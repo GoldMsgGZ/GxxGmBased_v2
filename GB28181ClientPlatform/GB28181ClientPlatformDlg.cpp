@@ -144,6 +144,36 @@ HCURSOR CGB28181ClientPlatformDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+int CGB28181ClientPlatformDlg::GetOrgCounts(struct OrgInfo org_infos, int &count)
+{
+	++count;
+
+	if (org_infos.sub_devs.size() > 0)
+		count += org_infos.sub_devs.size()
+
+	if (org_infos.sub_orgs.size() > 0)
+	{
+		std::vector<struct OrgInfo>::iterator iter;
+		for (iter = org_infos.sub_orgs.begin(); iter != org_infos.sub_orgs.end(); ++iter)
+		{
+			struct OrgInfo sub_info = *iter;
+			GetOrgCounts(sub_info, count);
+		}
+	}
+
+	return count;
+}
+
+int CGB28181ClientPlatformDlg::BuildGB28181Orgs(struct OrgInfo org_infos, int count)
+{
+	// 先组织所有的组织架构
+	// 首先判断是不是根目录
+	if (org_infos.gbcode.compare(org_infos.))
+
+	// 然后组织所有的设备信息
+	// 最后组织所有的通道信息
+	return 0;
+}
 
 void CGB28181ClientPlatformDlg::SetStatus(const char *status)
 {
@@ -278,7 +308,8 @@ SIP_REPSOND_CODE CGB28181ClientPlatformDlg::_DevInfoQueryCB(SESSION_HANDLE hSess
 
 			// 计算所有节点的总数
 			// 然后依次组织起来
-			//stuCata.iSumNum = dlg->org_infos;
+			dlg->GetOrgCounts(org_infos, stuCata.iSumNum);
+			stuCata.ptrCatalog = dlg->BuildGB28181Orgs();
 		}
 		break;
 	}

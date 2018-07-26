@@ -223,6 +223,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\DataStruct.h"
+				>
+			</File>
+			<File
 				RelativePath=".\GB28181ClientPlatform.h"
 				>
 			</File>

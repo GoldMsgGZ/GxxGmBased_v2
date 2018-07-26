@@ -55,7 +55,9 @@ public:
 
 public:
 	struct OrgInfo org_infos;
-	int BuildGB28181Orgs();
+	int GetOrgCounts(struct OrgInfo org_infos, int &count);
+	StruCatalogInfo* BuildGB28181Orgs(struct OrgInfo org_infos, int count);
+
 
 public:
 	CEdit m_cCurrentIp;
