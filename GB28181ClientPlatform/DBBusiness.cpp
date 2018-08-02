@@ -413,8 +413,8 @@ int DBBusiness::BuildOrgTree(struct OrgInfo *root_info, OrgInfo current_info, in
 {
 	int errCode = 0;
 
-	if (level > 4)
-		return -2;
+	//if (level > 4)
+	//	return -2;
 
 	// 如果得到的节点当前国标ID与父国标ID一致，则作为根节点，直接设置
 	// 如果不一致，则检查当前根节点是不是他的根节点，如果是，则加入子节点，如果不是，则遍历他的子节点作为根节点进行检查

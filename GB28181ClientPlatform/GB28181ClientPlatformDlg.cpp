@@ -21,6 +21,7 @@
 CGB28181ClientPlatformDlg::CGB28181ClientPlatformDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CGB28181ClientPlatformDlg::IDD, pParent)
 	, db_business_(new DBBusiness())
+	, org_and_devs(NULL)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -99,6 +100,9 @@ BOOL CGB28181ClientPlatformDlg::OnInitDialog()
 	m_cAuthenUsername.SetWindowText(A2T(authen_username.c_str()));
 	m_cAuthenPassword.SetWindowText(A2T(authen_password.c_str()));
 
+	// 判断本级平台类型还是设备类型
+	// 如果是平台类型就展示组织架构和设备树
+	// 如果是设备类型就展示设备树，设备数只有两级，根目录是设备，子目录是通道
 	// 从数据库读出组织架构树，并增加到组织架构树控件中
 	db_business_->GetOrgInfos(org_infos);
 
@@ -144,12 +148,12 @@ HCURSOR CGB28181ClientPlatformDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-int CGB28181ClientPlatformDlg::GetOrgCounts(struct OrgInfo org_infos, int &count)
+int CGB28181ClientPlatformDlg::GetOrgCounts(struct OrgInfo org_infos, unsigned int &count)
 {
 	++count;
 
 	if (org_infos.sub_devs.size() > 0)
-		count += org_infos.sub_devs.size()
+		count += org_infos.sub_devs.size();
 
 	if (org_infos.sub_orgs.size() > 0)
 	{
@@ -164,15 +168,68 @@ int CGB28181ClientPlatformDlg::GetOrgCounts(struct OrgInfo org_infos, int &count
 	return count;
 }
 
-int CGB28181ClientPlatformDlg::BuildGB28181Orgs(struct OrgInfo org_infos, int count)
+StruCatalogInfo* CGB28181ClientPlatformDlg::BuildGB28181Orgs(struct OrgInfo org_infos, int count, int &index)
 {
 	// 先组织所有的组织架构
 	// 首先判断是不是根目录
-	if (org_infos.gbcode.compare(org_infos.))
+	if (org_infos.gbcode.compare(org_infos.father_gbcode) == 0)
+	{
+		// 是根目录，构建新的组织架构与设备列表数组
+		if (org_and_devs != NULL)
+			delete [] org_and_devs;
+
+		org_and_devs = new StruCatalogInfo[count];
+		memset(org_and_devs, 0, sizeof(StruCatalogInfo) * count);
+	}
+
+	// 判断当前节点有没有子节点
+	int isParent = 0;
+	if (org_infos.sub_devs.size() > 0 || org_infos.sub_orgs.size() > 0)
+		isParent = 1;
+
+	strncpy(org_and_devs[index].czGBCode, org_infos.gbcode.c_str(), STR_GBCODE_LEN);				// 国标编码
+	strncpy(org_and_devs[index].czDeviceName, org_infos.name.c_str(), STR_NAME_LEN);				// 设备名称
+	strncpy(org_and_devs[index].czManufacturer, "GOSUNCN", STR_MANUFACTURER_LEN);					// 当为设备是，表示设备生产商
+	strncpy(org_and_devs[index].czModel, "V3.3", STR_MANUFACTURER_LEN);								// 当为设备是，表示设备型号
+	strncpy(org_and_devs[index].czOwner, org_infos.father_gbcode.c_str(), STR_OWNER_LEN);			// 当为设备是，表示设备型号
+	strncpy(org_and_devs[index].czCivilCode, org_infos.father_gbcode.c_str(), STR_CIVILCODE_LEN);	// 行政区域
+	strncpy(org_and_devs[index].czBlock, org_infos.father_gbcode.c_str(), STR_BLOCK_LEN);			// 警区
+	strncpy(org_and_devs[index].czAddress, org_infos.father_gbcode.c_str(), STR_ADDRESS_LEN);		// 当为设备时，表示安装地址
+	org_and_devs[index].iParental = isParent;														// 当为设备时，表示是否有子设备
+	strncpy(org_and_devs[index].czParentID, org_infos.father_gbcode.c_str(), STR_PARENTID_LEN);		// 当为设备时，表示是否有子设备
+	org_and_devs[index].iSafetyWay = 0;																// 信令安全模式，我们这里强制为0
+	org_and_devs[index].iRegisterWay = 1;															// 注册方式，默认为1：符合sip3261标准的认证注册模式
+	strncpy(org_and_devs[index].czCertNum, "CertNum 0", STR_CERTNUM_LEN);							// 证书序列号
+	org_and_devs[index].iCertifiable = 0;
+	org_and_devs[index].iErrCode = 400;
+	strncpy(org_and_devs[index].czEndTime, "2010-11-11T19:46:17", STR_DATETIME_LEN);				// 证书有效期
+	org_and_devs[index].iSecrecy = 0;
+	strncpy(org_and_devs[index].czIPAddress, "192.168.1.1", STR_IPADDRESS_LEN);
+	org_and_devs[index].iPort = 5060;
+	strncpy(org_and_devs[index].czPassword, "Password", STR_PASSWORD_LEN);
+	org_and_devs[index].iStatus = 1;																// 在线状态
+	org_and_devs[index].dLongitude = 113.283198;
+	org_and_devs[index].dLatitude = 23.143136;
+	//org_and_devs[0].iPtzType = 
+
+	++index;
 
 	// 然后组织所有的设备信息
-	// 最后组织所有的通道信息
-	return 0;
+	std::vector<struct OrgInfo>::iterator iter_org;
+	for (iter_org = org_infos.sub_orgs.begin(); iter_org != org_infos.sub_orgs.end(); ++iter_org)
+	{
+		struct OrgInfo orginfo = *iter_org;
+		BuildGB28181Orgs(orginfo, count, index);
+	}
+
+	//// 最后组织所有的通道信息
+	//std::vector<struct DevInfo>::iterator iter_dev;
+	//for (iter_dev = org_infos.sub_devs.begin(); iter_dev != org_infos.sub_devs.end(); ++iter_dev)
+	//{
+	//	struct DevInfo orginfo = *iter_dev;
+	//	BuildGB28181Orgs(orginfo, count, index);
+	//}
+	return org_and_devs;
 }
 
 void CGB28181ClientPlatformDlg::SetStatus(const char *status)
@@ -220,10 +277,7 @@ void CGB28181ClientPlatformDlg::BuildOrgTreeCtrl(struct OrgInfo root_org, HTREEI
 			struct OrgInfo sub_org = *iter;
 			BuildOrgTreeCtrl(sub_org, h_childNode);
 		}
-
 	}
-
-	
 }
 
 void CGB28181ClientPlatformDlg::OnBnClickedBtnStart()
@@ -280,6 +334,22 @@ void CGB28181ClientPlatformDlg::OnBnClickedBtnRegister()
 	}
 	else
 	{
+		// 注册成功，将参数回写到数据库
+		CString current_ip, current_port, current_gbcode;
+		m_cCurrentIp.GetWindowText(current_ip);
+		m_cCurrentPort.GetWindowText(current_port);
+		m_cCurrentGbcode.GetWindowText(current_gbcode);
+
+		db_business_->SetCurrentIp(T2A(current_ip.GetBuffer(0)));
+		db_business_->SetCurrentPort(T2A(current_port.GetBuffer(0)));
+		db_business_->SetCurrentGbcode(T2A(current_gbcode.GetBuffer(0)));
+
+		db_business_->SetRemoteIp(T2A(str_remote_ip.GetBuffer(0)));
+		db_business_->SetRemotePort(T2A(str_remote_port.GetBuffer(0)));
+		db_business_->SetRemoteGbcode(T2A(str_remote_gbcode.GetBuffer(0)));
+		db_business_->SetAuthenUsername(T2A(str_authen_username.GetBuffer(0)));
+		db_business_->SetAuthenPassword(T2A(str_authen_password.GetBuffer(0)));
+
 		SetStatus("注册到上级平台成功！");
 		return ;
 	}
@@ -304,12 +374,25 @@ SIP_REPSOND_CODE CGB28181ClientPlatformDlg::_DevInfoQueryCB(SESSION_HANDLE hSess
 		// 设备目录查询
 		{
 			StruDeviceCatalog stuCata;
-			gs_strncpy(stuCata.czGBCode, stuQuery->czGBCode, STR_GBCODE_LEN);
+			//memset(&stuCata, 0, sizeof(StruDeviceCatalog));
+			stuCata.iSumNum = 0;
+			strncpy(stuCata.czGBCode, stuQuery->czGBCode, STR_GBCODE_LEN);
 
 			// 计算所有节点的总数
 			// 然后依次组织起来
-			dlg->GetOrgCounts(org_infos, stuCata.iSumNum);
-			stuCata.ptrCatalog = dlg->BuildGB28181Orgs();
+			int index = 0;
+			dlg->GetOrgCounts(dlg->org_infos, stuCata.iSumNum);
+			stuCata.ptrCatalog = dlg->BuildGB28181Orgs(dlg->org_infos, stuCata.iSumNum, index);
+
+			GS28181_ERR errCode = GB28181Agent_RespondDevCatalog(hSession, &stuCata, 2, false);
+			if( GS28181_ERR_SUCCESS == errCode )
+				TRACE("[设备目录查询] 指令响应成功！\n");
+			else
+				TRACE("[设备目录查询] 指令响应失败！\n");
+
+			// 这里就不删组织架构列表了，就当是缓存了
+			//delete [] stuCata.ptrCatalog;
+			//stuCata.ptrCatalog = NULL;
 		}
 		break;
 	}

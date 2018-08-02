@@ -7,6 +7,7 @@
 #include "afxcmn.h"
 
 #include "GB28181AgentSDK.h"
+#include "DataStruct.h"
 
 class DBBusiness;
 
@@ -55,8 +56,9 @@ public:
 
 public:
 	struct OrgInfo org_infos;
-	int GetOrgCounts(struct OrgInfo org_infos, int &count);
-	StruCatalogInfo* BuildGB28181Orgs(struct OrgInfo org_infos, int count);
+	StruCatalogInfo *org_and_devs;
+	int GetOrgCounts(struct OrgInfo org_infos, unsigned int &count);
+	StruCatalogInfo* BuildGB28181Orgs(struct OrgInfo org_infos, int count, int &index);
 
 
 public:
