@@ -1,0 +1,262 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文(中华人民共和国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
+    "LANGUAGE 4, 2\r\n"
+    "#pragma code_page(936)\r\n"
+    "#include ""res\\GB28181DeviceSimulater.rc2""  // 非 Microsoft Visual C++ 编辑的资源\r\n"
+    "#include ""l.CHS\\afxres.rc""      // 标准组件\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\GB28181DeviceSimulater.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 170, 62
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关于 GB28181DeviceSimulater"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,14,14,21,20
+    LTEXT           "GB28181DeviceSimulater，1.0 版",IDC_STATIC,42,14,114,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2018",IDC_STATIC,42,26,114,8
+    DEFPUSHBUTTON   "确定",IDOK,113,41,50,14,WS_GROUP
+END
+
+IDD_GB28181DEVICESIMULATER_DIALOG DIALOGEX 0, 0, 610, 454
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "GB28181设备模拟器"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "确定",IDOK,553,433,50,14,NOT WS_VISIBLE
+    PUSHBUTTON      "取消",IDCANCEL,553,433,50,14,NOT WS_VISIBLE
+    GROUPBOX        "连接配置",IDC_STATIC,7,7,210,208
+    LTEXT           "本地IP",IDC_STATIC,34,22,21,8
+    LTEXT           "本地PORT",IDC_STATIC,23,37,32,8
+    LTEXT           "本地GBCODE",IDC_STATIC,14,54,41,8
+    EDITTEXT        IDC_EDIT_LOCAL_IP,57,19,101,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_LOCAL_PORT,57,35,101,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_LOCAL_GBCODE,57,51,101,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,14,127,193,1
+    EDITTEXT        IDC_EDIT_GATEWAY_IP,57,131,101,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_,57,147,101,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT6,57,163,101,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT7,57,179,101,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT8,57,195,101,14,ES_AUTOHSCROLL
+    LTEXT           "网关IP",IDC_STATIC,33,133,21,8
+    LTEXT           "网关PORT",IDC_STATIC,22,150,32,8
+    LTEXT           "网关GBCODE",IDC_STATIC,13,166,41,8
+    LTEXT           "鉴权用户",IDC_STATIC,26,182,28,8
+    LTEXT           "鉴权密码",IDC_STATIC,26,198,28,8
+    PUSHBUTTON      "虚拟设备开机",IDC_BTN_START,161,18,50,52
+    PUSHBUTTON      "虚拟设备关机",IDC_BTN_STOP,161,72,50,52
+    PUSHBUTTON      "注册",IDC_BTN_REGISTER,161,131,50,38
+    PUSHBUTTON      "注销",IDC_BTN_UNREGISTER,161,171,50,38
+    GROUPBOX        "媒体资源配置",IDC_STATIC,7,285,210,162
+    GROUPBOX        "基本信息配置",IDC_STATIC,7,218,210,65
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,15,411,193,1
+    LTEXT           "视频采集设备",IDC_STATIC,14,300,42,8
+    LTEXT           "音频采集设备",IDC_STATIC,14,349,42,8
+    LTEXT           "录像文件路径",IDC_STATIC,15,417,42,8
+    COMBOBOX        IDC_COMBO_VIDEO_DEVICES,60,298,123,30,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_AUDIO_DEVICES,60,347,123,30,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "刷新",IDC_BTN_REFRESH_VIDEO_DEVICES,184,297,27,14
+    PUSHBUTTON      "刷新",IDC_BTN_REFRESH_AUDIO_DEVICES,184,346,27,14
+    LTEXT           "推流码率(bps)",IDC_STATIC,16,317,45,8
+    EDITTEXT        IDC_EDIT2,14,428,197,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "浏览...",IDC_BTN_OPEN_RECORD_FILE,161,414,50,14
+    LTEXT           "推流帧率(fps)",IDC_STATIC,16,331,43,8
+    EDITTEXT        IDC_EDIT_VIDEO_BITRATE,64,314,62,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_VIDEO_FRAMERATE,64,329,62,14,ES_AUTOHSCROLL
+    LTEXT           "推流码率(bps)",IDC_STATIC,16,366,45,8
+    LTEXT           "采样率(Hz)",IDC_STATIC,23,381,35,8
+    LTEXT           "声道数",IDC_STATIC,24,395,22,8
+    EDITTEXT        IDC_EDIT_AUDIO_BITRATE,64,363,62,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_AUDIO_SAMPLERATE,64,378,62,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_AUDIO_CHANNELS,64,393,62,14,ES_AUTOHSCROLL
+    CONTROL         "发送心跳",IDC_CHECK_IS_SEND_HEARTBEAT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,20,230,43,10
+    LTEXT           "心跳频率(毫秒/次)",IDC_STATIC,65,230,58,8
+    EDITTEXT        IDC_EDIT_HEARTBEAT_TIME,126,227,57,14,ES_AUTOHSCROLL
+    LTEXT           "经度坐标",IDC_STATIC,20,249,28,8
+    LTEXT           "纬度坐标",IDC_STATIC,20,265,28,8
+    EDITTEXT        IDC_EDIT_LONGTITUDE,51,246,99,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_LATITUDE,51,262,99,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_STATUS,223,285,380,162,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,14,70,143,1
+    LTEXT           "RTP服务IP",IDC_STATIC,271,181,34,8
+    CONTROL         "手工RTP端口",IDC_CHECK_MANUAL_PORT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,57,74,56,10
+    EDITTEXT        IDC_EDIT_RTP_SVR_IP,308,178,101,14,ES_AUTOHSCROLL
+    LTEXT           "RTP起始端口",IDC_STATIC,13,92,41,8
+    LTEXT           "RTP结束端口",IDC_STATIC,13,107,41,8
+    EDITTEXT        IDC_EDIT_RTP_PORT_BEGIN,57,89,101,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_RTP_PORT_FINISH,57,105,101,14,ES_AUTOHSCROLL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080403a8"
+        BEGIN
+            VALUE "CompanyName", "TODO: <公司名>"
+            VALUE "FileDescription", "TODO: <文件说明>"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "GB28181DeviceSimulater.exe"
+            VALUE "LegalCopyright", "TODO: (C) <公司名>。保留所有权利。"
+            VALUE "OriginalFilename", "GB28181DeviceSimulater.exe"
+            VALUE "ProductName", "TODO: <产品名>"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 936
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 163
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 55
+    END
+
+    IDD_GB28181DEVICESIMULATER_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 603
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 447
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_ABOUTBOX            "关于 GB28181DeviceSimulater(&A)..."
+END
+
+#endif    // 中文(中华人民共和国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE 4, 2
+#pragma code_page(936)
+#include "res\GB28181DeviceSimulater.rc2"  // 非 Microsoft Visual C++ 编辑的资源
+#include "l.CHS\afxres.rc"      // 标准组件
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
