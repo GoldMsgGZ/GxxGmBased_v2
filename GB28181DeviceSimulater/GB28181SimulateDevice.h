@@ -3,6 +3,7 @@
 
 #include "GB28181Defs.h"
 #include "RealDeviceObject.h"
+#include "RtpServerObject.h"
 #include <string>
 
 /**
@@ -30,10 +31,13 @@ public:
 
 public:
 	int AddRealStream(STREAM_HANDLE streamHandle, int iSSRC, unsigned short & iLocalPort);
-	int StartRealStream(StruMediaInfo *remote_media_info);
+	int StartRealStream(STREAM_HANDLE streamHandle, StruMediaInfo *remote_media_info);
 
 public:
-	virtual int MediaData(StruPSFrameInfo *ps_frame);
+	int StopStream(STREAM_HANDLE streamHandle);
+
+public:
+	virtual int MediaData(void *stream_handle, int ssrc, StruPSFrameInfo *ps_frame);
 
 private:
 	std::string device_gbcode_;
@@ -41,10 +45,12 @@ private:
 
 public:
 	RealDeviceObject *camera_;
+	RealDeviceObject *mic_;
+	RtpStreamMgr *rtp_stream_mgr_;
 
 public:
-	char token_[32];
-	int SSRC_;
+	//char token_[32];
+	//int SSRC_;
 };
 
 #endif

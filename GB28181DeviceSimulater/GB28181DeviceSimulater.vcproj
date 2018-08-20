@@ -319,52 +319,28 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="旧方案"
+			Name="11.视音频输入设备管理"
 			>
-			<Filter
-				Name="11.视音频输入设备管理"
+			<File
+				RelativePath=".\GxxGmInputDevice.cpp"
 				>
-				<File
-					RelativePath=".\GxxGmInputDevice.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\GxxGmInputDevice.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="12.28181流管理模块"
+			</File>
+			<File
+				RelativePath=".\GxxGmInputDevice.h"
 				>
-				<File
-					RelativePath=".\GB28181StreamMgr.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\GB28181StreamMgr.h"
-					>
-				</File>
-				<File
-					RelativePath=".\RtpStreamMgr.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\RtpStreamMgr.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="13.队列"
+			</File>
+		</Filter>
+		<Filter
+			Name="13.队列"
+			>
+			<File
+				RelativePath=".\GxxGmQueue.cpp"
 				>
-				<File
-					RelativePath=".\GxxGmQueue.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\GxxGmQueue.h"
-					>
-				</File>
-			</Filter>
+			</File>
+			<File
+				RelativePath=".\GxxGmQueue.h"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\ClassDiagram1.cd"

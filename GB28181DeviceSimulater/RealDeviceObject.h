@@ -23,7 +23,7 @@ enum MediaDeviceType
 class RealDeviceObjectObserver
 {
 public:
-	virtual int MediaData(StruPSFrameInfo *ps_frame) = 0;
+	virtual int MediaData(void *stream_handle, int ssrc, StruPSFrameInfo *ps_frame) = 0;
 };
 
 class RealDeviceObject
@@ -50,7 +50,7 @@ public:
 	/**
 	 * 开始转流
 	 */
-	int Start(enum AVCodecID dest_codec_id);
+	int Start(void *stream_handle, int ssrc, enum AVCodecID dest_codec_id);
 
 	/**
 	 * 停止转流
@@ -89,6 +89,8 @@ public:
 
 public:
 	RealDeviceObjectObserver *observer_;
+	void *stream_handle_;
+	int ssrc_;
 };
 
 #endif

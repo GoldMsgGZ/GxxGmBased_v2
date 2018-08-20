@@ -313,7 +313,7 @@ SIP_REPSOND_CODE GB28181AgentSignalObject::_StreamRequestCB(STREAM_HANDLE hStrea
 #endif
 
 			// 这里还有后续工作需要处理，通知流管理模块，启动视频推流
-			errCode = object->simulate_device_->StartRealStream(pInMedia);
+			errCode = object->simulate_device_->StartRealStream(hStream, pInMedia);
 		}
 		else
 		{
@@ -326,6 +326,7 @@ SIP_REPSOND_CODE GB28181AgentSignalObject::_StreamRequestCB(STREAM_HANDLE hStrea
 	else if (eRequest == eSTREAM_BYE)
 	{
 		// 查找关闭的对象，如果是试试对象，就关闭实时流，如果是历史对象，就关闭历史流
+		object->simulate_device_->StopStream(hStream);
 	}
 	else if (eRequest == eSTREAM_AUDIO)
 	{

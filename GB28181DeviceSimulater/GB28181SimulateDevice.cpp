@@ -4,6 +4,8 @@
 
 GB28181SimulateDevice::GB28181SimulateDevice()
 : camera_(new RealDeviceObject(this))
+, mic_(new RealDeviceObject(this))
+, rtp_stream_mgr_(new RtpStreamMgr())
 {
 
 }
@@ -11,6 +13,8 @@ GB28181SimulateDevice::GB28181SimulateDevice()
 GB28181SimulateDevice::~GB28181SimulateDevice()
 {
 	delete camera_;
+	delete mic_;
+	delete rtp_stream_mgr_;
 }
 
 int GB28181SimulateDevice::SetDeviceGbcode(const char *device_gbcode)
@@ -153,45 +157,79 @@ int GB28181SimulateDevice::AddRealStream(STREAM_HANDLE streamHandle, int iSSRC, 
 	int errCode = 0;
 
 	// 首先计算Token
-	memset(token_, 0, 32);
-	sprintf_s(token_, 32, "%d", streamHandle);
+	char current_token[32] = {0};
+	memset(current_token, 0, 32);
+	sprintf_s(current_token, 32, "%d", streamHandle);
 
-	SSRC_ = iSSRC;
+	//SSRC_ = iSSRC;
 
-	errCode = GSRTPServer_AddSource(token_, SSRC_, &iLocalPort);
+	errCode = GSRTPServer_AddSource(current_token, iSSRC, &iLocalPort);
+	if (errCode == GSRTP_SUCCESS)
+	{
+		rtp_stream_mgr_->AddStream(streamHandle, iSSRC, RtpStream_Real);
+	}
 
 	return errCode;
 }
 
-int GB28181SimulateDevice::StartRealStream(StruMediaInfo *remote_media_info)
+int GB28181SimulateDevice::StartRealStream(STREAM_HANDLE streamHandle, StruMediaInfo *remote_media_info)
 {
 	StruRtpAVSampleRate rtp_av_samplerate;
 	rtp_av_samplerate.iAudioSampleRate = 8000;
 	rtp_av_samplerate.iVideoSampleRate = 90000;
 
-	GSRTP_ERR err = GSRTPServer_SetSourceParam(token_, SSRC_, remote_media_info->czIP, remote_media_info->iPort, &rtp_av_samplerate, 3*1024*1024);
+	char current_token[32] = {0};
+	memset(current_token, 0, 32);
+	sprintf_s(current_token, 32, "%d", streamHandle);
+
+	// 从map中找到对应的流数据
+	RtpStreamInfo *element = rtp_stream_mgr_->GetStreamInfo(streamHandle);
+	if (element == NULL)
+	{
+		// 没找到
+		return -1;
+	}
+	
+	const char *token = element->stream_token_;
+	int ssrc = element->SSRC_;
+
+	GSRTP_ERR err = GSRTPServer_SetSourceParam(token, ssrc, remote_media_info->czIP, remote_media_info->iPort, &rtp_av_samplerate, 3*1024*1024);
 	if (err != GSRTP_SUCCESS)
 	{
-		GSRTPServer_Reclaim(token_, SSRC_);
+		rtp_stream_mgr_->RemoveStream(streamHandle);
+		GSRTPServer_Reclaim(token, ssrc);
 		return err;
 	}
 
 	// 启动真实设备，开始取流
 	camera_->OpenRealDevice();
-	camera_->Start(AV_CODEC_ID_H264);
+	camera_->Start(streamHandle, ssrc, AV_CODEC_ID_H264);
 
 	return err;
 }
 
-int GB28181SimulateDevice::MediaData(StruPSFrameInfo *ps_frame)
+int GB28181SimulateDevice::StopStream(STREAM_HANDLE streamHandle)
 {
+	camera_->is_stream_handler_stop_ = true;
+	camera_->stream_handler_.join();
+
+	rtp_stream_mgr_->RemoveStream(streamHandle);
+	return 0;
+}
+
+int GB28181SimulateDevice::MediaData(void *stream_handle, int ssrc, StruPSFrameInfo *ps_frame)
+{
+	char current_token[32] = {0};
+	memset(current_token, 0, 32);
+	sprintf_s(current_token, 32, "%d", stream_handle);
+
 	StruRtpFrame rtp_frame;
 	rtp_frame.eFrameType = RTP_FRAME_PS;
 	rtp_frame.iCodeID = 0x00000400;
 	rtp_frame.iTimeStamp = ps_frame->nPTS;
-	rtp_frame.iSSRC = SSRC_;
+	rtp_frame.iSSRC = ssrc;
 	rtp_frame.pFrame = (char*)ps_frame->pBuffer;
 	rtp_frame.iLenght = ps_frame->nBufLen;
-	GSRTP_ERR err = GSRTPServer_InputStream(token_, &rtp_frame);
+	GSRTP_ERR err = GSRTPServer_InputStream(current_token, &rtp_frame);
 	return err;
 }

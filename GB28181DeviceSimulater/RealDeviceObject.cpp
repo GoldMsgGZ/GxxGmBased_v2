@@ -45,11 +45,23 @@ int RealDeviceObject::OpenRealDevice()
 	input_format_ctx_ = avformat_alloc_context();
 	iformat_ = av_find_input_format(open_type_.c_str());
 
+	// 转换成utf-8
+	wchar_t utf8name_wide[4096] = {0};
+	char utf8name[4096] = {0};
+	MultiByteToWideChar(CP_UTF8, 0, device_name_.c_str(), device_name_.size(), utf8name_wide, 4096);
+	WideCharToMultiByte(CP_UTF8, 0, utf8name_wide, -1, utf8name, 4096, NULL, NULL);
+
 	char device_symbolink[128] = {0};
 	if (device_type_ == Dev_Camera)
-		sprintf_s(device_symbolink, 128, "video=%s", device_name_.c_str());
+	{
+		//sprintf_s(device_symbolink, 128, "video=%s", device_name_.c_str());
+		sprintf_s(device_symbolink, 128, "video=%s", utf8name);
+	}
 	else if (device_type_ == Dev_Mic)
-		sprintf_s(device_symbolink, 128, "mic=%s", device_name_.c_str());
+	{
+		//sprintf_s(device_symbolink, 128, "audio=%s", device_name_.c_str());
+		sprintf_s(device_symbolink, 128, "audio=%s", utf8name);
+	}
 
 	device_symbolink_ = device_symbolink;
 
@@ -61,7 +73,7 @@ void RealDeviceObject::CloseRealDevice()
 	//return 0;
 }
 
-int RealDeviceObject::Start(enum AVCodecID dest_codec_id)
+int RealDeviceObject::Start(void *stream_handle, int ssrc, enum AVCodecID dest_codec_id)
 {
 	int errCode = 0;
 
@@ -69,10 +81,13 @@ int RealDeviceObject::Start(enum AVCodecID dest_codec_id)
 		return -1;
 
 	dest_codec_id_ = dest_codec_id;
+	stream_handle_ = stream_handle;
+	ssrc_ = ssrc;
 
 	// 启动工作线程
 	is_stream_handler_stop_ = false;
 	stream_handler_.start(RealDeviceObject::StreamHandler, this);
+	Sleep(10);
 
 	return errCode;
 }
@@ -174,6 +189,31 @@ void RealDeviceObject::StreamHandler(void *param)
 			// 申请编码器上下文内存失败！
 			return ;
 		}
+
+		// 组织编码参数
+		object->video_encoder_ctx_->width = object->video_decoder_ctx_->width;
+		object->video_encoder_ctx_->height = object->video_decoder_ctx_->height;
+		object->video_encoder_ctx_->pix_fmt = AV_PIX_FMT_YUV420P;
+		object->video_encoder_ctx_->time_base.num = 1;
+		object->video_encoder_ctx_->time_base.den = 30;
+		object->video_encoder_ctx_->bit_rate = object->video_decoder_ctx_->bit_rate;
+
+		if (object->dest_codec_id_ == AV_CODEC_ID_H264)
+		{
+			av_opt_set(object->video_encoder_ctx_->priv_data, "preset", "slow", 0);
+			av_opt_set(object->video_encoder_ctx_->priv_data, "tune", "zerolatency", 0);
+		}
+
+		errCode = avcodec_open2(object->video_encoder_ctx_, object->video_encoder_, NULL);
+		if (errCode < 0)
+		{
+			// 打开编码器失败！
+			char av_msg[AV_ERROR_MAX_STRING_SIZE] = {0};
+			av_make_error_string(av_msg, AV_ERROR_MAX_STRING_SIZE, errCode);
+			sprintf_s(dbg_msg, 4096, "打开视频编码器出错，错误信息：%s\n", av_msg);
+			OutputDebugStringA(dbg_msg);
+			return ;
+		}
 	}
 	else if (object->device_type_ == Dev_Mic)
 	{
@@ -190,30 +230,26 @@ void RealDeviceObject::StreamHandler(void *param)
 			// 申请编码器上下文内存失败！
 			return ;
 		}
+
+		object->audio_encoder_ctx_->sample_fmt = AV_SAMPLE_FMT_U8;
+		object->audio_encoder_ctx_->sample_rate = 8000;
+		object->audio_encoder_ctx_->channels = 1;
+		object->audio_encoder_ctx_->bit_rate = 64000;
+		object->audio_encoder_ctx_->channel_layout = AV_CH_LAYOUT_MONO;
+
+		errCode = avcodec_open2(object->audio_encoder_ctx_, object->audio_encoder_, NULL);
+		if (errCode < 0)
+		{
+			// 打开编码器失败！
+			char av_msg[AV_ERROR_MAX_STRING_SIZE] = {0};
+			av_make_error_string(av_msg, AV_ERROR_MAX_STRING_SIZE, errCode);
+			sprintf_s(dbg_msg, 4096, "打开音频编码器出错，错误信息：%s\n", av_msg);
+			OutputDebugStringA(dbg_msg);
+			return ;
+		}
 	}
+
 	
-
-	// 组织编码参数
-	object->video_encoder_ctx_->width = object->video_decoder_ctx_->width;
-	object->video_encoder_ctx_->height = object->video_decoder_ctx_->height;
-	object->video_encoder_ctx_->pix_fmt = AV_PIX_FMT_YUV420P;
-	object->video_encoder_ctx_->time_base.num = 1;
-	object->video_encoder_ctx_->time_base.den = 30;
-	object->video_encoder_ctx_->bit_rate = 600000;
-
-	av_opt_set(object->video_encoder_ctx_->priv_data, "preset", "slow", 0);
-	av_opt_set(object->video_encoder_ctx_->priv_data, "tune", "zerolatency", 0);
-
-	errCode = avcodec_open2(object->video_encoder_ctx_, object->video_encoder_, NULL);
-	if (errCode < 0)
-	{
-		// 打开编码器失败！
-		char av_msg[AV_ERROR_MAX_STRING_SIZE] = {0};
-		av_make_error_string(av_msg, AV_ERROR_MAX_STRING_SIZE, errCode);
-		sprintf_s(dbg_msg, 4096, "打开视频编码器出错，错误信息：%s\n", av_msg);
-		OutputDebugStringA(dbg_msg);
-		return ;
-	}
 
 	// 开始转码发送
 	while (!object->is_stream_handler_stop_)
@@ -322,7 +358,7 @@ void RealDeviceObject::StreamHandler(void *param)
 				if (err == GS_MPEGPS_Ret_Success)
 				{
 					// 操作成功了，发送出去
-					errCode = object->observer_->MediaData(&ps_frame);
+					errCode = object->observer_->MediaData(object->stream_handle_, object->ssrc_, &ps_frame);
 					if (errCode != 0)
 					{
 						sprintf_s(dbg_msg, 4096, "发送视频流出错，错误码：%d\n", errCode);
@@ -356,7 +392,47 @@ void RealDeviceObject::StreamHandler(void *param)
 		}
 		else if (encoded_packet.stream_index == object->input_audio_stream_id_)
 		{
+			errCode = avcodec_decode_audio4(object->video_decoder_ctx_, frame, &got_frame, &encoded_packet);
+			if (errCode < 0)
+			{
+				// 解码失败
+				char av_msg[AV_ERROR_MAX_STRING_SIZE] = {0};
+				av_make_error_string(av_msg, AV_ERROR_MAX_STRING_SIZE, errCode);
+				sprintf_s(dbg_msg, 4096, "音频解码出错，错误信息：%s\n", av_msg);
+				OutputDebugStringA(dbg_msg);
+
+				av_frame_free(&frame);
+				av_free_packet(&encoded_packet);
+				continue;
+			}
+
+			if (!got_frame)
+			{
+				av_frame_free(&frame);
+				av_free_packet(&encoded_packet);
+				continue;
+			}
+
+			// 输出部分调试信息
+			sprintf_s(dbg_msg, 4096, "音频解码\n");
+			OutputDebugStringA(dbg_msg);
+
+			// 重新编码，这里不用FFmpeg了吧，好像不太好操作
 		}
 		
 	}
+
+	// 要关闭设备了，清理资源
+
+	// 关闭编码器
+	avcodec_close(object->video_encoder_ctx_);
+	object->video_encoder_ctx_ = NULL;
+
+	// 关闭解码器
+	avcodec_close(object->video_decoder_ctx_);
+	object->video_decoder_ctx_ = NULL;
+
+	// 关闭设备输入上下文
+	avformat_close_input(&object->input_format_ctx_);
+	object->input_format_ctx_ = NULL;
 }
