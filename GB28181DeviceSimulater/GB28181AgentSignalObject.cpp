@@ -39,6 +39,7 @@ int GB28181AgentSignalObject::Start(const char *local_ip, int local_port, const 
 #ifdef _DEBUG
 		OutputDebugStringA(dbg_msg);
 #endif
+		GB28181Agent_Uninit(handle_);
 		return err;
 	}
 
