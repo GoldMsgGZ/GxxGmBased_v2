@@ -24,7 +24,7 @@ public:
 	static void _ServerLogCallBack(EnumLogLevel eLevel, const char * szTemp, int iLen, void * pUserData);
 
 public:
-	std::map<std::string, StruRegistMsg dev_info> registed_devs_;
+	std::map<std::string, struct StruRegistMsg dev_info> registed_devs_;
 	
 private:
 	SERVER_HANDLE handle_;

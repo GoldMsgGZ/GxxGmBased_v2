@@ -61,7 +61,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	int errCode = 0;
 
 	// 读取人脸图片
-	const char *jpg_file = "C:\\Users\\WANGY\\Desktop\\wy.jpg";
+	const char *jpg_file = "C:\\Users\\baggio\\Desktop\\wy.jpg";
 
 	HANDLE hFace = CreateFileA(jpg_file, GENERIC_ALL, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFace == INVALID_HANDLE_VALUE)
@@ -117,7 +117,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		if(nCode == 200)
 		{
 			//返回成功，写入文件
-			const char *result_file = "C:\\Users\\WANGY\\Desktop\\result.html";
+			const char *result_file = "C:\\Users\\baggio\\Desktop\\result.html";
 
 			HANDLE hResult = CreateFileA(result_file, GENERIC_ALL, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hResult == INVALID_HANDLE_VALUE)

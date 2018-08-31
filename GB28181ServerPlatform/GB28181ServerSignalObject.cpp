@@ -61,10 +61,12 @@ void GB28181ServerSignalObject::Stop()
 
 SIP_REPSOND_CODE GB28181ServerSignalObject::_DevRegist_CallBackFunc(const StruRegistMsg * stuMsg, void * pUserData)
 {
+	char dbgmsg[4096] = {0};
 	GB28181ServerSignalObject *object = (GB28181ServerSignalObject*)pUserData;
 
 	// 有设备/平台注册
 	// 如果鉴权通过了，那么就将信息缓存下来
+	sprintf_s(dbgmsg, 4096, "有设备/平台注册过来，IP：%s，PORT：%d，GBCODE：%s", stuMsg->stuCnnParam.szIP, stuMsg->stuCnnParam.iPort, stuMsg->stuCnnParam.szGBCode);
 	
 
 	return SIP_RESPONSE_CODE_SUCCESS;
