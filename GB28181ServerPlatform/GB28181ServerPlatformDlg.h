@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "afxwin.h"
 
 class GB28181ServerSignalObject;
 
@@ -36,4 +37,11 @@ public:
 	GB28181ServerSignalObject *object_;
 
 public:
+	CEdit m_cServerIp;
+	CEdit m_cServerPort;
+	CEdit m_ccServerGbcode;
+	CEdit m_cServerUsername;
+	CEdit m_cServerPassword;
+	afx_msg void OnBnClickedBtnStart();
+	afx_msg void OnBnClickedBtnStop();
 };

@@ -59,6 +59,11 @@ CGB28181ServerPlatformDlg::CGB28181ServerPlatformDlg(CWnd* pParent /*=NULL*/)
 void CGB28181ServerPlatformDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_EDIT_SERVER_IP, m_cServerIp);
+	DDX_Control(pDX, IDC_EDIT_SERVER_PORT, m_cServerPort);
+	DDX_Control(pDX, IDC_EDIT_SERVER_GBCODE, m_ccServerGbcode);
+	DDX_Control(pDX, IDC_EDIT_SERVER_USERNAME, m_cServerUsername);
+	DDX_Control(pDX, IDC_EDIT_SERVER_PASSWORD, m_cServerPassword);
 }
 
 BEGIN_MESSAGE_MAP(CGB28181ServerPlatformDlg, CDialog)
@@ -66,6 +71,8 @@ BEGIN_MESSAGE_MAP(CGB28181ServerPlatformDlg, CDialog)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	//}}AFX_MSG_MAP
+	ON_BN_CLICKED(IDC_BTN_START, &CGB28181ServerPlatformDlg::OnBnClickedBtnStart)
+	ON_BN_CLICKED(IDC_BTN_STOP, &CGB28181ServerPlatformDlg::OnBnClickedBtnStop)
 END_MESSAGE_MAP()
 
 
@@ -101,8 +108,49 @@ BOOL CGB28181ServerPlatformDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+
+	// 得到当前程序所在目录
+	TCHAR current_program_path[4096] = {0};
+	GetModuleFileName(NULL, current_program_path, 4096);
+#ifdef UNICODE
+	std::wstring current_program_path_stl = current_program_path;
+	int pos = current_program_path_stl.find_last_of(L"\\");
+	std::wstring current_program_dir = current_program_path_stl.substr(0, pos +1);
+	std::wstring server_config_ini = current_program_dir;
+	server_config_ini.append(L"server_config.ini");
+#else
+	std::string current_program_path_stl = current_program_path;
+	int pos = current_program_path_stl.find_last_of("\\");
+	std::string current_program_dir = current_program_path_stl.substr(0, pos + 1);
+	std::string server_config_ini = current_program_dir;
+	server_config_ini.append("server_config.ini");
+#endif
+	
+
 	// 读取配置文件，保存的连接信息
-	TCHAR 
+	int errCode = 0;
+	TCHAR service_ip[4096] = {0};
+	TCHAR service_gbcode[4096] = {0};
+	TCHAR service_port[4096] = {0};
+	TCHAR username[4096] = {0};
+	TCHAR password[4096] = {0};
+
+	DWORD ret = GetPrivateProfileString(_T("CONNECTION"), _T("SERVER_IP"), _T(""), service_ip, 4096, server_config_ini.c_str());
+	errCode = GetLastError();
+	ret = GetPrivateProfileString(_T("CONNECTION"), _T("SERVER_GBCODE"), _T(""), service_gbcode, 4096, server_config_ini.c_str());
+	errCode = GetLastError();
+	ret = GetPrivateProfileString(_T("CONNECTION"), _T("SERVER_PORT"), _T(""), service_port, 4096, server_config_ini.c_str());
+	errCode = GetLastError();
+	ret = GetPrivateProfileString(_T("CONNECTION"), _T("SERVER_USERNAME"), _T(""), username, 4096, server_config_ini.c_str());
+	errCode = GetLastError();
+	ret = GetPrivateProfileString(_T("CONNECTION"), _T("SERVER_PASSWORD"), _T(""), password, 4096, server_config_ini.c_str());
+	errCode = GetLastError();
+
+	m_cServerIp.SetWindowText(service_ip);
+	m_cServerPort.SetWindowText(service_port);
+	m_ccServerGbcode.SetWindowText(service_gbcode);
+	m_cServerUsername.SetWindowText(username);
+	m_cServerPassword.SetWindowText(password);
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -156,3 +204,35 @@ HCURSOR CGB28181ServerPlatformDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+
+void CGB28181ServerPlatformDlg::OnBnClickedBtnStart()
+{
+	CString str_server_ip;
+	CString str_server_port;
+	CString str_server_gbcode;
+	CString str_server_username;
+	CString str_server_password;
+
+	m_cServerIp.GetWindowText(str_server_ip);
+	m_cServerPort.GetWindowText(str_server_port);
+	m_ccServerGbcode.GetWindowText(str_server_gbcode);
+	m_cServerUsername.GetWindowText(str_server_username);
+	m_cServerPassword.GetWindowText(str_server_password);
+
+	// 调用接口启动
+	USES_CONVERSION;
+	int errCode = object_->Start(T2A(str_server_ip.GetBuffer(0)), _ttoi(str_server_port.GetBuffer(0)), T2A(str_server_gbcode.GetBuffer(0)), T2A(str_server_password.GetBuffer(0)));
+	if (errCode != 0)
+	{
+		// 启动失败
+		return ;
+	}
+
+	// 启动成功
+}
+
+void CGB28181ServerPlatformDlg::OnBnClickedBtnStop()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	object_->Stop();
+}

@@ -2,6 +2,7 @@
 #define _GB28181ServerSignalObject_H_
 
 #include "GB28181ServerSDK.h"
+#include "GB28181Defs.h"
 #include <string>
 #include <map>
 
@@ -24,7 +25,7 @@ public:
 	static void _ServerLogCallBack(EnumLogLevel eLevel, const char * szTemp, int iLen, void * pUserData);
 
 public:
-	std::map<std::string, struct StruRegistMsg dev_info> registed_devs_;
+	//std::map<std::string, struct StruRegistMsg dev_info> registed_devs_;
 	
 private:
 	SERVER_HANDLE handle_;
@@ -32,6 +33,6 @@ private:
 	std::string srv_ip_;
 	int srv_port_;
 	std::string srv_gbcode_;
-}
+};
 
 #endif//_GB28181ServerSignalObject_H_

@@ -45,10 +45,10 @@ int GB28181ServerSignalObject::Start(const char *srv_ip, int srv_port, const cha
 #endif
 
 	// ×¢²á»Øµ÷
-	GB28181Server_SetLogCallBack(handle_, ServerLogCallBack, this);
-	GB28181Server_SetRegistCallBack(handle_ _DevRegist_CallBackFunc, this);
-	GB28181Server_SetNotifyCallBack(handle_, NotifyInfo_CallBackFunc, this);
-	GB28181Server_SetStreamReqCallBack(handle_, StreamRequest_CallBackFunc, this);
+	GB28181Server_SetLogCallBack(handle_, _ServerLogCallBack, this);
+	GB28181Server_SetRegistCallBack(handle_, _DevRegist_CallBackFunc, this);
+	GB28181Server_SetNotifyCallBack(handle_, _NotifyInfo_CallBackFunc, this);
+	GB28181Server_SetStreamReqCallBack(handle_, _StreamRequest_CallBackFunc, this);
 
 	return errCode;
 }

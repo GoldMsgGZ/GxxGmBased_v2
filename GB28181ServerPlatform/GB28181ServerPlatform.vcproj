@@ -274,11 +274,11 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\config.ini"
+			RelativePath=".\ReadMe.txt"
 			>
 		</File>
 		<File
-			RelativePath=".\ReadMe.txt"
+			RelativePath=".\server_config.ini"
 			>
 		</File>
 	</Files>
