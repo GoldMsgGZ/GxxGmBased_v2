@@ -4,6 +4,8 @@
 
 #pragma once
 
+class GB28181ServerSignalObject;
+
 
 // CGB28181ServerPlatformDlg ¶Ô»°¿ò
 class CGB28181ServerPlatformDlg : public CDialog
@@ -29,4 +31,9 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+
+public:
+	GB28181ServerSignalObject *object_;
+
+public:
 };

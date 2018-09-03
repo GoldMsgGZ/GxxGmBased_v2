@@ -6,6 +6,8 @@
 #include "GB28181ServerPlatform.h"
 #include "GB28181ServerPlatformDlg.h"
 
+#include "GB28181ServerSignalObject.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -49,6 +51,7 @@ END_MESSAGE_MAP()
 
 CGB28181ServerPlatformDlg::CGB28181ServerPlatformDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CGB28181ServerPlatformDlg::IDD, pParent)
+	, object_(new GB28181ServerSignalObject())
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -98,6 +101,8 @@ BOOL CGB28181ServerPlatformDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	// 读取配置文件，保存的连接信息
+	TCHAR 
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
