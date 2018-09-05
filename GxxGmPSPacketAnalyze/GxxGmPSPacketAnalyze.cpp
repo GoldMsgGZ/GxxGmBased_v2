@@ -11,7 +11,17 @@ static bool finish = false;
 
 void CALLBACK _ESFrameReceivedCallBack(GS_MpegPSHandle handle, StruESFrameInfo const *stESFrameInfo, StruPSFrameInfo const* stPSFrameInfo, void* pUserData)
 {
-	std::cout<<"解析PS包..."<<std::endl;
+	std::string media_type = "视频流";
+	if (stESFrameInfo->eType == GS_MEDIA_TYPE_AUDIO)
+		media_type = "音频流";
+	else if (stESFrameInfo->eType == GS_MEDIA_TYPE_VIDEO)
+		media_type = "视频流";
+	else
+		media_type = "其他流";
+	
+	std::cout<<"解析PS包..."<<media_type.c_str()<<" => 编码ID："<<stESFrameInfo->eCodec<<"，PTS："<<stESFrameInfo->nPTS<<"，数据长度："<<stESFrameInfo->nBufLen<<std::endl;
+
+	// 尝试播放？
 }
 
 int _tmain(int argc, _TCHAR* argv[])
