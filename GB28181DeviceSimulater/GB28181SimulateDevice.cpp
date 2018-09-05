@@ -34,6 +34,11 @@ int GB28181SimulateDevice::SetVideoDeviceName(const char *device_name)
 	return camera_->SetDeviceName(device_name);
 }
 
+int GB28181SimulateDevice::SetAudioDeviceName(const char *device_name)
+{
+	return mic_->SetDeviceName(device_name);
+}
+
 int GB28181SimulateDevice::GetDeviceCatlog(int &catlog_counts, StruCatalogInfo **catlogs)
 {
 	int errCode = 0;
@@ -204,6 +209,9 @@ int GB28181SimulateDevice::StartRealStream(STREAM_HANDLE streamHandle, StruMedia
 	// 启动真实设备，开始取流
 	camera_->OpenRealDevice();
 	camera_->Start(streamHandle, ssrc, AV_CODEC_ID_H264);
+
+	mic_->OpenRealDevice();
+	mic_->Start(streamHandle, ssrc, AV_CODEC_ID_PCM_MULAW);
 
 	return err;
 }

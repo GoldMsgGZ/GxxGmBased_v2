@@ -22,6 +22,7 @@ public:
 	int SetDeviceGbcode(const char *device_gbcode);
 	int SetVideoGbcode(const char *video_gbcode);
 	int SetVideoDeviceName(const char *device_name);
+	int SetAudioDeviceName(const char *device_name);
 
 public:
 	int GetDeviceCatlog(int &catlog_counts, StruCatalogInfo **catlogs);

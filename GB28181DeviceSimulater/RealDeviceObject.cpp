@@ -195,7 +195,7 @@ void RealDeviceObject::StreamHandler(void *param)
 		object->video_encoder_ctx_->height = object->video_decoder_ctx_->height;
 		object->video_encoder_ctx_->pix_fmt = AV_PIX_FMT_YUV420P;
 		object->video_encoder_ctx_->time_base.num = 1;
-		object->video_encoder_ctx_->time_base.den = 30;
+		object->video_encoder_ctx_->time_base.den = 20;
 		object->video_encoder_ctx_->bit_rate = object->video_decoder_ctx_->bit_rate;
 
 		if (object->dest_codec_id_ == AV_CODEC_ID_H264)
