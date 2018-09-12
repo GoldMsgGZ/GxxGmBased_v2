@@ -162,6 +162,14 @@ int GxxGmDSJSimulater::SendBaseInfo()
 		base_info_.battery_.c_str(), base_info_.storage_.c_str(), base_info_.cpu_.c_str(),
 		base_info_.version_.c_str(), base_info_.local_record_.c_str());
 
+	// 调用接口，发送透传信息
+	StruConnectParam connention_param;
+	strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, server_ip_.c_str());
+	strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, server_gbcode_.c_str());
+	connention_param.iPort = atoi(server_port_.c_str());
+
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str, msg_format, strlen(msg_format));
+
 	return errCode;
 }
 
