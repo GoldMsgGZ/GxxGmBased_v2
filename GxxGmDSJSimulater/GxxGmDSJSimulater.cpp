@@ -1,4 +1,8 @@
 #include "GxxGmDSJSimulater.h"
+#include <Windows.h>
+#include <sstream>
+
+#include "Poco/Base64Encoder.h"
 
 GxxGmDSJSimulater::GxxGmDSJSimulater()
 : agent_(NULL)
@@ -107,42 +111,48 @@ void GxxGmDSJSimulater::SetLocationInfo(DEVICE_LOCATION_INFO location_info)
 	location_info_.speed_				= location_info.speed_;
 }
 
-void GxxGmDSJSimulater::SetExceptionInfo(DEVICE_EXCEPTION_INFO exception_info)
+void GxxGmDSJSimulater::SetExceptionInfo(DEVICE_EXCEPTION_INFO excep_info)
 {
 	// 
-	exception_info_.battery_	= exception_info_.battery_;
-	exception_info_.ccd_		= exception_info_.ccd_;
-	exception_info_.storage_	= exception_info_.storage_;
-	exception_info_.mic_		= exception_info_.mic_;
+	exception_info_.battery_	= excep_info.battery_;
+	exception_info_.ccd_		= excep_info.ccd_;
+	exception_info_.storage_	= excep_info.storage_;
+	exception_info_.mic_		= excep_info.mic_;
 }
 
-int GxxGmDSJSimulater::SendBindUserInfo()
+int GxxGmDSJSimulater::SendBindUserInfo(const char *platform_id, const char *device_imei, const char *user_id, const char *password)
 {
-	int errCode = 0;
-
 	// 按照要求构建字符串
-	//const char *msg_format = "<SubCmdType>DeviceInfo</SubCmdType> \
-	//	<DeviceStates> \
-	//	<Carrieroperator>%s</Carrieroperator> \
-	//	<Nettype>%s</Nettype> \
-	//	<Signal>%s</Signal> \
-	//	<Battery>%s</Battery> \
-	//	<Storage>%s</Storage> \
-	//	<CPU>%s</CPU> \
-	//	<Version>%s</Version> \
-	//	<LocalRecord>%s</LocalRecord> \
-	//	</DeviceStates>";
+	const char *msg_format = "<SubCmdType>BindUser</SubCmdType> \
+							  <DeviceStates> \
+									<PlatformID>GM_SHENZHEN</PlatformID> \
+									<DeviceIMEI>358F27F145B</DeviceIMEI> \
+									<UserID>GM001</UserID> \
+									<Password>111111</Password> \
+							  </DeviceStates>";
 
-	//char msg[4096] = {0};
-	//sprintf_s(msg, 4096, msg_format, );
+	char msg[4096] = {0};
+	sprintf_s(msg, 4096, msg_format, 
+		platform_id, device_imei, user_id, password);
 
-	return errCode;
+	// 调用接口，发送透传信息
+	StruConnectParam connention_param;
+	strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, server_ip_.c_str());
+	strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, server_gbcode_.c_str());
+	connention_param.iPort = atoi(server_port_.c_str());
+
+	// 这里是否要考虑一下编码问题
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg_format, strlen(msg_format));
+	if (err != GS28181_ERR_SUCCESS)
+	{
+		// 
+	}
+
+	return err;
 }
 
 int GxxGmDSJSimulater::SendBaseInfo()
 {
-	int errCode = 0;
-
 	// 按照要求构建字符串
 	const char *msg_format = "<SubCmdType>DeviceInfo</SubCmdType> \
 							  <DeviceStates> \
@@ -168,15 +178,18 @@ int GxxGmDSJSimulater::SendBaseInfo()
 	strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, server_gbcode_.c_str());
 	connention_param.iPort = atoi(server_port_.c_str());
 
-	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str, msg_format, strlen(msg_format));
+	// 这里是否要考虑一下编码问题
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg_format, strlen(msg_format));
+	if (err != GS28181_ERR_SUCCESS)
+	{
+		// 
+	}
 
-	return errCode;
+	return err;
 }
 
 int GxxGmDSJSimulater::SendLocationInfo()
 {
-	int errCode = 0;
-
 	// 按照要求构建字符串
 	const char *msg_format = "<SubCmdType>LocationInfo</SubCmdType> \
 							  <Location> \
@@ -193,73 +206,183 @@ int GxxGmDSJSimulater::SendLocationInfo()
 									<LocationAvailable>%s</LocationAvailable> \
 							 </Location>";
 
-	return errCode;
+	// 这里比较特别，每次发之前，时间我们最好重新计算一下
+	SYSTEMTIME st;
+	GetLocalTime(&st);
+	char current_time[128] = {0};
+	sprintf_s(current_time, 128, "%d-%02d-%02d %02d-%02d-%02d.%03d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+
+	char msg[4096] = {0};
+	sprintf_s(msg, 4096, msg_format,
+		location_info_.division_ns_.c_str(), location_info_.division_ew_.c_str(), location_info_.radius_.c_str(),
+		location_info_.longitude_.c_str(), location_info_.latitude_.c_str(), location_info_.direction_.c_str(),
+		location_info_.speed_.c_str(), location_info_.height_.c_str(), current_time, location_info_.satellites_.c_str(),
+		location_info_.location_available_.c_str());
+
+	// 调用接口，发送透传信息
+	StruConnectParam connention_param;
+	strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, server_ip_.c_str());
+	strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, server_gbcode_.c_str());
+	connention_param.iPort = atoi(server_port_.c_str());
+
+	// 这里是否要考虑一下编码问题
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg_format, strlen(msg_format));
+	if (err != GS28181_ERR_SUCCESS)
+	{
+		// 
+	}
+
+	return err;
 }
 
 int GxxGmDSJSimulater::SendExceptionInfo()
 {
-	int errCode = 0;
-
 	const char *msg_format = "<SubCmdType>DeviceException</SubCmdType> \
-							<Exceptions> \
-							<Storage>NotFound</Storage> \
-							<Battery>Removed</Battery> \
-							<CCD>Error</CCD> \
-							<MIC>Error</MIC> \
-							</Exceptions>";
+							  <Exceptions> \
+									<Storage>NotFound</Storage> \
+									<Battery>Removed</Battery> \
+									<CCD>Error</CCD> \
+									<MIC>Error</MIC> \
+							  </Exceptions>";
 
-	return errCode;
+	char msg[4096] = {0};
+	sprintf_s(msg, 4096, msg_format,
+		exception_info_.storage_.c_str(), exception_info_.battery_.c_str(), exception_info_.ccd_.c_str(), exception_info_.mic_.c_str());
+
+	// 调用接口，发送透传信息
+	StruConnectParam connention_param;
+	strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, server_ip_.c_str());
+	strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, server_gbcode_.c_str());
+	connention_param.iPort = atoi(server_port_.c_str());
+
+	// 这里是否要考虑一下编码问题
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg_format, strlen(msg_format));
+	if (err != GS28181_ERR_SUCCESS)
+	{
+		// 
+	}
+
+	return err;
 }
 
 int GxxGmDSJSimulater::SendAlarmInfo()
 {
-	int errCode = 0;
-
 	const char *msg_format = "<SubCmdType>DeviceSOS</SubCmdType> \
-							<DeviceSOSInfo> \
-							<Datetime>2018-05-22 18:03:01</Datetime> \
-							<Location>  \
-							<DivisionNS>N/S</DivisionNS> \
-							<DivisionEW>E/W</DivisionEW> \
-							<Radius>3</Radius > \
-							<Longitude>12345678</Longitude> \
-							<Latitude>23456789</Latitude> \
-							<Direction>0</Direction> \
-							<Speed>3</Speed> \
-							<Height>3</Height> \
-							<LocationTime>2018-05-22 18:03:01.876</LocationTime> \
-							<Satellites>3</Satellites> \
-							<LocationAvailable>1</LocationAvailable> \
-							</Location> \
+							  <DeviceSOSInfo> \
+									<Datetime>%s</Datetime> \
+									<Location>  \
+										<DivisionNS>%s</DivisionNS> \
+										<DivisionEW>%s</DivisionEW> \
+										<Radius>%s</Radius > \
+										<Longitude>%s</Longitude> \
+										<Latitude>%s</Latitude> \
+										<Direction>%s</Direction> \
+										<Speed>%s</Speed> \
+										<Height>%s</Height> \
+										<LocationTime>%s</LocationTime> \
+										<Satellites>%s</Satellites> \
+										<LocationAvailable>%s</LocationAvailable> \
+									</Location> \
 							</DeviceSOSInfo>";
 
-	return errCode;
+	// 这里比较特别，每次发之前，时间我们最好重新计算一下
+	SYSTEMTIME st;
+	GetLocalTime(&st);
+	char current_time[128] = {0};
+	char current_datetime[128] = {0};
+	sprintf_s(current_time, 128, "%d-%02d-%02d %02d-%02d-%02d.%03d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+	sprintf_s(current_datetime, 128, "%d-%02d-%02d %02d-%02d-%02d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+
+	char msg[4096] = {0};
+	sprintf_s(msg, 4096, msg_format, current_datetime,
+		location_info_.division_ns_.c_str(), location_info_.division_ew_.c_str(), location_info_.radius_.c_str(),
+		location_info_.longitude_.c_str(), location_info_.latitude_.c_str(), location_info_.direction_.c_str(),
+		location_info_.speed_.c_str(), location_info_.height_.c_str(), current_time, location_info_.satellites_.c_str(),
+		location_info_.location_available_.c_str());
+
+	// 调用接口，发送透传信息
+	StruConnectParam connention_param;
+	strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, server_ip_.c_str());
+	strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, server_gbcode_.c_str());
+	connention_param.iPort = atoi(server_port_.c_str());
+
+	// 这里是否要考虑一下编码问题
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg_format, strlen(msg_format));
+	if (err != GS28181_ERR_SUCCESS)
+	{
+		// 
+	}
+
+	return err;
 }
 
-int GxxGmDSJSimulater::SendFaceInfo()
+int GxxGmDSJSimulater::SendFaceInfo(const char *face_img, int face_img_len)
 {
-	int errCode = 0;
-
 	const char *msg_format = "<SubCmdType>FaceRecognition</SubCmdType> \
-							<FaceInfo> \
-							<FaceImageData>1A2B3C4D5F1A2B3C4D5F…</FaceImageData> \
-							<DateTime>2018-08-15 18:15:07</DateTime> \
-							</FaceInfo>";
+							  <FaceInfo> \
+									<FaceImageData>%s</FaceImageData> \
+									<DateTime>%s</DateTime> \
+							  </FaceInfo>";
 
-	return errCode;
+	SYSTEMTIME st;
+	GetLocalTime(&st);
+	char current_datetime[128] = {0};
+	sprintf_s(current_datetime, 128, "%d-%02d-%02d %02d-%02d-%02d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+
+	// 人脸数据base64编码
+	std::ostringstream str;
+	Poco::Base64Encoder encoder(str);
+	encoder<<std::string(face_img, face_img_len);
+	encoder.close();
+
+	char msg[4096] = {0};
+	sprintf_s(msg, 4096, msg_format, str.str(), current_datetime);
+
+	// 调用接口，发送透传信息
+	StruConnectParam connention_param;
+	strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, server_ip_.c_str());
+	strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, server_gbcode_.c_str());
+	connention_param.iPort = atoi(server_port_.c_str());
+
+	// 这里是否要考虑一下编码问题
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg_format, strlen(msg_format));
+	if (err != GS28181_ERR_SUCCESS)
+	{
+		// 
+	}
+
+	return err;
 }
 
 int GxxGmDSJSimulater::SendCarIdInfo()
 {
-	int errCode = 0;
-
+	return -1;
 	const char *msg_format = "<SubCmdType>CarIDRecognition</SubCmdType> \
 							<CarIDInfo> \
 							<CarIDImageData>1A2B3C4D5F1A2B3C4D5F…</CarIDImageData> \
 							<DateTime>2018-08-15 18:15:07</DateTime> \
 							</CarIDInfo>";
 
-	return errCode;
+	char msg[4096] = {0};
+	sprintf_s(msg, 4096, msg_format,
+		base_info_.carrieroperator_.c_str(), base_info_.net_type_.c_str(), base_info_.signal_.c_str(),
+		base_info_.battery_.c_str(), base_info_.storage_.c_str(), base_info_.cpu_.c_str(),
+		base_info_.version_.c_str(), base_info_.local_record_.c_str());
+
+	// 调用接口，发送透传信息
+	StruConnectParam connention_param;
+	strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, server_ip_.c_str());
+	strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, server_gbcode_.c_str());
+	connention_param.iPort = atoi(server_port_.c_str());
+
+	// 这里是否要考虑一下编码问题
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg_format, strlen(msg_format));
+	if (err != GS28181_ERR_SUCCESS)
+	{
+		// 
+	}
+
+	return err;
 }
 
 void GxxGmDSJSimulater::_AgentLogCallBack(EnumLogLevel eLevel, const char * szTemp, int iLen, void * pUserData)

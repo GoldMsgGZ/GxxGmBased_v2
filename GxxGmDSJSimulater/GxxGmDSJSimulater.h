@@ -24,11 +24,11 @@ public:
 	// 设置设备定位信息
 	void SetLocationInfo(DEVICE_LOCATION_INFO location_info);
 	// 设置设备异常信息
-	void SetExceptionInfo(DEVICE_EXCEPTION_INFO exception_info);
+	void SetExceptionInfo(DEVICE_EXCEPTION_INFO excep_info);
 
 public:
 	// 发送绑定用户请求
-	int SendBindUserInfo();
+	int SendBindUserInfo(const char *platform_id, const char *device_imei, const char *user_id, const char *password);
 	// 发送设备基本信息
 	int SendBaseInfo();
 	// 发送设备定位信息
@@ -38,7 +38,7 @@ public:
 	// 发送设备告警信息
 	int SendAlarmInfo();
 	// 发送人脸识别信息
-	int SendFaceInfo();
+	int SendFaceInfo(const char *face_img, int face_img_len);
 	// 发送车牌识别信息
 	int SendCarIdInfo();
 
