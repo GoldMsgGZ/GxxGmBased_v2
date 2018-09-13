@@ -82,6 +82,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GxxGmDSJSimulater", "GxxGmDSJSimulater\GxxGmDSJSimulater.vcproj", "{D70B8082-885A-4796-AC4B-FD3BA60A227D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GxxGmDSJSimulaterContainer", "GxxGmDSJSimulaterContainer\GxxGmDSJSimulaterContainer.vcproj", "{B2A4FDC6-7DA9-4734-AB94-6E9E6D19A719}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D70B8082-885A-4796-AC4B-FD3BA60A227D} = {D70B8082-885A-4796-AC4B-FD3BA60A227D}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

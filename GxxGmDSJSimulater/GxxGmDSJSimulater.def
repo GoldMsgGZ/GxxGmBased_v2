@@ -1,0 +1,23 @@
+LIBRARY	"GxxGmDSJSimulater"
+
+EXPORTS
+	??0GxxGmDSJSimulater@@QAE@XZ
+	;??0_DEVICE_BASE_INFO_@@QAE@XZ
+	;??1_DEVICE_BASE_INFO_@@QAE@XZ
+	;??0_DEVICE_LOCATION_INFO_@@QAE@XZ
+	;??1_DEVICE_LOCATION_INFO_@@QAE@XZ
+	;??0_DEVICE_EXCEPTION_INFO_@@QAE@XZ
+	;??1_DEVICE_EXCEPTION_INFO_@@QAE@XZ
+	??1GxxGmDSJSimulater@@QAE@XZ
+	?Initialize@GxxGmDSJSimulater@@QAEHPBD0000000@Z
+	?Destroy@GxxGmDSJSimulater@@QAEXXZ
+	?SetBaseInfo@GxxGmDSJSimulater@@QAEXU_DEVICE_BASE_INFO_@@@Z
+	?SetLocationInfo@GxxGmDSJSimulater@@QAEXU_DEVICE_LOCATION_INFO_@@@Z
+	?SetExceptionInfo@GxxGmDSJSimulater@@QAEXU_DEVICE_EXCEPTION_INFO_@@@Z
+	?SendBindUserInfo@GxxGmDSJSimulater@@QAEHPBD000@Z
+	?SendBaseInfo@GxxGmDSJSimulater@@QAEHXZ
+	?SendLocationInfo@GxxGmDSJSimulater@@QAEHXZ
+	?SendExceptionInfo@GxxGmDSJSimulater@@QAEHXZ
+	?SendAlarmInfo@GxxGmDSJSimulater@@QAEHXZ
+	?SendFaceInfo@GxxGmDSJSimulater@@QAEHPBDH@Z
+	?SendCarIdInfo@GxxGmDSJSimulater@@QAEHXZ

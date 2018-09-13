@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include "Poco/Base64Encoder.h"
+#include "Poco/Thread.h"
 
 GxxGmDSJSimulater::GxxGmDSJSimulater()
 : agent_(NULL)
@@ -77,7 +78,8 @@ int GxxGmDSJSimulater::Initialize(const char *local_ip, const char *local_port, 
 
 void GxxGmDSJSimulater::Destroy()
 {
-	// 
+	// 先发送命令，停止心跳发送，并且停止基础信息、定位信息的推送
+
 	GB28181Agent_Stop(agent_);
 	GB28181Agent_Uninit(agent_);
 }
@@ -441,6 +443,14 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_DevInfoQueryCB(SESSION_HANDLE hSession, con
 		{
 			// 查询目录响应失败
 		}
+
+		// 查询目录响应成功
+		// 开始向上推送设备状态信息和定位信息
+		// 使用Poco的多线程框架做吧
+		gb28181_heartbeat_thread_.start(simulater->GB28181HeartbeatThreadFun, simulater);
+		Sleep(10);
+		gb28181_extend_info_thread_.start(simulater->GB28181ExtendInfoThreadFun, simulater);
+		Sleep(10);
 	}
 	else if (stuQuery->eType == EnumQueryType::eQUE_DEV_RECORDINDEX)
 	{
@@ -491,4 +501,18 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_ExtendRqeustCallBack(SESSION_HANDLE hSessio
 	GxxGmDSJSimulater *simulater = (GxxGmDSJSimulater *)pUserData;
 
 	return SIP_RESPONSE_CODE_SUCCESS;
+}
+
+void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
+{
+	// 
+	GxxGmDSJSimulater *simulater = (GxxGmDSJSimulater *)param;
+
+	while (simulater)
+}
+
+void GxxGmDSJSimulater::GB28181ExtendInfoThreadFun(void *param)
+{
+	// 
+	GxxGmDSJSimulater *simulater = (GxxGmDSJSimulater *)param;
 }

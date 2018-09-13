@@ -52,6 +52,15 @@ public:
 	static SIP_REPSOND_CODE _ExtendRqeustCallBack(SESSION_HANDLE hSession, EnumExtendType eType, const char * czTargetDevID, void * pMsg, void * pUserData);
 
 public:
+	static void GB28181HeartbeatThreadFun(void *param);
+	Poco::Thread gb28181_heartbeat_thread_;
+	bool is_gb28181_heartbeat_thread_need_exit_;
+
+	static void GB28181ExtendInfoThreadFun(void *param);
+	Poco::Thread gb28181_extend_info_thread_;
+	bool is_gb28181_extend_info_thread_need_exit_;
+
+public:
 	std::string local_ip_;			// 执法仪IP
 	std::string local_port_;		// 执法仪端口号
 	std::string local_gbcode_;		// 执法仪国标码
