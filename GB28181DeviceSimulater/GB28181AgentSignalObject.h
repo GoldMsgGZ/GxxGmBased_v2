@@ -38,7 +38,7 @@ public:
 public:
 	GB28181SimulateDevice *simulate_device_;
 
-private:
+public:
 	AGENT_HANDLE handle_;
 
 	std::string local_ip_;
@@ -51,6 +51,9 @@ private:
 
 	std::string authen_username_;
 	std::string authen_password_;
+
+public:
+	HANDLE hHeartBeat_;
 };
 
 #endif//_GB28181AgentSignalObject_H_

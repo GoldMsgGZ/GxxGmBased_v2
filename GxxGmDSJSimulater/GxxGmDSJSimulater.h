@@ -5,6 +5,13 @@
 #include "GB28181AgentSDK.h"
 #include <string>
 
+#include "Poco/Thread.h"
+#include "Poco/Logger.h"
+#include "Poco/PatternFormatter.h"
+#include "Poco/FormattingChannel.h"
+#include "Poco/FileChannel.h"
+#include "Poco/AutoPtr.h"
+
 class GxxGmDSJSimulater
 {
 public:
@@ -56,10 +63,6 @@ public:
 	Poco::Thread gb28181_heartbeat_thread_;
 	bool is_gb28181_heartbeat_thread_need_exit_;
 
-	static void GB28181ExtendInfoThreadFun(void *param);
-	Poco::Thread gb28181_extend_info_thread_;
-	bool is_gb28181_extend_info_thread_need_exit_;
-
 public:
 	std::string local_ip_;			// 执法仪IP
 	std::string local_port_;		// 执法仪端口号
@@ -71,6 +74,10 @@ public:
 	std::string password_;			// 鉴权密码
 
 	AGENT_HANDLE agent_;
+
+public:
+	// 简单粗暴一点，文档日志就直接普普通通的写文档
+	HANDLE log_file_handle_;
 
 public:
 	DEVICE_BASE_INFO base_info_;

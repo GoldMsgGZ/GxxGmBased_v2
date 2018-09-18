@@ -3,10 +3,12 @@
 #include <sstream>
 
 #include "Poco/Base64Encoder.h"
-#include "Poco/Thread.h"
+
 
 GxxGmDSJSimulater::GxxGmDSJSimulater()
 : agent_(NULL)
+, is_gb28181_heartbeat_thread_need_exit_(false)
+, log_file_handle_(NULL)
 {
 	// 
 }
@@ -25,6 +27,7 @@ int GxxGmDSJSimulater::Initialize(const char *local_ip, const char *local_port, 
 	if (agent_ == NULL)
 	{
 		// 
+		printf("[%s]初始化28181协议栈失败！\n", local_gbcode);
 		return -1;
 	}
 
@@ -40,27 +43,60 @@ int GxxGmDSJSimulater::Initialize(const char *local_ip, const char *local_port, 
 	GS28181_ERR err = GB28181Agent_Start(agent_, local_ip, atoi(local_port), local_gbcode, EnumTransType::eTYPE_UDP);
 	if (err != GS28181_ERR_SUCCESS)
 	{
+		printf("[%s]启动28181协议栈失败！错误码：%d\n", local_gbcode, err);
 		GB28181Agent_Uninit(agent_);
 		return err;
 	}
 
 	StruRegistMsg reg_msg;
-	memset(&reg_msg, 0, sizeof(StruRegistMsg));
-
-	reg_msg.iExpires = 31536000;	// 1年
-	strcpy_s(reg_msg.szUserName, 64, username);
-	strcpy_s(reg_msg.szPassword, 64, password);
-	strcpy_s(reg_msg.stuCnnParam.szIP, 64, server_ip);
-	reg_msg.stuCnnParam.iPort = atoi(server_port);
-	strcpy_s(reg_msg.stuCnnParam.szGBCode, 64, server_gbcode);
+	
+	reg_msg.iExpires = 86400;	// 1年
+	strcpy_s(reg_msg.szUserName, STR_USERNAME_LEN, username);
+	strcpy_s(reg_msg.szPassword, STR_PASSWORD_LEN, password);
+	strcpy_s(reg_msg.stuCnnParam.szIP, STR_IPADDRESS_LEN, server_ip);
+	reg_msg.stuCnnParam.iPort = (unsigned int)atoi(server_port);
+	strcpy_s(reg_msg.stuCnnParam.szGBCode, STR_GBCODE_LEN, server_gbcode);
 	
 	char date_time[4096] = {0};
 	err = GB28181Agent_Register(agent_, &reg_msg, date_time);
 	if (err != GS28181_ERR_SUCCESS)
 	{
+		printf("[%s]注册到接入网关失败！错误码：%d\n", local_gbcode, err);
 		GB28181Agent_Stop(agent_);
 		GB28181Agent_Uninit(agent_);
 		return err;
+	}
+
+	printf("[%s]注册到接入网关成功！错误码：%d\n", local_gbcode, err);
+
+	// 初始化日志
+	SYSTEMTIME st;
+	GetLocalTime(&st);
+	char current_time[128] = {0};
+	sprintf_s(current_time, 128, "%d-%02d-%02d %02d-%02d-%02d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+
+	char log_file_name[4096] = {0};
+	sprintf_s(log_file_name, 4096, "%s.log", current_time, local_gbcode);
+
+	char current_program_path[4096] = {0};
+	GetModuleFileNameA(NULL, current_program_path, 4096);
+	std::string tmp = current_program_path;
+	int pos = tmp.find_last_of('\\');
+
+	std::string log_path = tmp.substr(0, pos + 1);
+	log_path.append("log");
+	CreateDirectoryA(log_path.c_str(), NULL);
+	log_path.append("\\");
+	log_path.append(local_gbcode);
+	CreateDirectoryA(log_path.c_str(), NULL);
+	log_path.append("\\");
+	log_path.append(log_file_name);
+
+	log_file_handle_ = CreateFileA(log_path.c_str(), GENERIC_ALL, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (log_file_handle_ == INVALID_HANDLE_VALUE)
+	{
+		errCode = GetLastError();
+		printf("[%s]创建日志文件失败！\n", local_gbcode);
 	}
 
 	// 保存参数
@@ -79,9 +115,27 @@ int GxxGmDSJSimulater::Initialize(const char *local_ip, const char *local_port, 
 void GxxGmDSJSimulater::Destroy()
 {
 	// 先发送命令，停止心跳发送，并且停止基础信息、定位信息的推送
+	is_gb28181_heartbeat_thread_need_exit_ = true;
+	gb28181_heartbeat_thread_.join();
+
+	// 反注册
+	StruRegistMsg reg_msg;
+
+	reg_msg.iExpires = 0;	// 1年
+	strcpy_s(reg_msg.szUserName, STR_USERNAME_LEN, username_.c_str());
+	strcpy_s(reg_msg.szPassword, STR_PASSWORD_LEN, password_.c_str());
+	strcpy_s(reg_msg.stuCnnParam.szIP, STR_IPADDRESS_LEN, server_ip_.c_str());
+	reg_msg.stuCnnParam.iPort = (unsigned int)atoi(server_port_.c_str());
+	strcpy_s(reg_msg.stuCnnParam.szGBCode, STR_GBCODE_LEN, server_gbcode_.c_str());
+
+	char date_time[4096] = {0};
+	GB28181Agent_Register(agent_, &reg_msg, date_time);
 
 	GB28181Agent_Stop(agent_);
 	GB28181Agent_Uninit(agent_);
+
+	CloseHandle(log_file_handle_);
+	log_file_handle_ = NULL;
 }
 
 void GxxGmDSJSimulater::SetBaseInfo(DEVICE_BASE_INFO base_info)
@@ -94,7 +148,7 @@ void GxxGmDSJSimulater::SetBaseInfo(DEVICE_BASE_INFO base_info)
 	base_info_.net_type_		= base_info.net_type_;
 	base_info_.signal_			= base_info.signal_;
 	base_info_.storage_			= base_info.storage_;
-	base_info.version_			= base_info.version_;
+	base_info_.version_			= base_info.version_;
 }
 
 void GxxGmDSJSimulater::SetLocationInfo(DEVICE_LOCATION_INFO location_info)
@@ -144,10 +198,11 @@ int GxxGmDSJSimulater::SendBindUserInfo(const char *platform_id, const char *dev
 	connention_param.iPort = atoi(server_port_.c_str());
 
 	// 这里是否要考虑一下编码问题
-	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg_format, strlen(msg_format));
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg, strlen(msg));
 	if (err != GS28181_ERR_SUCCESS)
 	{
 		// 
+		printf("[%s]发送设备绑定请求失败！错误码：%d\n", local_gbcode_.c_str(), err);
 	}
 
 	return err;
@@ -181,10 +236,11 @@ int GxxGmDSJSimulater::SendBaseInfo()
 	connention_param.iPort = atoi(server_port_.c_str());
 
 	// 这里是否要考虑一下编码问题
-	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg_format, strlen(msg_format));
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg, strlen(msg));
 	if (err != GS28181_ERR_SUCCESS)
 	{
 		// 
+		printf("[%s]发送设备基础信息失败！错误码：%d\n", local_gbcode_.c_str(), err);
 	}
 
 	return err;
@@ -212,7 +268,7 @@ int GxxGmDSJSimulater::SendLocationInfo()
 	SYSTEMTIME st;
 	GetLocalTime(&st);
 	char current_time[128] = {0};
-	sprintf_s(current_time, 128, "%d-%02d-%02d %02d-%02d-%02d.%03d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+	sprintf_s(current_time, 128, "%d-%02d-%02d %02d:%02d:%02d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
 
 	char msg[4096] = {0};
 	sprintf_s(msg, 4096, msg_format,
@@ -228,10 +284,11 @@ int GxxGmDSJSimulater::SendLocationInfo()
 	connention_param.iPort = atoi(server_port_.c_str());
 
 	// 这里是否要考虑一下编码问题
-	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg_format, strlen(msg_format));
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg, strlen(msg));
 	if (err != GS28181_ERR_SUCCESS)
 	{
 		// 
+		printf("[%s]发送设备定位信息失败！错误码：%d\n", local_gbcode_.c_str(), err);
 	}
 
 	return err;
@@ -258,10 +315,11 @@ int GxxGmDSJSimulater::SendExceptionInfo()
 	connention_param.iPort = atoi(server_port_.c_str());
 
 	// 这里是否要考虑一下编码问题
-	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg_format, strlen(msg_format));
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg, strlen(msg));
 	if (err != GS28181_ERR_SUCCESS)
 	{
 		// 
+		printf("[%s]发送设备异常信息失败！错误码：%d\n", local_gbcode_.c_str(), err);
 	}
 
 	return err;
@@ -309,10 +367,11 @@ int GxxGmDSJSimulater::SendAlarmInfo()
 	connention_param.iPort = atoi(server_port_.c_str());
 
 	// 这里是否要考虑一下编码问题
-	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg_format, strlen(msg_format));
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg, strlen(msg));
 	if (err != GS28181_ERR_SUCCESS)
 	{
 		// 
+		printf("[%s]发送设备告警信息失败！错误码：%d\n", local_gbcode_.c_str(), err);
 	}
 
 	return err;
@@ -347,10 +406,11 @@ int GxxGmDSJSimulater::SendFaceInfo(const char *face_img, int face_img_len)
 	connention_param.iPort = atoi(server_port_.c_str());
 
 	// 这里是否要考虑一下编码问题
-	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg_format, strlen(msg_format));
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg, strlen(msg));
 	if (err != GS28181_ERR_SUCCESS)
 	{
 		// 
+		printf("[%s]发送人脸识别请求失败！错误码：%d\n", local_gbcode_.c_str(), err);
 	}
 
 	return err;
@@ -378,10 +438,11 @@ int GxxGmDSJSimulater::SendCarIdInfo()
 	connention_param.iPort = atoi(server_port_.c_str());
 
 	// 这里是否要考虑一下编码问题
-	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg_format, strlen(msg_format));
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg, strlen(msg));
 	if (err != GS28181_ERR_SUCCESS)
 	{
 		// 
+		printf("[%s]发送车牌识别请求失败！错误码：%d\n", local_gbcode_.c_str(), err);
 	}
 
 	return err;
@@ -390,6 +451,17 @@ int GxxGmDSJSimulater::SendCarIdInfo()
 void GxxGmDSJSimulater::_AgentLogCallBack(EnumLogLevel eLevel, const char * szTemp, int iLen, void * pUserData)
 {
 	// 这是所有的SIP通信日志，可以考虑写入日志文件
+	GxxGmDSJSimulater *simulater = (GxxGmDSJSimulater *)pUserData;
+
+	// 屏幕输出
+	printf("%s\n", szTemp);
+
+	// dbgview输出
+	OutputDebugStringA(szTemp);
+
+	// 日志文件输出
+	DWORD written = 0;
+	WriteFile(simulater->log_file_handle_, szTemp, iLen, &written, NULL);
 }
 
 SIP_REPSOND_CODE GxxGmDSJSimulater::_DevInfoQueryCB(SESSION_HANDLE hSession, const char * czSrvGBCode, StruQueryReqDescri * stuQuery, void * pUserData)
@@ -406,10 +478,62 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_DevInfoQueryCB(SESSION_HANDLE hSession, con
 	if (stuQuery->eType == EnumQueryType::eQUE_DEV_INFO)
 	{
 		// 设备信息查询
+		StruDeviceInfo stuInfo;
+		ZeroMemory(&stuInfo, sizeof(StruDeviceInfo));
+		strcpy_s(stuInfo.czGBCode, STR_GBCODE_LEN, stuQuery->czGBCode);
+
+		stuInfo.bResultOK = true;
+		strcpy_s(stuInfo.czDeviceName, STR_NAME_LEN, "高新兴国迈模拟摄像头");
+		strcpy_s(stuInfo.czManufacturer, STR_MANUFACTURER_LEN, "GOSUNCN");
+		strcpy_s(stuInfo.czModel, STR_MODEL_LEN, "GXX-GM-SIMULATE-001");
+		strcpy_s(stuInfo.czFirmware, STR_FIREWARE_LEN, "V1.0, build 0001");
+		stuInfo.iChanal = 1;
+
+		GS28181_ERR err = GB28181Agent_RespondDevInfo(hSession, &stuInfo);
+		if (err != GS28181_ERR_SUCCESS)
+		{
+			printf("[%s]响应设备信息查询失败！错误码：%d\n", simulater->local_gbcode_.c_str(), err);
+			return SIP_RESPONSE_CODE_SUCCESS;
+		}
 	}
 	else if (stuQuery->eType == EnumQueryType::eQUE_DEV_STATUS)
 	{
 		// 设备状态查询
+		StruDeviceStatus stuStatus;
+		ZeroMemory(&stuStatus, sizeof(StruDeviceStatus));
+		strcpy_s(stuStatus.czGBCode, STR_GBCODE_LEN, stuQuery->czGBCode);
+
+		SYSTEMTIME st;
+		GetLocalTime(&st);
+		char device_datetime[STR_DATETIME_LEN] = {0};
+		sprintf_s(device_datetime, STR_DATETIME_LEN, "%d-%02d-%02dT%02d:%02d:%02d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+
+		strcpy_s(stuStatus.czDevDateTime, STR_DATETIME_LEN, device_datetime);
+		strcpy_s(stuStatus.czErrReason, STR_ERRREASON_LEN, "NO ERROR");
+		stuStatus.bResult = true;
+		stuStatus.bOnLine = true;
+		stuStatus.bRecord = false;
+		stuStatus.bEncode = false;
+		stuStatus.bStatusOK = true;
+		stuStatus.iAlarmNum = 1;
+
+		StruAlarmStatus * stuAlarm = new StruAlarmStatus;
+		ZeroMemory(stuAlarm, sizeof(StruAlarmStatus));
+		strcpy_s(stuAlarm->czAlarmID, STR_ALARMID_LEN, simulater->local_gbcode_.c_str());	// 报警设备编码
+		stuAlarm->eStatus = eONDUTY;
+
+		stuStatus.ptrAlarm = stuAlarm;
+
+		GS28181_ERR err = GB28181Agent_RespondDevStatus(hSession, &stuStatus);
+
+		delete stuAlarm;
+		stuAlarm = NULL;
+
+		if (err != GS28181_ERR_SUCCESS)
+		{
+			printf("[%s]响应设备状态查询失败！错误码：%d\n", simulater->local_gbcode_.c_str(), err);
+			return SIP_RESPONSE_CODE_SUCCESS;
+		}
 	}
 	else if (stuQuery->eType == EnumQueryType::eQUE_DEV_CATALOG)
 	{
@@ -418,39 +542,59 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_DevInfoQueryCB(SESSION_HANDLE hSession, con
 		strcpy_s(stuCata.czGBCode, STR_GBCODE_LEN, stuQuery->czGBCode);
 
 		stuCata.iSumNum = 1;
-		stuCata.ptrCatalog = new StruCatalogInfo;
-		strcpy_s(stuCata.ptrCatalog->czAddress, STR_ADDRESS_LEN, "广州市黄埔区开创大道2819号");
-		strcpy_s(stuCata.ptrCatalog->czBlock, STR_BLOCK_LEN, "联合街道暹岗警区");
-		strcpy_s(stuCata.ptrCatalog->czCivilCode, STR_CIVILCODE_LEN, "440100");
-		strcpy_s(stuCata.ptrCatalog->czDeviceName, STR_NAME_LEN, "高新兴国迈G4执法记录仪");
-		strcpy_s(stuCata.ptrCatalog->czGBCode, STR_GBCODE_LEN, simulater->local_gbcode_.c_str());
-		strcpy_s(stuCata.ptrCatalog->czIPAddress, STR_IPADDRESS_LEN, simulater->local_ip_.c_str());
-		strcpy_s(stuCata.ptrCatalog->czManufacturer, STR_MANUFACTURER_LEN, "高新兴国迈科技有限公司");
-		strcpy_s(stuCata.ptrCatalog->czModel, STR_MODEL_LEN, "DSJ-G4");
-		strcpy_s(stuCata.ptrCatalog->czOwner, STR_OWNER_LEN, "440000");
-		strcpy_s(stuCata.ptrCatalog->czParentID, STR_PARENTID_LEN, simulater->local_gbcode_.c_str());
-		stuCata.ptrCatalog->dLongitude = 0;
-		stuCata.ptrCatalog->dLatitude = 0;
-		stuCata.ptrCatalog->iParental = 0;
-		stuCata.ptrCatalog->iPort = atoi(simulater->local_port_.c_str());
-		stuCata.ptrCatalog->iRegisterWay = 1;
-		stuCata.ptrCatalog->iSafetyWay = 0;
-		stuCata.ptrCatalog->iSecrecy = 0;
-		stuCata.ptrCatalog->iStatus = 1;
+		
+		StruCatalogInfo *catlog = new StruCatalogInfo[stuCata.iSumNum];
+		memset(catlog, 0, sizeof(StruCatalogInfo) * stuCata.iSumNum);
+
+		strcpy_s(catlog[0].czGBCode, STR_GBCODE_LEN, simulater->local_gbcode_.c_str());
+		strcpy_s(catlog[0].czDeviceName, STR_NAME_LEN, "高新兴国迈G4执法记录仪");
+		strcpy_s(catlog[0].czModel, STR_MODEL_LEN, "DSJ-G4");
+		strcpy_s(catlog[0].czManufacturer, STR_MANUFACTURER_LEN, "高新兴国迈科技有限公司");
+		strcpy_s(catlog[0].czOwner, STR_OWNER_LEN, "440000");
+		strcpy_s(catlog[0].czCivilCode, STR_CIVILCODE_LEN, "440100");
+		strcpy_s(catlog[0].czBlock, STR_BLOCK_LEN, "联合街道暹岗警区");
+		//strcpy_s(catlog[0].czAddress, STR_ADDRESS_LEN, "广州市黄埔区开创大道2819号");
+		strcpy_s(catlog[0].czAddress, STR_ADDRESS_LEN, "GuangZhou HuangpPu KaiChuang Road No.2819");
+		catlog[0].iParental = 0;
+		strcpy_s(catlog[0].czParentID, STR_PARENTID_LEN, simulater->local_gbcode_.c_str());
+		catlog[0].iSafetyWay = 0;
+		catlog[0].iRegisterWay = 1;
+		strcpy_s(catlog[0].czCertNum, STR_CERTNUM_LEN, "CertNum 0");
+		catlog[0].iCertifiable = 0;
+		catlog[0].iErrCode = 400;
+		strcpy_s(catlog[0].czEndTime, STR_DATETIME_LEN, "2010-11-11T19:46:17");
+		catlog[0].iSecrecy = 0;
+		strcpy_s(catlog[0].czIPAddress, STR_IPADDRESS_LEN, simulater->local_ip_.c_str());
+		catlog[0].iPort = atoi(simulater->local_port_.c_str());
+		strcpy_s(catlog[0].czPassword, STR_PASSWORD_LEN, "Password 0");
+		catlog[0].iStatus = 1;
+		catlog[0].dLongitude = 0;
+		catlog[0].dLatitude = 0;
+		catlog[0].iPtzType = 2;
+		catlog[0].iRoomType = 3;
+
+		stuCata.ptrCatalog = catlog;		
 
 		GS28181_ERR err = GB28181Agent_RespondDevCatalog(hSession, &stuCata, 0, false);
-		if(GS28181_ERR_SUCCESS == err)
+
+		delete [] catlog;
+		catlog = NULL;
+
+		if(GS28181_ERR_SUCCESS != err)
 		{
 			// 查询目录响应失败
+			printf("[%s]响应设备目录查询失败！错误码：%d\n", simulater->local_gbcode_.c_str(), err);
+			return SIP_RESPONSE_CODE_SUCCESS;
 		}
 
 		// 查询目录响应成功
 		// 开始向上推送设备状态信息和定位信息
 		// 使用Poco的多线程框架做吧
-		gb28181_heartbeat_thread_.start(simulater->GB28181HeartbeatThreadFun, simulater);
-		Sleep(10);
-		gb28181_extend_info_thread_.start(simulater->GB28181ExtendInfoThreadFun, simulater);
-		Sleep(10);
+		if (!simulater->gb28181_heartbeat_thread_.isRunning())
+		{
+			simulater->gb28181_heartbeat_thread_.start(simulater->GB28181HeartbeatThreadFun, simulater);
+			Sleep(10);
+		}
 	}
 	else if (stuQuery->eType == EnumQueryType::eQUE_DEV_RECORDINDEX)
 	{
@@ -486,6 +630,13 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_StreamRequestCB(STREAM_HANDLE hStream, cons
 {
 	GxxGmDSJSimulater *simulater = (GxxGmDSJSimulater *)pUserData;
 
+	// 先分析输入流信息
+	//if (eRequest == eSTREAM_REALPLAY)
+	//{
+	//	StruMediaInfo out_media_info;
+	//	ZeroMemory(&out_media_info, sizeof(StruMediaInfo));
+	//}
+
 	return SIP_RESPONSE_CODE_SUCCESS;
 }
 
@@ -500,6 +651,8 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_ExtendRqeustCallBack(SESSION_HANDLE hSessio
 {
 	GxxGmDSJSimulater *simulater = (GxxGmDSJSimulater *)pUserData;
 
+	// 这里是上面透传下来的吧
+
 	return SIP_RESPONSE_CODE_SUCCESS;
 }
 
@@ -508,11 +661,40 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 	// 
 	GxxGmDSJSimulater *simulater = (GxxGmDSJSimulater *)param;
 
-	while (simulater)
-}
+	StruConnectParam connention_param;
+	strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, simulater->server_ip_.c_str());
+	strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, simulater->server_gbcode_.c_str());
+	connention_param.iPort = atoi(simulater->server_port_.c_str());
 
-void GxxGmDSJSimulater::GB28181ExtendInfoThreadFun(void *param)
-{
-	// 
-	GxxGmDSJSimulater *simulater = (GxxGmDSJSimulater *)param;
+	int heartbeat_count = 0;
+	int baseinfo_count = 0;
+	while (!simulater->is_gb28181_heartbeat_thread_need_exit_)
+	{
+		Sleep(1000);
+		++heartbeat_count;
+
+		if (heartbeat_count == 30)
+		{
+			// 发送保活心跳
+			StruErrorList *error_list = NULL;
+			GS28181_ERR err = GB28181Agent_HeartBeat(simulater->agent_, &connention_param, 1, NULL);
+			if (err != GS28181_ERR_SUCCESS)
+			{
+				printf("[%s]发送28181保活心跳失败！\n", simulater->local_gbcode_.c_str());
+			}
+
+			heartbeat_count = 0;
+		}
+
+		if (baseinfo_count == 5)
+		{
+			// 发送设备基本信息
+			simulater->SendBaseInfo();
+
+			// 发送定位信息
+			simulater->SendLocationInfo();
+
+			baseinfo_count = 0;
+		}
+	}
 }

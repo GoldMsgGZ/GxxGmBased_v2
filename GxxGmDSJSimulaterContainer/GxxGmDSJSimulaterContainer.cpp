@@ -1,10 +1,14 @@
 #include <iostream>
 #include <string>
+#include <vector>
 #include <Windows.h>
 #include "..\GxxGmDSJSimulater\GxxGmDSJSimulater.h"
 
 int main(int argc, const char *argv[])
 {
+	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V1.0\n");
+	system("pause");
+
 	// 首先根据配置文件加载数据
 	char current_program_path[4096] = {0};
 	GetModuleFileNameA(NULL, current_program_path, 4096);
@@ -41,6 +45,8 @@ int main(int argc, const char *argv[])
 	local_port_start = GetPrivateProfileIntA("GxxGmDSJSimulater", "DEVICE_PORT_START", 9000, config_path.c_str());
 	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "GBCODE_PRE", "00000000000000", local_gbcode_pre, 4096, config_path.c_str());
 	local_gbcode_id_start = GetPrivateProfileIntA("GxxGmDSJSimulater", "GBCODE_ID_START", 0, config_path.c_str());
+
+	std::vector<GxxGmDSJSimulater *> simulaters;
 
 	// 根据设备数量启动所有设备
 	for (int index = 0; index < simulater_count; ++index)
@@ -88,9 +94,23 @@ int main(int argc, const char *argv[])
 		if (errCode != 0)
 		{
 			printf("初始化%d模拟器%s失败，错误码：%d\n", index, current_client_gbcode, errCode);
+			delete simulater;
+			continue;
 		}
+
+		simulaters.push_back(simulater);
 	}
 
 	system("pause");
+
+	// 这里批量注销
+	std::vector<GxxGmDSJSimulater *>::iterator iter;
+	for (iter = simulaters.begin(); iter != simulaters.end(); ++iter)
+	{
+		(*iter)->Destroy();
+		delete *iter;
+	}
+
+	simulaters.clear();
 	return 0;
 }

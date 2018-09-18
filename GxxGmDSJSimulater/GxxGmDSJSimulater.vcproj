@@ -119,6 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="..\GosuncnLib\28181\inc;..\ext\Poco\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;GXXGMDSJSIMULATER_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -137,7 +138,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="lib28181AgentSDK.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="..\GosuncnLib\28181\lib\x86;..\ext\Poco\lib"
 				ModuleDefinitionFile="GxxGmDSJSimulater.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"

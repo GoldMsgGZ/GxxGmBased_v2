@@ -4,8 +4,32 @@
 
 #include <Windows.h>
 
+DWORD WINAPI HeartBeatThread(LPVOID lpParam)
+{
+	GB28181AgentSignalObject *object = (GB28181AgentSignalObject*)lpParam;
+
+	while (true)
+	{
+		Sleep(1000);
+		
+		StruConnectParam connect_param;
+		strcpy_s(connect_param.szIP, STR_IPADDRESS_LEN, object->remote_ip_.c_str());
+		strcpy_s(connect_param.szGBCode, STR_GBCODE_LEN, object->remote_gbcode_.c_str());
+		connect_param.iPort = object->remote_port_;
+		
+		GS28181_ERR err = GB28181Agent_HeartBeat(object->handle_, &connect_param, 1, NULL);
+		if (err == GS28181_ERR_SUCCESS)
+		{
+			// 
+		}
+	}
+
+	return 0;
+}
+
 GB28181AgentSignalObject::GB28181AgentSignalObject()
 : simulate_device_(new GB28181SimulateDevice())
+, hHeartBeat_(NULL)
 {
 
 }
@@ -105,12 +129,16 @@ int GB28181AgentSignalObject::Register(const char *remote_ip, int remote_port, c
 	OutputDebugStringA(dbg_msg);
 #endif
 
+	hHeartBeat_ = CreateThread(NULL, 0, HeartBeatThread, this, 0, NULL);
+
 	return err;
 }
 
 void GB28181AgentSignalObject::UnRegister()
 {
 	char dbg_msg[4096] = {0};
+
+	TerminateThread(hHeartBeat_, 4);
 
 	StruRegistMsg regmsg;
 	regmsg.iExpires = 0;
