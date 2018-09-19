@@ -46,6 +46,10 @@ int main(int argc, const char *argv[])
 	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "GBCODE_PRE", "00000000000000", local_gbcode_pre, 4096, config_path.c_str());
 	local_gbcode_id_start = GetPrivateProfileIntA("GxxGmDSJSimulater", "GBCODE_ID_START", 0, config_path.c_str());
 
+	int manual_port = GetPrivateProfileIntA("GxxGmDSJSimulater", "MANUAL_PORT", 0, config_path.c_str());
+	int rtp_port_begin = GetPrivateProfileIntA("GxxGmDSJSimulater", "RTP_PORT_START", 10000, config_path.c_str());
+	int rtp_port_count = GetPrivateProfileIntA("GxxGmDSJSimulater", "RTP_PORT_COUNT", 10, config_path.c_str());
+
 	std::vector<GxxGmDSJSimulater *> simulaters;
 
 	// 根据设备数量启动所有设备
@@ -61,6 +65,10 @@ int main(int argc, const char *argv[])
 
 		char current_client_gbcode[21] = {0};
 		sprintf_s(current_client_gbcode, 21, "%s%s", local_gbcode_pre, current_client_device_index);
+
+		// 计算RTP相关的端口信息
+		int current_client_rtp_port_begin = rtp_port_begin * (1 + index) + rtp_port_count * index;
+		int current_client_rtp_port_end = current_client_rtp_port_begin + rtp_port_count;
 
 		GxxGmDSJSimulater *simulater = new GxxGmDSJSimulater();
 
@@ -90,7 +98,7 @@ int main(int argc, const char *argv[])
 		location_info.location_available_ = "1";
 		simulater->SetLocationInfo(location_info);
 
-		int errCode = simulater->Initialize(local_ip, current_client_port_string, current_client_gbcode, server_ip, server_port, server_gbcode, server_username, server_password);
+		int errCode = simulater->Initialize(local_ip, current_client_port_string, current_client_gbcode, server_ip, server_port, server_gbcode, server_username, server_password, manual_port, current_client_rtp_port_begin, current_client_rtp_port_end);
 		if (errCode != 0)
 		{
 			printf("初始化%d模拟器%s失败，错误码：%d\n", index, current_client_gbcode, errCode);

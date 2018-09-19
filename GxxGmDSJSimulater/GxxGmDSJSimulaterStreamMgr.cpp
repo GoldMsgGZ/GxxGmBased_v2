@@ -1,6 +1,8 @@
 #include "GxxGmDSJSimulaterStreamMgr.h"
+#include "GMFLib.h"
 
 GxxGmDSJSimulaterStreamMgr::GxxGmDSJSimulaterStreamMgr()
+: is_stream_send_thread_stop_(false)
 {
 	// 
 }
@@ -52,7 +54,58 @@ int GxxGmDSJSimulaterStreamMgr::AddRealStream(STREAM_HANDLE streamHandle, int iS
 	return errCode;
 }
 
-int GxxGmDSJSimulaterStreamMgr::StartRealStream()
+int GxxGmDSJSimulaterStreamMgr::StartRealStream(STREAM_HANDLE streamHandle, int iSSRC, const char *clientIP, int clientPort)
 {
+	StruRtpAVSampleRate struRate;
+	struRate.iAudioSampleRate = 8000;
+	struRate.iVideoSampleRate = 90000;
 
+	char current_token[32] = {0};
+	memset(current_token, 0, 32);
+	sprintf_s(current_token, 32, "%d", streamHandle);
+
+	GSRTP_ERR err = GSRTPServer_SetSourceParam(current_token, iSSRC, clientIP, clientPort, &struRate, 3*1024*1024);
+	if (err != GSRTP_SUCCESS)
+	{
+		GSRTPServer_Reclaim(current_token, iSSRC);
+		return err
+	}
+
+	// 启动推流线程
+	if (!stream_send_thread_.isRunning())
+	{
+		stream_send_thread_.start(GxxGmDSJSimulaterStreamMgr::StreamSendThreadFunc, this);
+	}
+
+	return 0;
+}
+
+void GS_RTP_CALLBACK GxxGmDSJSimulaterStreamMgr::_RtpServerEventCallBack(const char *szToken, unsigned int iSSRC, EnumRtpEventType eEvent, void *pEventData, void *pUserData)
+{
+	// 
+}
+
+void GxxGmDSJSimulaterStreamMgr::StreamSendThreadFunc(void* param)
+{
+	// 从指定的录像文件中拉取视频流并推送，并且是循环推送
+	// 这里采用GMF文件来推流
+
+	// 先打开GMF文件，读取到一个队列里面
+	char current_program_path[4096] = {0};
+	GetModuleFileNameA(NULL, current_program_path, 4096);
+	std::string tmp = current_program_path;
+	int pos = tmp.find_last_of('\\');
+
+	std::string video_path = tmp.substr(0, pos + 1);
+	video_path.append("video.gmf");
+
+	GS_FILEHANDLE gmf_file_handle = NULL;
+	int errCode = GMF_OpenFile(&gmf_file_handle, video_path.c_str(), EnumGSAVFileOpenMode::eOPEN_READ);
+	if (errCode != eAVF_SUCCESS)
+	{
+		printf("初始化视频推流失败！\n");
+		return ;
+	}
+
+	// 
 }

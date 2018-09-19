@@ -110,7 +110,7 @@ int GxxGmDSJSimulater::Initialize(const char *local_ip, const char *local_port, 
 	password_ = password;
 
 	// 初始化流管理模块
-	errCode = stream_mgr_.Initialize(is_manual_port, begin_port, end_port);
+	errCode = stream_mgr_.Initialize(is_manual_port, begin_port, end_port, local_ip);
 	if (errCode != 0)
 	{
 		printf("[%s]初始化推流服务失败！\n", local_gbcode);

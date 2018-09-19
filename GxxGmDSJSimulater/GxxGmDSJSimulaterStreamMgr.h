@@ -5,6 +5,8 @@
 #include "GSRtpServer.h"
 #include <map>
 
+#include "Poco/Thread.h"
+
 enum RtpStreamType
 {
 	RtpStream_Real,
@@ -30,13 +32,18 @@ public:
 
 public:
 	int AddRealStream(STREAM_HANDLE streamHandle, int iSSRC, unsigned short & iLocalPort);
-	int StartRealStream();
+	int StartRealStream(STREAM_HANDLE streamHandle, int iSSRC, unsigned short & iLocalPort);
 
 public:
-	static _RtpServerEventCallBack(const char *szToken, unsigned int iSSRC, EnumRtpEventType eEvent, void *pEventData, void *pUserData);
+	static void GS_RTP_CALLBACK _RtpServerEventCallBack(const char *szToken, unsigned int iSSRC, EnumRtpEventType eEvent, void *pEventData, void *pUserData);
 
 public:
 	std::map<int, RtpStreamInfo*> stream_maps_;
+
+public:
+	Poco::Thread stream_send_thread_;
+	bool is_stream_send_thread_stop_;
+	static void StreamSendThreadFunc(void* param);
 };
 
 #endif//_GxxGmDSJSimulaterStreamMgr_H_

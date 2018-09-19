@@ -9,7 +9,7 @@ EXPORTS
 	;??0_DEVICE_EXCEPTION_INFO_@@QAE@XZ
 	;??1_DEVICE_EXCEPTION_INFO_@@QAE@XZ
 	??1GxxGmDSJSimulater@@QAE@XZ
-	?Initialize@GxxGmDSJSimulater@@QAEHPBD0000000@Z
+	?Initialize@GxxGmDSJSimulater@@QAEHPBD0000000HGG@Z
 	?Destroy@GxxGmDSJSimulater@@QAEXXZ
 	?SetBaseInfo@GxxGmDSJSimulater@@QAEXU_DEVICE_BASE_INFO_@@@Z
 	?SetLocationInfo@GxxGmDSJSimulater@@QAEXU_DEVICE_LOCATION_INFO_@@@Z
