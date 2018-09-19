@@ -18,7 +18,7 @@ GxxGmDSJSimulater::~GxxGmDSJSimulater()
 	// 
 }
 
-int GxxGmDSJSimulater::Initialize(const char *local_ip, const char *local_port, const char *local_gbcode, const char *server_ip, const char *server_port, const char *server_gbcode, const char *username, const char *password)
+int GxxGmDSJSimulater::Initialize(const char *local_ip, const char *local_port, const char *local_gbcode, const char *server_ip, const char *server_port, const char *server_gbcode, const char *username, const char *password, int is_manual_port, unsigned short begin_port, unsigned short end_port)
 {
 	int errCode = 0;
 
@@ -109,7 +109,14 @@ int GxxGmDSJSimulater::Initialize(const char *local_ip, const char *local_port, 
 	username_ = username;
 	password_ = password;
 
-	return 0;
+	// 初始化流管理模块
+	errCode = stream_mgr_.Initialize(is_manual_port, begin_port, end_port);
+	if (errCode != 0)
+	{
+		printf("[%s]初始化推流服务失败！\n", local_gbcode);
+	}
+
+	return errCode;
 }
 
 void GxxGmDSJSimulater::Destroy()
@@ -631,11 +638,81 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_StreamRequestCB(STREAM_HANDLE hStream, cons
 	GxxGmDSJSimulater *simulater = (GxxGmDSJSimulater *)pUserData;
 
 	// 先分析输入流信息
-	//if (eRequest == eSTREAM_REALPLAY)
-	//{
-	//	StruMediaInfo out_media_info;
-	//	ZeroMemory(&out_media_info, sizeof(StruMediaInfo));
-	//}
+	if (eRequest == eSTREAM_REALPLAY)
+	{
+		StruMediaInfo out_media_info;
+		ZeroMemory(&out_media_info, sizeof(StruMediaInfo));
+
+		// 点流目标设备ID
+		strncpy(out_media_info.czDeviceID, pInMedia->czDeviceID, STR_GBCODE_LEN);
+		// 本地用于RTP流传输的IP地址
+		strncpy(out_media_info.czIP, pInMedia->czIP, STR_IPADDRESS_LEN);
+
+		// 不填该值时，协议会根据请求类型填入Play/Playback/download/Talk等
+		strncpy(out_media_info.czMediaName, pInMedia->czMediaName, STR_NAME_LEN);
+
+		// 是否支持RTCP
+		out_media_info.bEnableRTCP = pInMedia->bEnableRTCP;
+
+		// 传输方式，由于要转换成本地的，所以这样需要将Rtp类型翻转
+		if (pInMedia->eRtpType == eRTP_OVER_UDP)
+		{
+			// RTP over UDP传输
+			out_media_info.eRtpType = eRTP_OVER_UDP;
+		}
+		else if (pInMedia->eRtpType == eRTP_OVER_TCP_ACTIVE)
+		{
+			// 远端是RTP over TCP主动传输
+			// 本地这里就应该是被动传输
+			out_media_info.eRtpType = eRTP_OVER_TCP_PASSIVE;
+		}
+		else if (pInMedia->eRtpType = eRTP_OVER_TCP_PASSIVE)
+		{
+			// RTP over TCP被动传输
+			out_media_info.eRtpType = eRTP_OVER_TCP_ACTIVE;
+		}
+
+		//码流类型  1:主码流  2:副码流
+		out_media_info.iStreamType = pInMedia->iStreamType;
+
+		// 开始UNIX时间戳
+		out_media_info.iStart = pInMedia->iStart;
+		// 结束UNIX时间戳
+		out_media_info.iEnd = pInMedia->iEnd;
+
+		//发起点流请求时，可填可不填
+		//为保证SSRC的连续性，必须统一行径，要么每次不填，要么每次都填
+		out_media_info.iSSRC = pInMedia->iSSRC;
+
+		out_media_info.stuDescri.iDescriNum = pInMedia->stuDescri.iDescriNum;
+		for (int index = 0; index < out_media_info.stuDescri.iDescriNum; ++index)
+		{
+			out_media_info.stuDescri.mapDescri[index].eMediaType = pInMedia->stuDescri.mapDescri[index].eMediaType;
+			out_media_info.stuDescri.mapDescri[index].iRtpmapNum = pInMedia->stuDescri.mapDescri[index].iRtpmapNum;
+			for (int index2 = 0; index2 < out_media_info.stuDescri.mapDescri[index].iRtpmapNum; ++index2)
+			{
+				strncpy(out_media_info.stuDescri.mapDescri[index].mapRtp[index2].czMimeType, pInMedia->stuDescri.mapDescri[index].mapRtp[index2].czMimeType, STR_RTPTYPENAME_LEN);
+				out_media_info.stuDescri.mapDescri[index].mapRtp[index2].iMediaFormat = pInMedia->stuDescri.mapDescri[index].mapRtp[index2].iMediaFormat;
+				out_media_info.stuDescri.mapDescri[index].mapRtp[index2].iSampleRate = pInMedia->stuDescri.mapDescri[index].mapRtp[index2].iSampleRate;
+			}
+		}
+
+		// 注册RTP实时流
+		unsigned short local_port = 0;
+		int errCode = simulater->stream_mgr_.AddRealStream(hStream, pInMedia->iSSRC, local_port);
+		out_media_info.iPort = local_port;
+
+		// 向上级平台反馈结果
+		GS28181_ERR err = GB28181Agent_RespondPlayRequest(hStream, eSTREAM_REALPLAY, &out_media_info, NULL);
+		if (err != GS28181_ERR_SUCCESS)
+		{
+			// 返回点流信息失败！
+			return SIP_RESPONSE_CODE_FAIL;
+		}
+
+		// 启动流
+		simulater->stream_mgr_.StartRealStream();
+	}
 
 	return SIP_RESPONSE_CODE_SUCCESS;
 }
@@ -672,6 +749,7 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 	{
 		Sleep(1000);
 		++heartbeat_count;
+		++baseinfo_count;
 
 		if (heartbeat_count == 30)
 		{

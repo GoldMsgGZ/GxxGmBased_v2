@@ -2,6 +2,7 @@
 #define _GxxGmDSJSimulater_H_
 
 #include "GxxGmDeviceInfo.h"
+#include "GxxGmDSJSimulaterStreamMgr.h"
 #include "GB28181AgentSDK.h"
 #include <string>
 
@@ -20,7 +21,7 @@ public:
 
 public:
 	// 开机
-	int Initialize(const char *local_ip, const char *local_port, const char *local_gbcode, const char *server_ip, const char *server_port, const char *server_gbcode, const char *username, const char *password);
+	int Initialize(const char *local_ip, const char *local_port, const char *local_gbcode, const char *server_ip, const char *server_port, const char *server_gbcode, const char *username, const char *password, int is_manual_port, unsigned short begin_port, unsigned short end_port);
 
 	// 关机
 	void Destroy();
@@ -86,6 +87,9 @@ public:
 
 public:
 	std::string bind_user_id_;
+
+public:
+	GxxGmDSJSimulaterStreamMgr stream_mgr_;
 };
 
 #endif//_GxxGmDSJSimulater_H_

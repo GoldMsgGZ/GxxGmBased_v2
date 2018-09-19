@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\GosuncnLib\28181\inc;..\ext\Poco\include"
+				AdditionalIncludeDirectories="..\GosuncnLib\GSRtpStack\inc;..\GosuncnLib\28181\inc;..\ext\Poco\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;GXXGMDSJSIMULATER_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,9 +61,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="lib28181AgentSDK.lib"
+				AdditionalDependencies="lib28181AgentSDK.lib GSRtpServer.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\GosuncnLib\28181\lib\x86;..\ext\Poco\lib"
+				AdditionalLibraryDirectories="..\GosuncnLib\28181\lib\x86;..\ext\Poco\lib;..\GosuncnLib\GSRtpStack\lib\x86"
 				ModuleDefinitionFile="GxxGmDSJSimulater.def"
 				GenerateDebugInformation="true"
 				GenerateMapFile="true"
@@ -187,6 +187,10 @@
 				RelativePath=".\GxxGmDSJSimulater.def"
 				>
 			</File>
+			<File
+				RelativePath=".\GxxGmDSJSimulaterStreamMgr.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Í·ÎÄ¼þ"
@@ -199,6 +203,10 @@
 			</File>
 			<File
 				RelativePath=".\GxxGmDSJSimulater.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GxxGmDSJSimulaterStreamMgr.h"
 				>
 			</File>
 		</Filter>
