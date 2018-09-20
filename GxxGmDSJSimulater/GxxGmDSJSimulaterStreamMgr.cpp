@@ -68,7 +68,7 @@ int GxxGmDSJSimulaterStreamMgr::StartRealStream(STREAM_HANDLE streamHandle, int 
 	if (err != GSRTP_SUCCESS)
 	{
 		GSRTPServer_Reclaim(current_token, iSSRC);
-		return err
+		return err;
 	}
 
 	// 启动推流线程

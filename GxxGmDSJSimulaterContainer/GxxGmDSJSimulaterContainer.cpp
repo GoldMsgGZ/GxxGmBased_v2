@@ -6,7 +6,7 @@
 
 int main(int argc, const char *argv[])
 {
-	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V1.0\n");
+	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V1.1\n");
 	system("pause");
 
 	// 首先根据配置文件加载数据
@@ -67,8 +67,8 @@ int main(int argc, const char *argv[])
 		sprintf_s(current_client_gbcode, 21, "%s%s", local_gbcode_pre, current_client_device_index);
 
 		// 计算RTP相关的端口信息
-		int current_client_rtp_port_begin = rtp_port_begin * (1 + index) + rtp_port_count * index;
-		int current_client_rtp_port_end = current_client_rtp_port_begin + rtp_port_count;
+		int current_client_rtp_port_begin = rtp_port_begin * (1 + index) + rtp_port_count * index + 1;
+		int current_client_rtp_port_end = current_client_rtp_port_begin + rtp_port_count - 1;
 
 		GxxGmDSJSimulater *simulater = new GxxGmDSJSimulater();
 
@@ -109,7 +109,8 @@ int main(int argc, const char *argv[])
 		simulaters.push_back(simulater);
 	}
 
-	system("pause");
+	printf("模拟器已经运行，按任意键关闭模拟器....");
+	getchar();
 
 	// 这里批量注销
 	std::vector<GxxGmDSJSimulater *>::iterator iter;

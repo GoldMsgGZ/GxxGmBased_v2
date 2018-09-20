@@ -116,6 +116,15 @@ int GxxGmDSJSimulater::Initialize(const char *local_ip, const char *local_port, 
 		printf("[%s]初始化推流服务失败！\n", local_gbcode);
 	}
 
+	// 查询目录响应成功
+	// 开始向上推送设备状态信息和定位信息
+	// 使用Poco的多线程框架做吧
+	if (!gb28181_heartbeat_thread_.isRunning())
+	{
+		gb28181_heartbeat_thread_.start(GB28181HeartbeatThreadFun, this);
+		Sleep(10);
+	}
+
 	return errCode;
 }
 
@@ -593,15 +602,6 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_DevInfoQueryCB(SESSION_HANDLE hSession, con
 			printf("[%s]响应设备目录查询失败！错误码：%d\n", simulater->local_gbcode_.c_str(), err);
 			return SIP_RESPONSE_CODE_SUCCESS;
 		}
-
-		// 查询目录响应成功
-		// 开始向上推送设备状态信息和定位信息
-		// 使用Poco的多线程框架做吧
-		if (!simulater->gb28181_heartbeat_thread_.isRunning())
-		{
-			simulater->gb28181_heartbeat_thread_.start(simulater->GB28181HeartbeatThreadFun, simulater);
-			Sleep(10);
-		}
 	}
 	else if (stuQuery->eType == EnumQueryType::eQUE_DEV_RECORDINDEX)
 	{
@@ -640,6 +640,7 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_StreamRequestCB(STREAM_HANDLE hStream, cons
 	// 先分析输入流信息
 	if (eRequest == eSTREAM_REALPLAY)
 	{
+#ifdef USE_REALSTREAM
 		StruMediaInfo out_media_info;
 		ZeroMemory(&out_media_info, sizeof(StruMediaInfo));
 
@@ -711,7 +712,9 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_StreamRequestCB(STREAM_HANDLE hStream, cons
 		}
 
 		// 启动流
-		simulater->stream_mgr_.StartRealStream();
+		simulater->stream_mgr_.StartRealStream(hStream, pInMedia->iSSRC, simulater->local_ip_.c_str(), local_port);
+
+#endif
 	}
 
 	return SIP_RESPONSE_CODE_SUCCESS;

@@ -117,7 +117,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\GosuncnLib\28181\inc;..\ext\Poco\include"
+				AdditionalIncludeDirectories="..\GosuncnLib\GSRtpStack\inc;..\GosuncnLib\28181\inc;..\ext\Poco\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -195,6 +195,10 @@
 		</Filter>
 		<File
 			RelativePath=".\GxxGmDSJSimulater.ini"
+			>
+		</File>
+		<File
+			RelativePath=".\readme.txt"
 			>
 		</File>
 	</Files>

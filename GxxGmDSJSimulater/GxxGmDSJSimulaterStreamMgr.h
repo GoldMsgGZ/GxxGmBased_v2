@@ -32,7 +32,7 @@ public:
 
 public:
 	int AddRealStream(STREAM_HANDLE streamHandle, int iSSRC, unsigned short & iLocalPort);
-	int StartRealStream(STREAM_HANDLE streamHandle, int iSSRC, unsigned short & iLocalPort);
+	int StartRealStream(STREAM_HANDLE streamHandle, int iSSRC, const char *clientIP, int clientPort);
 
 public:
 	static void GS_RTP_CALLBACK _RtpServerEventCallBack(const char *szToken, unsigned int iSSRC, EnumRtpEventType eEvent, void *pEventData, void *pUserData);
