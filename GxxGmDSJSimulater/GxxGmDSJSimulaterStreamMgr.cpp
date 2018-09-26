@@ -1,6 +1,16 @@
 #include "GxxGmDSJSimulaterStreamMgr.h"
 #include "GMFLib.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include "libavformat/avformat.h"
+#include "libavcodec/avcodec.h"
+#include "libavutil/avutil.h"
+#ifdef __cplusplus
+};
+#endif
+
 GxxGmDSJSimulaterStreamMgr::GxxGmDSJSimulaterStreamMgr()
 : is_stream_send_thread_stop_(false)
 {
@@ -36,6 +46,14 @@ int GxxGmDSJSimulaterStreamMgr::AddRealStream(STREAM_HANDLE streamHandle, int iS
 	char current_token[32] = {0};
 	memset(current_token, 0, 32);
 	sprintf_s(current_token, 32, "%d", streamHandle);
+
+	char current_program_path[4096] = {0};
+	GetModuleFileNameA(NULL, current_program_path, 4096);
+	std::string tmp = current_program_path;
+	int pos = tmp.find_last_of('\\');
+
+	std::string video_path = tmp.substr(0, pos + 1);
+	video_path.append("video.gmf");
 
 	errCode = GSRTPServer_AddSource(current_token, iSSRC, &iLocalPort);
 	if (errCode == GSRTP_SUCCESS)
@@ -87,6 +105,7 @@ void GS_RTP_CALLBACK GxxGmDSJSimulaterStreamMgr::_RtpServerEventCallBack(const c
 
 void GxxGmDSJSimulaterStreamMgr::StreamSendThreadFunc(void* param)
 {
+	GxxGmDSJSimulaterStreamMgr *stream_mgr = (GxxGmDSJSimulaterStreamMgr*)param;
 	// 从指定的录像文件中拉取视频流并推送，并且是循环推送
 	// 这里采用GMF文件来推流
 
@@ -99,13 +118,23 @@ void GxxGmDSJSimulaterStreamMgr::StreamSendThreadFunc(void* param)
 	std::string video_path = tmp.substr(0, pos + 1);
 	video_path.append("video.gmf");
 
-	GS_FILEHANDLE gmf_file_handle = NULL;
-	int errCode = GMF_OpenFile(&gmf_file_handle, video_path.c_str(), EnumGSAVFileOpenMode::eOPEN_READ);
-	if (errCode != eAVF_SUCCESS)
+	AVFormatContext *input_format_context = NULL;
+	int errCode = avformat_open_input(&input_format_context, video_path.c_str(), NULL, NULL);
+	if (errCode < 0)
 	{
-		printf("初始化视频推流失败！\n");
 		return ;
 	}
 
-	// 
+	avformat_find_stream_info(input_format_context, NULL);
+
+	int video_stream_index = -1;
+	int audio_stream_index = -1;
+
+	for (int index = 0; index < input_format_context->nb_streams; ++index)
+	{
+		if (input_format_context->streams[index]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
+		{
+			video_stream_index = index;
+		}
+	}
 }

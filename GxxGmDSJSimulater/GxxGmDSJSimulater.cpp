@@ -5,6 +5,8 @@
 #include "Poco/Base64Encoder.h"
 
 
+#define USE_REALSTREAM
+
 GxxGmDSJSimulater::GxxGmDSJSimulater()
 : agent_(NULL)
 , is_gb28181_heartbeat_thread_need_exit_(false)

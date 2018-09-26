@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\GosuncnLib\GSRtpStack\inc;..\GosuncnLib\28181\inc;..\GosuncnLib\GMFLib;..\ext\Poco\include"
+				AdditionalIncludeDirectories="..\GosuncnLib\GSRtpStack\inc;..\GosuncnLib\28181\inc;..\GosuncnLib\GMFLib;..\ext\Poco\include;..\ext\FFmpeg\3.4\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;GXXGMDSJSIMULATER_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,9 +61,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="lib28181AgentSDK.lib GSRtpServer.lib GMFLib.lib"
+				AdditionalDependencies="lib28181AgentSDK.lib GSRtpServer.lib GMFLib.lib avcodec.lib avdevice.lib avfilter.lib avformat.lib avutil.lib postproc.lib swresample.lib swscale.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\GosuncnLib\28181\lib\x86;..\ext\Poco\lib;..\GosuncnLib\GSRtpStack\lib\x86;..\GosuncnLib\GMFLib"
+				AdditionalLibraryDirectories="..\GosuncnLib\28181\lib\x86;..\ext\Poco\lib;..\GosuncnLib\GSRtpStack\lib\x86;..\GosuncnLib\GMFLib;..\ext\FFmpeg\3.4\lib\x86"
 				ModuleDefinitionFile="GxxGmDSJSimulater.def"
 				GenerateDebugInformation="true"
 				GenerateMapFile="true"
@@ -191,6 +191,10 @@
 				RelativePath=".\GxxGmDSJSimulaterStreamMgr.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\GxxGmVideoFile.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Í·ÎÄ¼þ"
@@ -207,6 +211,10 @@
 			</File>
 			<File
 				RelativePath=".\GxxGmDSJSimulaterStreamMgr.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GxxGmVideoFile.h"
 				>
 			</File>
 		</Filter>
