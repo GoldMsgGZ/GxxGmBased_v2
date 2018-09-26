@@ -3,7 +3,7 @@
 
 #include "GB28181Defs.h"
 #include "GSRtpServer.h"
-#include "GxxGmVideoFile.h"
+//#include "GxxGmVideoFile.h"
 #include <map>
 
 #include "Poco/Thread.h"
@@ -47,7 +47,11 @@ public:
 	static void StreamSendThreadFunc(void* param);
 
 public:
-	GxxGmVideoFile video_file_;
+	//GxxGmVideoFile video_file_;
+
+public:
+	char current_token_[32];
+	int ssrc_;
 };
 
 #endif//_GxxGmDSJSimulaterStreamMgr_H_

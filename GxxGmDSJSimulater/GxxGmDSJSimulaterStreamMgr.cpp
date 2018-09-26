@@ -1,5 +1,6 @@
 #include "GxxGmDSJSimulaterStreamMgr.h"
 #include "GMFLib.h"
+#include "PSFormat.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,6 +16,9 @@ GxxGmDSJSimulaterStreamMgr::GxxGmDSJSimulaterStreamMgr()
 : is_stream_send_thread_stop_(false)
 {
 	// 
+	av_register_all();
+	avformat_network_init();
+	avcodec_register_all();
 }
 
 GxxGmDSJSimulaterStreamMgr::~GxxGmDSJSimulaterStreamMgr()
@@ -78,14 +82,15 @@ int GxxGmDSJSimulaterStreamMgr::StartRealStream(STREAM_HANDLE streamHandle, int 
 	struRate.iAudioSampleRate = 8000;
 	struRate.iVideoSampleRate = 90000;
 
-	char current_token[32] = {0};
-	memset(current_token, 0, 32);
-	sprintf_s(current_token, 32, "%d", streamHandle);
+	memset(current_token_, 0, 32);
+	sprintf_s(current_token_, 32, "%d", streamHandle);
 
-	GSRTP_ERR err = GSRTPServer_SetSourceParam(current_token, iSSRC, clientIP, clientPort, &struRate, 3*1024*1024);
+	ssrc_ = iSSRC;
+
+	GSRTP_ERR err = GSRTPServer_SetSourceParam(current_token_, ssrc_, clientIP, clientPort, &struRate, 3*1024*1024);
 	if (err != GSRTP_SUCCESS)
 	{
-		GSRTPServer_Reclaim(current_token, iSSRC);
+		GSRTPServer_Reclaim(current_token_, ssrc_);
 		return err;
 	}
 
@@ -130,11 +135,101 @@ void GxxGmDSJSimulaterStreamMgr::StreamSendThreadFunc(void* param)
 	int video_stream_index = -1;
 	int audio_stream_index = -1;
 
+	AVStream *video_stream = NULL;
+
 	for (int index = 0; index < input_format_context->nb_streams; ++index)
 	{
 		if (input_format_context->streams[index]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
 		{
 			video_stream_index = index;
+			// 这里尝试计算一下帧率
+			video_stream = input_format_context->streams[index];
+			Sleep(1);
+		}
+		else if (input_format_context->streams[index]->codec->codec_type == AVMEDIA_TYPE_AUDIO)
+		{
+			audio_stream_index = index;
 		}
 	}
+
+	AVBitStreamFilterContext* h264bsfc =  av_bitstream_filter_init("h264_mp4toannexb");
+
+	while (true)
+	{
+		AVPacket pkt;
+		errCode = av_read_frame(input_format_context, &pkt);
+		if (errCode < 0)
+		{
+			break;
+		}
+
+		if (pkt.stream_index == video_stream_index)
+		{
+			// 视频帧，直接打包成PS封包
+			// 这里可能需要确认一下，H.264编码是否需要加一下过滤器
+			av_bitstream_filter_filter(h264bsfc, video_stream->codec, NULL, &pkt.data, &pkt.size, pkt.data, pkt.size, 0);
+
+			StruESStreamDesc es_stream_desc;
+			es_stream_desc.eVideoCodecs = GS_MPEGPS_CODEC_V_H264;
+			es_stream_desc.eAudioCodecs = GS_MPEGPS_CODEC_A_G711U;
+		
+			StruESFrameInfo es_frame_info;
+			es_frame_info.eCodec = GS_MPEGPS_CODEC_V_H264;
+			es_frame_info.eType = EnumGSMediaType::GS_MEDIA_TYPE_VIDEO;
+			es_frame_info.nBufLen = pkt.size;
+			es_frame_info.pBuffer = pkt.data;
+			es_frame_info.nPTS = pkt.pts;
+
+			while (true)
+			{
+				StruPSFrameInfo ps_frame;
+				ps_frame.nBufLen = 4096;
+				ps_frame.pBuffer = new Byte[ps_frame.nBufLen];
+
+				EnumGS_MPEGPS_RetCode err = GS_MPEGPS_ES2PS(&es_stream_desc, &es_frame_info, &ps_frame);
+				if (err == GS_MPEGPS_Ret_Success)
+				{
+					// 成功了，将PS包发出去
+					StruRtpFrame rtp_frame;
+					rtp_frame.eFrameType = RTP_FRAME_PS;
+					rtp_frame.iCodeID = 0x00000400;
+					rtp_frame.iTimeStamp = ps_frame.nPTS;
+					rtp_frame.iSSRC = stream_mgr->ssrc_;
+					rtp_frame.pFrame = (char*)ps_frame.pBuffer;
+					rtp_frame.iLenght = ps_frame.nBufLen;
+
+					GSRTP_ERR err = GSRTPServer_InputStream(stream_mgr->current_token_, &rtp_frame);
+					if (err != GSRTP_SUCCESS)
+					{
+						printf("发送RTP包失败！错误码：%d\n", err);
+					}
+
+					delete [] ps_frame.pBuffer;
+					ps_frame.pBuffer = NULL;
+
+					break;
+				}
+				else if (err == GS_MPEGPS_Ret_Out_Of_Buffer)
+				{
+					// 缓冲区不够
+					delete [] ps_frame.pBuffer;
+					ps_frame.nBufLen += 1024;
+					ps_frame.pBuffer = new Byte[ps_frame.nBufLen];
+					continue;
+				}
+			}
+
+			// 手工控制帧率为：25pfs
+			Sleep(40);
+		}
+		else if (pkt.stream_index == audio_stream_index)
+		{
+			// 音频帧，模拟器暂不处理吧
+		}
+	}
+
+	av_bitstream_filter_close(h264bsfc);
+	avformat_close_input(&input_format_context);
+
+	return ;
 }
