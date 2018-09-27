@@ -8,6 +8,9 @@
 
 #include "Poco/Thread.h"
 
+//#define POCO_THREAD
+#define WIN32_THREAD
+
 enum RtpStreamType
 {
 	RtpStream_Real,
@@ -34,6 +37,7 @@ public:
 public:
 	int AddRealStream(STREAM_HANDLE streamHandle, int iSSRC, unsigned short & iLocalPort);
 	int StartRealStream(STREAM_HANDLE streamHandle, int iSSRC, const char *clientIP, int clientPort);
+	int SendRealStream();
 
 public:
 	static void GS_RTP_CALLBACK _RtpServerEventCallBack(const char *szToken, unsigned int iSSRC, EnumRtpEventType eEvent, void *pEventData, void *pUserData);
@@ -42,9 +46,18 @@ public:
 	std::map<int, RtpStreamInfo*> stream_maps_;
 
 public:
-	Poco::Thread stream_send_thread_;
 	bool is_stream_send_thread_stop_;
+	HANDLE stream_send_thread_handle_;
+
+#ifdef POCO_THREAD
+	Poco::Thread stream_send_thread_;
 	static void StreamSendThreadFunc(void* param);
+#endif
+
+#ifdef WIN32_THREAD
+	
+	static DWORD WINAPI StreamSendThreadFuncEx(LPVOID* param);
+#endif
 
 public:
 	//GxxGmVideoFile video_file_;

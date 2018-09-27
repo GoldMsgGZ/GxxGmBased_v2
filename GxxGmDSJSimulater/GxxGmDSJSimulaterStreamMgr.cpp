@@ -14,6 +14,7 @@ extern "C" {
 
 GxxGmDSJSimulaterStreamMgr::GxxGmDSJSimulaterStreamMgr()
 : is_stream_send_thread_stop_(false)
+, stream_send_thread_handle_(NULL)
 {
 	// 
 	av_register_all();
@@ -95,22 +96,27 @@ int GxxGmDSJSimulaterStreamMgr::StartRealStream(STREAM_HANDLE streamHandle, int 
 	}
 
 	// 启动推流线程
+#ifdef POCO_THREAD
 	if (!stream_send_thread_.isRunning())
 	{
 		stream_send_thread_.start(GxxGmDSJSimulaterStreamMgr::StreamSendThreadFunc, this);
 	}
+#endif
+
+#ifdef WIN32_THREAD
+	DWORD exit_code = 0;
+	BOOL bret = GetExitCodeThread(stream_send_thread_handle_, &exit_code);
+	if (exit_code != STILL_ACTIVE)
+	{
+		stream_send_thread_handle_ = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)GxxGmDSJSimulaterStreamMgr::StreamSendThreadFuncEx, this, 0, NULL);
+	}
+#endif
 
 	return 0;
 }
 
-void GS_RTP_CALLBACK GxxGmDSJSimulaterStreamMgr::_RtpServerEventCallBack(const char *szToken, unsigned int iSSRC, EnumRtpEventType eEvent, void *pEventData, void *pUserData)
+int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 {
-	// 
-}
-
-void GxxGmDSJSimulaterStreamMgr::StreamSendThreadFunc(void* param)
-{
-	GxxGmDSJSimulaterStreamMgr *stream_mgr = (GxxGmDSJSimulaterStreamMgr*)param;
 	// 从指定的录像文件中拉取视频流并推送，并且是循环推送
 	// 这里采用GMF文件来推流
 
@@ -127,7 +133,7 @@ void GxxGmDSJSimulaterStreamMgr::StreamSendThreadFunc(void* param)
 	int errCode = avformat_open_input(&input_format_context, video_path.c_str(), NULL, NULL);
 	if (errCode < 0)
 	{
-		return ;
+		return errCode;
 	}
 
 	avformat_find_stream_info(input_format_context, NULL);
@@ -154,7 +160,12 @@ void GxxGmDSJSimulaterStreamMgr::StreamSendThreadFunc(void* param)
 
 	AVBitStreamFilterContext* h264bsfc =  av_bitstream_filter_init("h264_mp4toannexb");
 
-	while (true)
+	while (!is_stream_send_thread_stop_)
+	{
+		av_seek_frame(input_format_context)
+	}
+
+	while (!is_stream_send_thread_stop_)
 	{
 		AVPacket pkt;
 		errCode = av_read_frame(input_format_context, &pkt);
@@ -172,7 +183,7 @@ void GxxGmDSJSimulaterStreamMgr::StreamSendThreadFunc(void* param)
 			StruESStreamDesc es_stream_desc;
 			es_stream_desc.eVideoCodecs = GS_MPEGPS_CODEC_V_H264;
 			es_stream_desc.eAudioCodecs = GS_MPEGPS_CODEC_A_G711U;
-		
+
 			StruESFrameInfo es_frame_info;
 			es_frame_info.eCodec = GS_MPEGPS_CODEC_V_H264;
 			es_frame_info.eType = EnumGSMediaType::GS_MEDIA_TYPE_VIDEO;
@@ -183,7 +194,7 @@ void GxxGmDSJSimulaterStreamMgr::StreamSendThreadFunc(void* param)
 			while (true)
 			{
 				StruPSFrameInfo ps_frame;
-				ps_frame.nBufLen = 4096;
+				ps_frame.nBufLen = es_frame_info.nBufLen + 4096;
 				ps_frame.pBuffer = new Byte[ps_frame.nBufLen];
 
 				EnumGS_MPEGPS_RetCode err = GS_MPEGPS_ES2PS(&es_stream_desc, &es_frame_info, &ps_frame);
@@ -194,11 +205,11 @@ void GxxGmDSJSimulaterStreamMgr::StreamSendThreadFunc(void* param)
 					rtp_frame.eFrameType = RTP_FRAME_PS;
 					rtp_frame.iCodeID = 0x00000400;
 					rtp_frame.iTimeStamp = ps_frame.nPTS;
-					rtp_frame.iSSRC = stream_mgr->ssrc_;
+					rtp_frame.iSSRC = ssrc_;
 					rtp_frame.pFrame = (char*)ps_frame.pBuffer;
 					rtp_frame.iLenght = ps_frame.nBufLen;
 
-					GSRTP_ERR err = GSRTPServer_InputStream(stream_mgr->current_token_, &rtp_frame);
+					GSRTP_ERR err = GSRTPServer_InputStream(current_token_, &rtp_frame);
 					if (err != GSRTP_SUCCESS)
 					{
 						printf("发送RTP包失败！错误码：%d\n", err);
@@ -213,7 +224,7 @@ void GxxGmDSJSimulaterStreamMgr::StreamSendThreadFunc(void* param)
 				{
 					// 缓冲区不够
 					delete [] ps_frame.pBuffer;
-					ps_frame.nBufLen += 1024;
+					ps_frame.nBufLen += 4096;
 					ps_frame.pBuffer = new Byte[ps_frame.nBufLen];
 					continue;
 				}
@@ -231,5 +242,32 @@ void GxxGmDSJSimulaterStreamMgr::StreamSendThreadFunc(void* param)
 	av_bitstream_filter_close(h264bsfc);
 	avformat_close_input(&input_format_context);
 
+	return 0;
+}
+
+void GS_RTP_CALLBACK GxxGmDSJSimulaterStreamMgr::_RtpServerEventCallBack(const char *szToken, unsigned int iSSRC, EnumRtpEventType eEvent, void *pEventData, void *pUserData)
+{
+	// 
+}
+
+#ifdef POCO_THREAD
+void GxxGmDSJSimulaterStreamMgr::StreamSendThreadFunc(void* param)
+{
+	GxxGmDSJSimulaterStreamMgr *stream_mgr = (GxxGmDSJSimulaterStreamMgr*)param;
+
+	stream_mgr->SendRealStream();
+
 	return ;
 }
+#endif
+
+#ifdef WIN32_THREAD
+DWORD WINAPI GxxGmDSJSimulaterStreamMgr::StreamSendThreadFuncEx(LPVOID* param)
+{
+	GxxGmDSJSimulaterStreamMgr *stream_mgr = (GxxGmDSJSimulaterStreamMgr*)param;
+
+	stream_mgr->SendRealStream();
+
+	return 0;
+}
+#endif

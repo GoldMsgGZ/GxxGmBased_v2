@@ -713,8 +713,8 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_StreamRequestCB(STREAM_HANDLE hStream, cons
 			return SIP_RESPONSE_CODE_FAIL;
 		}
 
-		// 启动流
-		simulater->stream_mgr_.StartRealStream(hStream, pInMedia->iSSRC, simulater->local_ip_.c_str(), local_port);
+		// 启动流，确认了，推上去的端口号有问题，不是远端的端口号
+		simulater->stream_mgr_.StartRealStream(hStream, pInMedia->iSSRC, pInMedia->czIP, pInMedia->iPort);
 
 #endif
 	}
@@ -750,11 +750,13 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 
 	int heartbeat_count = 0;
 	int baseinfo_count = 0;
+	int location_count = 0;
 	while (!simulater->is_gb28181_heartbeat_thread_need_exit_)
 	{
 		Sleep(1000);
 		++heartbeat_count;
 		++baseinfo_count;
+		++location_count;
 
 		if (heartbeat_count == 30)
 		{
@@ -773,11 +775,14 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 		{
 			// 发送设备基本信息
 			simulater->SendBaseInfo();
+			baseinfo_count = 0;
+		}
 
+		if (location_count == 5)
+		{
 			// 发送定位信息
 			simulater->SendLocationInfo();
-
-			baseinfo_count = 0;
+			location_count = 0;
 		}
 	}
 }
