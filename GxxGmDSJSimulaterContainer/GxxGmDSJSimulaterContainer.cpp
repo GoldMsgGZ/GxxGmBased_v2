@@ -28,7 +28,6 @@ int main(int argc, const char *argv[])
 	DWORD bRet = 0;
 	int errCode = GetLastError();
 	bRet = GetPrivateProfileStringA("DeviceGateway", "SERVER_IP", "127.0.0.1", server_ip, 4096, config_path.c_str());
-	errCode = GetLastError();
 	bRet = GetPrivateProfileStringA("DeviceGateway", "SERVER_PORT", "5060", server_port, 4096, config_path.c_str());
 	bRet = GetPrivateProfileStringA("DeviceGateway", "SERVER_GBCODE", "00000000000000000000", server_gbcode, 4096, config_path.c_str());
 	bRet = GetPrivateProfileStringA("DeviceGateway", "SERVER_USERNAME", "1", server_username, 4096, config_path.c_str());
@@ -49,6 +48,17 @@ int main(int argc, const char *argv[])
 	int manual_port = GetPrivateProfileIntA("GxxGmDSJSimulater", "MANUAL_PORT", 0, config_path.c_str());
 	int rtp_port_begin = GetPrivateProfileIntA("GxxGmDSJSimulater", "RTP_PORT_START", 10000, config_path.c_str());
 	int rtp_port_count = GetPrivateProfileIntA("GxxGmDSJSimulater", "RTP_PORT_COUNT", 10, config_path.c_str());
+
+	char sip_net[4096] = {0};
+	char rtp_net[4096] = {0};
+	char stream_file[4096] = {0};
+
+	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "SIP_NET", "UDP", sip_net, 4096, config_path.c_str());
+	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "RTP_NET", "UDP", rtp_net, 4096, config_path.c_str());
+	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "SIM_STREAM_FILE", "video.gmf", stream_file, 4096, config_path.c_str());
+	int gb28181_hb_time = GetPrivateProfileIntA("GxxGmDSJSimulater", "GB28181_HB_TIME", 30, config_path.c_str());
+	int dev_baseinfo_time = GetPrivateProfileIntA("GxxGmDSJSimulater", "DEV_BASE_INFO_TIME", 5, config_path.c_str());
+	int dev_location_time = GetPrivateProfileIntA("GxxGmDSJSimulater", "DEV_LOCATION_TIME", 5, config_path.c_str());
 
 	std::vector<GxxGmDSJSimulater *> simulaters;
 
@@ -98,7 +108,27 @@ int main(int argc, const char *argv[])
 		location_info.location_available_ = "1";
 		simulater->SetLocationInfo(location_info);
 
-		int errCode = simulater->Initialize(local_ip, current_client_port_string, current_client_gbcode, server_ip, server_port, server_gbcode, server_username, server_password, manual_port, current_client_rtp_port_begin, current_client_rtp_port_end);
+		struct SimulaterInitInfo init_info;
+		init_info.local_ip_ = local_ip;
+		init_info.local_port_ = current_client_port_string;
+		init_info.local_gbcode_ = current_client_gbcode;
+		init_info.server_ip_ = server_ip;
+		init_info.server_port_ = server_port;
+		init_info.server_gbcode_ = server_gbcode;
+		init_info.username_ = server_username;
+		init_info.password_ = server_password;
+		init_info.manual_port_ = manual_port;
+		init_info.begin_port_ = current_client_rtp_port_begin;
+		init_info.end_port_ = current_client_rtp_port_end;
+		init_info.sip_net_ = sip_net;
+		init_info.rtp_net_ = rtp_net;
+		init_info.stream_file_ = stream_file;
+		init_info.gb28181_hb_time_ = gb28181_hb_time;
+		init_info.dev_baseinfo_time_ = dev_baseinfo_time;
+		init_info.dev_location_time_ = dev_location_time;
+
+		//int errCode = simulater->Initialize(local_ip, current_client_port_string, current_client_gbcode, server_ip, server_port, server_gbcode, server_username, server_password, manual_port, current_client_rtp_port_begin, current_client_rtp_port_end);
+		int errCode = simulater->Initialize(init_info);
 		if (errCode != 0)
 		{
 			printf("³õÊ¼»¯%dÄ£ÄâÆ÷%sÊ§°Ü£¬´íÎóÂë£º%d\n", index, current_client_gbcode, errCode);

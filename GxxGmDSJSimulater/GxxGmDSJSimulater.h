@@ -13,6 +13,30 @@
 #include "Poco/FileChannel.h"
 #include "Poco/AutoPtr.h"
 
+struct SimulaterInitInfo
+{
+	std::string local_ip_;
+	std::string local_port_;
+	std::string local_gbcode_;
+
+	std::string server_ip_;
+	std::string server_port_;
+	std::string server_gbcode_;
+	std::string username_;
+	std::string password_;
+
+	int manual_port_;
+	unsigned short begin_port_;
+	unsigned short end_port_;
+
+	std::string sip_net_;
+	std::string rtp_net_;
+	std::string stream_file_;
+	int gb28181_hb_time_;
+	int dev_baseinfo_time_;
+	int dev_location_time_;
+};
+
 class GxxGmDSJSimulater
 {
 public:
@@ -21,7 +45,8 @@ public:
 
 public:
 	// 开机
-	int Initialize(const char *local_ip, const char *local_port, const char *local_gbcode, const char *server_ip, const char *server_port, const char *server_gbcode, const char *username, const char *password, int is_manual_port, unsigned short begin_port, unsigned short end_port);
+	//int Initialize(const char *local_ip, const char *local_port, const char *local_gbcode, const char *server_ip, const char *server_port, const char *server_gbcode, const char *username, const char *password, int is_manual_port, unsigned short begin_port, unsigned short end_port);
+	int Initialize(struct SimulaterInitInfo &init_info);
 
 	// 关机
 	void Destroy();
@@ -81,6 +106,10 @@ public:
 	HANDLE log_file_handle_;
 
 public:
+	int gb28181_hb_time_;
+	int dev_baseinfo_time_;
+	int dev_location_time_;
+
 	DEVICE_BASE_INFO base_info_;
 	DEVICE_LOCATION_INFO location_info_;
 	DEVICE_EXCEPTION_INFO exception_info_;
