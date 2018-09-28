@@ -133,7 +133,6 @@ int main(int argc, const char *argv[])
 		init_info.dev_baseinfo_time_ = dev_baseinfo_time;
 		init_info.dev_location_time_ = dev_location_time;
 
-		//int errCode = simulater->Initialize(local_ip, current_client_port_string, current_client_gbcode, server_ip, server_port, server_gbcode, server_username, server_password, manual_port, current_client_rtp_port_begin, current_client_rtp_port_end);
 		int errCode = simulater->Initialize(init_info);
 		if (errCode != 0)
 		{

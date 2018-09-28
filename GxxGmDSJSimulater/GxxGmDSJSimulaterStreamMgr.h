@@ -4,7 +4,6 @@
 #include "FFMpegStub.h"
 #include "GB28181Defs.h"
 #include "GSRtpServer.h"
-//#include "GxxGmVideoFile.h"
 #include <map>
 
 
@@ -72,8 +71,6 @@ public:
 #endif
 
 public:
-	//GxxGmVideoFile video_file_;
-
 	FFMpegStub ffmpeg_;
 
 public:

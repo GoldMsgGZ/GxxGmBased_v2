@@ -34,116 +34,6 @@ GxxGmDSJSimulater::~GxxGmDSJSimulater()
 	// 
 }
 
-//int GxxGmDSJSimulater::Initialize(const char *local_ip, const char *local_port, const char *local_gbcode, const char *server_ip, const char *server_port, const char *server_gbcode, const char *username, const char *password, int is_manual_port, unsigned short begin_port, unsigned short end_port)
-//{
-//	int errCode = 0;
-//
-//	// 初始化协议栈
-//	agent_ = GB28181Agent_Init(2, 16, Enum28181Version::eVERSION_2016, 3000);
-//	if (agent_ == NULL)
-//	{
-//		// 
-//		printf("[%s]初始化28181协议栈失败！\n", local_gbcode);
-//		return -1;
-//	}
-//
-//	// 安装回调
-//	GB28181Agent_SetLogCB(agent_, _AgentLogCallBack, this);
-//	GB28181Agent_SetDevInfoQueryCB(agent_, _DevInfoQueryCB, this);
-//	GB28181Agent_SetDevControlCB(agent_, _DevControlCB, this);
-//	GB28181Agent_SetPlayControlCB(agent_, _PlayControlCB, this);
-//	GB28181Agent_SetStreamRequestCB(agent_, _StreamRequestCB, this);
-//	GB28181Agent_SetNotifyInfoCB(agent_, _NotifyInfo_CallBackFunc, this);
-//	GB28181Agent_SetExtendRequestCB(agent_, _ExtendRqeustCallBack, this);
-//
-//	GS28181_ERR err = GB28181Agent_Start(agent_, local_ip, atoi(local_port), local_gbcode, EnumTransType::eTYPE_UDP);
-//	if (err != GS28181_ERR_SUCCESS)
-//	{
-//		printf("[%s]启动28181协议栈失败！错误码：%d\n", local_gbcode, err);
-//		GB28181Agent_Uninit(agent_);
-//		return err;
-//	}
-//
-//	StruRegistMsg reg_msg;
-//	
-//	reg_msg.iExpires = 86400;	// 1年
-//	strcpy_s(reg_msg.szUserName, STR_USERNAME_LEN, username);
-//	strcpy_s(reg_msg.szPassword, STR_PASSWORD_LEN, password);
-//	strcpy_s(reg_msg.stuCnnParam.szIP, STR_IPADDRESS_LEN, server_ip);
-//	reg_msg.stuCnnParam.iPort = (unsigned int)atoi(server_port);
-//	strcpy_s(reg_msg.stuCnnParam.szGBCode, STR_GBCODE_LEN, server_gbcode);
-//	
-//	char date_time[4096] = {0};
-//	err = GB28181Agent_Register(agent_, &reg_msg, date_time);
-//	if (err != GS28181_ERR_SUCCESS)
-//	{
-//		printf("[%s]注册到接入网关失败！错误码：%d\n", local_gbcode, err);
-//		GB28181Agent_Stop(agent_);
-//		GB28181Agent_Uninit(agent_);
-//		return err;
-//	}
-//
-//	printf("[%s]注册到接入网关成功！错误码：%d\n", local_gbcode, err);
-//
-//	// 初始化日志
-//	SYSTEMTIME st;
-//	GetLocalTime(&st);
-//	char current_time[128] = {0};
-//	sprintf_s(current_time, 128, "%d-%02d-%02d %02d-%02d-%02d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-//
-//	char log_file_name[4096] = {0};
-//	sprintf_s(log_file_name, 4096, "%s.log", current_time, local_gbcode);
-//
-//	char current_program_path[4096] = {0};
-//	GetModuleFileNameA(NULL, current_program_path, 4096);
-//	std::string tmp = current_program_path;
-//	int pos = tmp.find_last_of('\\');
-//
-//	std::string log_path = tmp.substr(0, pos + 1);
-//	log_path.append("log");
-//	CreateDirectoryA(log_path.c_str(), NULL);
-//	log_path.append("\\");
-//	log_path.append(local_gbcode);
-//	CreateDirectoryA(log_path.c_str(), NULL);
-//	log_path.append("\\");
-//	log_path.append(log_file_name);
-//
-//	log_file_handle_ = CreateFileA(log_path.c_str(), GENERIC_ALL, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-//	if (log_file_handle_ == INVALID_HANDLE_VALUE)
-//	{
-//		errCode = GetLastError();
-//		printf("[%s]创建日志文件失败！\n", local_gbcode);
-//	}
-//
-//	// 保存参数
-//	local_ip_ = local_ip;
-//	local_port_ = local_port;
-//	local_gbcode_ = local_gbcode;
-//	server_ip_ = server_ip;
-//	server_port_ = server_port;
-//	server_gbcode_ = server_gbcode;
-//	username_ = username;
-//	password_ = password;
-//
-//	// 初始化流管理模块
-//	errCode = stream_mgr_.Initialize(is_manual_port, begin_port, end_port, local_ip, );
-//	if (errCode != 0)
-//	{
-//		printf("[%s]初始化推流服务失败！\n", local_gbcode);
-//	}
-//
-//	// 查询目录响应成功
-//	// 开始向上推送设备状态信息和定位信息
-//	// 使用Poco的多线程框架做吧
-//	if (!gb28181_heartbeat_thread_.isRunning())
-//	{
-//		gb28181_heartbeat_thread_.start(GB28181HeartbeatThreadFun, this);
-//		Sleep(10);
-//	}
-//
-//	return errCode;
-//}
-
 int GxxGmDSJSimulater::Initialize(struct SimulaterInitInfo &init_info)
 {
 	int errCode = 0;
@@ -273,8 +163,6 @@ void GxxGmDSJSimulater::Destroy()
 
 	// 停止推流
 	stream_mgr_.StopRealStream();
-
-	// 主动停流
 
 	// 反注册
 	StruRegistMsg reg_msg;
@@ -711,7 +599,6 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_DevInfoQueryCB(SESSION_HANDLE hSession, con
 		strcpy_s(catlog[0].czOwner, STR_OWNER_LEN, "440000");
 		strcpy_s(catlog[0].czCivilCode, STR_CIVILCODE_LEN, "440100");
 		strcpy_s(catlog[0].czBlock, STR_BLOCK_LEN, "联合街道暹岗警区");
-		//strcpy_s(catlog[0].czAddress, STR_ADDRESS_LEN, "广州市黄埔区开创大道2819号");
 		strcpy_s(catlog[0].czAddress, STR_ADDRESS_LEN, "GuangZhou HuangpPu KaiChuang Road No.2819");
 		catlog[0].iParental = 0;
 		strcpy_s(catlog[0].czParentID, STR_PARENTID_LEN, simulater->local_gbcode_.c_str());
