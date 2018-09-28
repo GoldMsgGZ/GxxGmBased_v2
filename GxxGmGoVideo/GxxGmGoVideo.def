@@ -1,0 +1,6 @@
+LIBRARY	"GxxGmGoVideo"
+
+EXPORTS
+	??0GxxGmGoVideo@@QAE@XZ
+	??1GxxGmGoVideo@@QAE@XZ
+	?Login@GxxGmGoVideo@@QAEHPBDG00H00@Z

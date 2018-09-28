@@ -172,7 +172,13 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 			video_stream_index = index;
 			// 这里尝试计算一下帧率
 			video_stream = input_format_context->streams[index];
-			video_frame_rate = video_stream->avg_frame_rate.num / video_stream->avg_frame_rate.den;
+
+			// 如果帧率参数不对，那么我们就强制设置为30帧
+			if (video_stream->avg_frame_rate.den == 0)
+				video_frame_rate = 30;
+			else
+				video_frame_rate = video_stream->avg_frame_rate.num / video_stream->avg_frame_rate.den;
+
 			Sleep(1);
 		}
 		else if (input_format_context->streams[index]->codec->codec_type == AVMEDIA_TYPE_AUDIO)
