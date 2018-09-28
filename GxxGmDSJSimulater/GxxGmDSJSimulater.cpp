@@ -7,6 +7,17 @@
 
 #define USE_REALSTREAM
 
+#ifdef USE_FFMPEG
+#pragma comment(lib, "avformat.lib")
+#pragma comment(lib, "avcodec.lib")
+#pragma comment(lib, "avfilter.lib")
+#pragma comment(lib, "avutil.lib")
+#pragma comment(lib, "swresample.lib")
+//#pragma comment(lib, "avformat.lib")
+//#pragma comment(lib, "avformat.lib")
+//#pragma comment(lib, "avformat.lib")
+#endif
+
 GxxGmDSJSimulater::GxxGmDSJSimulater()
 : agent_(NULL)
 , is_gb28181_heartbeat_thread_need_exit_(false)
@@ -155,7 +166,14 @@ int GxxGmDSJSimulater::Initialize(struct SimulaterInitInfo &init_info)
 	GB28181Agent_SetNotifyInfoCB(agent_, _NotifyInfo_CallBackFunc, this);
 	GB28181Agent_SetExtendRequestCB(agent_, _ExtendRqeustCallBack, this);
 
-	GS28181_ERR err = GB28181Agent_Start(agent_, init_info.local_ip_.c_str(), atoi(init_info.local_port_.c_str()), init_info.local_gbcode_.c_str(), EnumTransType::eTYPE_UDP);
+	// 这里判断网络情况
+	EnumTransType eTransType = EnumTransType::eTYPE_UDP;
+	if (init_info.sip_net_.compare("UDP") == 0)
+		eTransType = EnumTransType::eTYPE_UDP;
+	else if (init_info.sip_net_.compare("TCP") == 0)
+		eTransType = EnumTransType::eTYPE_TCP;
+
+	GS28181_ERR err = GB28181Agent_Start(agent_, init_info.local_ip_.c_str(), atoi(init_info.local_port_.c_str()), init_info.local_gbcode_.c_str(), eTransType);
 	if (err != GS28181_ERR_SUCCESS)
 	{
 		printf("[%s]启动28181协议栈失败！错误码：%d\n", init_info.local_gbcode_.c_str(), err);
@@ -252,6 +270,11 @@ void GxxGmDSJSimulater::Destroy()
 	// 先发送命令，停止心跳发送，并且停止基础信息、定位信息的推送
 	is_gb28181_heartbeat_thread_need_exit_ = true;
 	gb28181_heartbeat_thread_.join();
+
+	// 停止推流
+	stream_mgr_.StopRealStream();
+
+	// 主动停流
 
 	// 反注册
 	StruRegistMsg reg_msg;

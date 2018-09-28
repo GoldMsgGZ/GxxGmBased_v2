@@ -119,8 +119,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\GosuncnLib\GSRtpStack\inc;..\GosuncnLib\28181\inc;..\GosuncnLib\GMFLib;..\ext\Poco\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;GXXGMDSJSIMULATER_EXPORTS"
+				AdditionalIncludeDirectories="..\GosuncnLib\GSRtpStack\inc;..\GosuncnLib\28181\inc;..\GosuncnLib\PSFormat\inc;..\ext\Poco\include;..\ext\FFmpeg\3.4\include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;GXXGMDSJSIMULATER_EXPORTS;__STDC_CONSTANT_MACROS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
@@ -138,9 +138,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="lib28181AgentSDK.lib GSRtpServer.lib GMFLib.lib"
+				AdditionalDependencies="lib28181AgentSDK.lib GSRtpServer.lib PSFormat.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\GosuncnLib\28181\lib\x86;..\ext\Poco\lib;..\GosuncnLib\GSRtpStack\lib\x86;..\GosuncnLib\GMFLib"
+				AdditionalLibraryDirectories="..\ext\Poco\lib;..\GosuncnLib\28181\lib\x86;..\GosuncnLib\GSRtpStack\lib\x86;..\GosuncnLib\GMFLib;..\GosuncnLib\PSFormat\lib\x86;..\ext\FFmpeg\3.4\lib\x86"
 				ModuleDefinitionFile="GxxGmDSJSimulater.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -215,6 +215,22 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+		</Filter>
+		<Filter
+			Name="FFMpeg¶¯Ì¬¼ÓÔØÄ£¿é"
+			>
+			<File
+				RelativePath=".\FFMpegInterface.h"
+				>
+			</File>
+			<File
+				RelativePath=".\FFMpegStub.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\FFMpegStub.h"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

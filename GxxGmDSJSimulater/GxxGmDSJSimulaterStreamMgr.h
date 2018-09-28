@@ -1,15 +1,20 @@
 #ifndef _GxxGmDSJSimulaterStreamMgr_H_
 #define _GxxGmDSJSimulaterStreamMgr_H_
 
+#include "FFMpegStub.h"
 #include "GB28181Defs.h"
 #include "GSRtpServer.h"
 //#include "GxxGmVideoFile.h"
 #include <map>
 
+
+
 #include "Poco/Thread.h"
 
 //#define POCO_THREAD
 #define WIN32_THREAD
+
+//#define USE_FFMPEG
 
 enum RtpStreamType
 {
@@ -52,6 +57,7 @@ public:
 	std::string rtp_net_;
 
 public:
+	STREAM_HANDLE streamHandle_;
 	bool is_stream_send_thread_stop_;
 	HANDLE stream_send_thread_handle_;
 
@@ -67,6 +73,8 @@ public:
 
 public:
 	//GxxGmVideoFile video_file_;
+
+	FFMpegStub ffmpeg_;
 
 public:
 	char current_token_[32];
