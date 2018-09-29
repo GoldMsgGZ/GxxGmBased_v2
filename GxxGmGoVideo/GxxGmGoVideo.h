@@ -3,6 +3,28 @@
 
 #include <string>
 #include <sstream>
+#include <vector>
+
+typedef struct _GOVIDEO_DEVICE_INFO_
+{
+	unsigned int device_id_;
+	unsigned int device_index_;
+	std::string device_name_;
+	unsigned int model_id_;
+	unsigned int category_id_;
+	std::string device_code_;
+	std::string device_connection_info_;
+	std::string device_version_;
+	std::string device_username_;
+	std::string device_password_;
+	std::string device_extra_info_;
+	std::string gb28181_code_;
+	std::string device_name_abbr_;
+	unsigned int version_;
+	std::string remark_;
+	unsigned int dgw_server_id_;
+
+} GOVIDEO_DEVICE_INFO, *PGOVIDEO_DEVICE_INFO;
 
 class GxxGmGoVideo
 {
@@ -15,13 +37,25 @@ public:
 	int Logout();
 
 public:
-	// 点流指令
-	int GetStream();
-	// 停留指令
-	int 
+	
+	// 查询所有设备(通道)
+	int GetAllDevices();
 
+	// 查询设备状态
+	int GetDeviceStatus(const char *device_id);
+
+	// 接收GoVideo发来的设备变更信息
+
+	// 点流
+	int GetRealStream(const char *device_id);
+
+	// 语音对讲
+	int StartTalk(const char *device_id);
 private:
 	std::string token_;
+
+private:
+	std::map<unsigned int, GOVIDEO_DEVICE_INFO> devices_;
 
 private:
 	std::string host_;
