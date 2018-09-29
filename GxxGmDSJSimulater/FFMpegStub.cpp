@@ -32,7 +32,9 @@ FFMpegStub::FFMpegStub()
 , ptr_av_bitstream_filter_filter(NULL)
 , ptr_av_bitstream_filter_close(NULL)
 , ptr_avcodec_register_all(NULL)
+, ptr_av_copy_packet(NULL)
 , ptr_av_free(NULL)
+, ptr_av_strerror(NULL)
 {
 	//
 }
@@ -109,9 +111,11 @@ int FFMpegStub::Initialize(const char *base_dir /* = NULL */)
 	ptr_av_bitstream_filter_filter	= (_av_bitstream_filter_filter)GetProcAddress((HMODULE)h_avcodec_, "av_bitstream_filter_filter");
 	ptr_av_bitstream_filter_close	= (_av_bitstream_filter_close)GetProcAddress((HMODULE)h_avcodec_, "av_bitstream_filter_close");
 	ptr_avcodec_register_all		= (_avcodec_register_all)GetProcAddress((HMODULE)h_avcodec_, "avcodec_register_all");
+	ptr_av_copy_packet				= (_av_copy_packet)GetProcAddress((HMODULE)h_avcodec_, "av_copy_packet");
 
 	// avutil
 	ptr_av_free						= (_av_free)GetProcAddress((HMODULE)h_avutil_, "av_free");
+	ptr_av_strerror					= (_av_strerror)GetProcAddress((HMODULE)h_avutil_, "av_strerror");
 
 	// 准备完毕
 	// 立即初始化一下FFMpeg环境

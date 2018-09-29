@@ -38,6 +38,7 @@ typedef void (* _av_bitstream_filter_close)(AVBitStreamFilterContext *bsf);
 //////////////////////////////////////////////////////////////////////////
 
 typedef void (* _avcodec_register_all)(void);
+typedef int (* _av_copy_packet)(AVPacket *dst, const AVPacket *src);
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -46,5 +47,6 @@ typedef void (* _avcodec_register_all)(void);
 //////////////////////////////////////////////////////////////////////////
 
 typedef void (* _av_free)(void *ptr);
+typedef int (* _av_strerror)(int errnum, char *errbuf, size_t errbuf_size);
 
 #endif//_FFMpegInterface_H_

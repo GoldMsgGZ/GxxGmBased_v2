@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <map>
 
 typedef struct _GOVIDEO_DEVICE_INFO_
 {
@@ -51,11 +52,14 @@ public:
 
 	// ”Ô“Ù∂‘Ω≤
 	int StartTalk(const char *device_id);
+
 private:
+	void* http_session_;
 	std::string token_;
 
 private:
-	std::map<unsigned int, GOVIDEO_DEVICE_INFO> devices_;
+	//std::map<unsigned int, GOVIDEO_DEVICE_INFO*> devices_;
+	std::vector<GOVIDEO_DEVICE_INFO*> devices_;
 
 private:
 	std::string host_;

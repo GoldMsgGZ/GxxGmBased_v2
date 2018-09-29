@@ -33,9 +33,11 @@ public:
 
 public:
 	_avcodec_register_all		ptr_avcodec_register_all;
+	_av_copy_packet				ptr_av_copy_packet;
 
 public:
 	_av_free					ptr_av_free;
+	_av_strerror				ptr_av_strerror;
 
 private:
 	void* h_avcodec_;

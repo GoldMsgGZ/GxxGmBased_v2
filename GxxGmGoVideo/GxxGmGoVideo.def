@@ -4,3 +4,7 @@ EXPORTS
 	??0GxxGmGoVideo@@QAE@XZ
 	??1GxxGmGoVideo@@QAE@XZ
 	?Login@GxxGmGoVideo@@QAEHPBDG00H00@Z
+	?Logout@GxxGmGoVideo@@QAEHXZ
+	?GetAllDevices@GxxGmGoVideo@@QAEHXZ
+	?GetDeviceStatus@GxxGmGoVideo@@QAEHPBD@Z
+	?GetRealStream@GxxGmGoVideo@@QAEHPBD@Z

@@ -13,6 +13,11 @@ int _tmain(int argc, const TCHAR *argv[])
 	// 首先，登录到GoVideo
 	GxxGmGoVideo govideo;
 	int errCode = govideo.Login(ip, port, "cyfid111", "cyfid111", 107, "ad22min", "admin2222");
+
+	// 获取所有设备信息
+	errCode = govideo.GetAllDevices();
+
+	// 获取设备状态
 	
 	// 然后尝试发送点流命令
 	system("pause");

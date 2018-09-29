@@ -6,7 +6,7 @@
 
 int main(int argc, const char *argv[])
 {
-	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.1\n");
+	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.2\n");
 	printf("\n");
 	printf("功能说明：\n");
 	printf("1. 支持GB28181-2011 和 GB28181-2016两个版本的协议通信；\n");

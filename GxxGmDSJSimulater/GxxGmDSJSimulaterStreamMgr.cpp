@@ -140,6 +140,7 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 {
 	// 从指定的录像文件中拉取视频流并推送，并且是循环推送
 	// 这里采用GMF文件来推流
+	char ffmppeg_errpr[4096] = {0};
 
 	// 先打开GMF文件，读取到一个队列里面
 	char current_program_path[4096] = {0};
@@ -154,15 +155,23 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 	int errCode = ffmpeg_.ptr_avformat_open_input(&input_format_context, video_path.c_str(), NULL, NULL);
 	if (errCode < 0)
 	{
+		ffmpeg_.ptr_av_strerror(errCode, ffmppeg_errpr, 4096);
 		return errCode;
 	}
 
-	ffmpeg_.ptr_avformat_find_stream_info(input_format_context, NULL);
+	errCode = ffmpeg_.ptr_avformat_find_stream_info(input_format_context, NULL);
+	if (errCode < 0)
+	{
+		ffmpeg_.ptr_av_strerror(errCode, ffmppeg_errpr, 4096);
+		return errCode;
+	}
 
 	int video_stream_index = -1;
 	int audio_stream_index = -1;
 
 	AVStream *video_stream = NULL;
+	AVCodecID video_codec_id = AV_CODEC_ID_NONE;
+	EnumGSPSCodecType gxx_codec_id = EnumGSPSCodecType::GS_MPEGPS_CODEC_NONE;
 	int video_frame_rate = 0;
 
 	for (int index = 0; index < input_format_context->nb_streams; ++index)
@@ -179,7 +188,38 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 			else
 				video_frame_rate = video_stream->avg_frame_rate.num / video_stream->avg_frame_rate.den;
 
-			Sleep(1);
+			// 这里拿一下编码，看看后面能不能兼容其他的编码格式
+			video_codec_id = video_stream->codec->codec_id;
+			if (video_codec_id == AV_CODEC_ID_H264)
+			{
+				gxx_codec_id = EnumGSPSCodecType::GS_MPEGPS_CODEC_V_H264;
+				printf("视频编码为：AVC(H264)\n");
+			}
+			else if (video_codec_id == AV_CODEC_ID_H265)
+			{
+				gxx_codec_id = EnumGSPSCodecType::GS_MPEGPS_CODEC_V_H265;
+				printf("视频编码为：HEVC(H265)\n");
+			}
+			else if (video_codec_id == AV_CODEC_ID_MPEG4)
+			{
+				gxx_codec_id = EnumGSPSCodecType::GS_MPEGPS_CODEC_V_MP4;
+				printf("视频编码为：MP4\n");
+			}
+			else if (video_codec_id == AV_CODEC_ID_MPEG1VIDEO)
+			{
+				gxx_codec_id = EnumGSPSCodecType::GS_MPEGPS_CODEC_V_MPEG1;
+				printf("视频编码为：MPEG1\n");
+			}
+			else if (video_codec_id == AV_CODEC_ID_MPEG2VIDEO)
+			{
+				gxx_codec_id = EnumGSPSCodecType::GS_MPEGPS_CODEC_V_MPEG2;
+				printf("视频编码为：MPEG2\n");
+			}
+			else
+			{
+				printf("不支持的视频编码...请转码...\n");
+				system("pause");
+			}
 		}
 		else if (input_format_context->streams[index]->codec->codec_type == AVMEDIA_TYPE_AUDIO)
 		{
@@ -194,7 +234,8 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 
 	while (!is_stream_send_thread_stop_)
 	{
-		ffmpeg_.ptr_av_seek_frame(input_format_context, video_stream_index, 1 * AV_TIME_BASE, AVSEEK_FLAG_ANY);
+		// 回到视频开始处，对于有些视频似乎不太起作用
+		ffmpeg_.ptr_av_seek_frame(input_format_context, video_stream_index, 0, AVSEEK_FLAG_BACKWARD);
 
 		while (!is_stream_send_thread_stop_)
 		{
@@ -202,6 +243,8 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 			errCode = ffmpeg_.ptr_av_read_frame(input_format_context, &pkt);
 			if (errCode < 0)
 			{
+				// 这里要识别错误
+				ffmpeg_.ptr_av_strerror(errCode, ffmppeg_errpr, 4096);
 				break;
 			}
 
@@ -217,14 +260,17 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 				// 这里可能需要确认一下，H.264编码是否需要加一下过滤器
 				// 这么操作会导致内存泄露，需要解决以下。参考页面：https://blog.csdn.net/LG1259156776/article/details/73283920
 				AVPacket out_pkt;
-				ffmpeg_.ptr_av_bitstream_filter_filter(h264bsfc, video_stream->codec, NULL, &out_pkt.data, &out_pkt.size, pkt.data, pkt.size, 0);
+				if (gxx_codec_id == EnumGSPSCodecType::GS_MPEGPS_CODEC_V_H264)
+					ffmpeg_.ptr_av_bitstream_filter_filter(h264bsfc, video_stream->codec, NULL, &out_pkt.data, &out_pkt.size, pkt.data, pkt.size, 0);
+				else
+					ffmpeg_.ptr_av_copy_packet(&out_pkt, &pkt);
 
 				StruESStreamDesc es_stream_desc;
-				es_stream_desc.eVideoCodecs = GS_MPEGPS_CODEC_V_H264;
+				es_stream_desc.eVideoCodecs = gxx_codec_id;
 				es_stream_desc.eAudioCodecs = GS_MPEGPS_CODEC_A_G711U;
 
 				StruESFrameInfo es_frame_info;
-				es_frame_info.eCodec = GS_MPEGPS_CODEC_V_H264;
+				es_frame_info.eCodec = gxx_codec_id;
 				es_frame_info.eType = EnumGSMediaType::GS_MEDIA_TYPE_VIDEO;
 				es_frame_info.nBufLen = out_pkt.size;
 				es_frame_info.pBuffer = out_pkt.data;
@@ -277,7 +323,10 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 					}
 				}
 
-				ffmpeg_.ptr_av_free(out_pkt.data);
+				if (gxx_codec_id == EnumGSPSCodecType::GS_MPEGPS_CODEC_V_H264)
+					ffmpeg_.ptr_av_free(out_pkt.data);
+				else
+					ffmpeg_.ptr_av_free_packet(&out_pkt);
 
 				// 控制帧率
 				Sleep(wait_time);
