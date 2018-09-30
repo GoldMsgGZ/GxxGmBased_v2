@@ -194,6 +194,10 @@
 				RelativePath=".\GxxGmGoVideo.h"
 				>
 			</File>
+			<File
+				RelativePath=".\GxxGmGoVideoError.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="资源文件"

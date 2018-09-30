@@ -251,16 +251,198 @@ int GxxGmGoVideo::GetAllDevices()
 	return errCode;
 }
 
-int GxxGmGoVideo::GetDeviceStatus(const char *device_id)
+int GxxGmGoVideo::GetDeviceStatus(const char *device_gb28181_code, GOVIDEO_DEVICE_STATUS &device_status)
 {
 	int errCode = 0;
+
+	// 首先在已经查询到的设备列表里面读取GoVideo注册的设备id
+	unsigned int govideo_device_id = 0;
+	std::vector<GOVIDEO_DEVICE_INFO *>::iterator iter;
+	for (iter = devices_.begin(); iter != devices_.end(); ++iter)
+	{
+		GOVIDEO_DEVICE_INFO *dev_info = *iter;
+		if (dev_info->gb28181_code_.compare(device_gb28181_code) == 0)
+		{
+			govideo_device_id = dev_info->device_id_;
+			device_status.gb28181_code_ = device_gb28181_code;
+			break;
+		}
+	}
+
+	if (iter == devices_.end())
+	{
+		// 没找到设备
+		return -1;
+	}
+
+	try {
+		Poco::Net::HTTPClientSession *session = (Poco::Net::HTTPClientSession *)http_session_;
+
+		char query_string[4096] = {0};
+		sprintf_s(query_string, 4096,
+			"/GoVideo/Device/GetDeviceStatusRequest?SequenceID=5&DeviceID=%d&Token=%s",
+			govideo_device_id, token_.c_str());
+		std::string uri = query_string;
+		Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_GET, uri, Poco::Net::HTTPRequest::HTTP_1_1);
+
+		session->sendRequest(request);
+
+		Poco::Net::HTTPResponse response;
+		std::istream &is = session->receiveResponse(response);
+
+		std::ostringstream ostr;
+		Poco::StreamCopier::copyStream(is, ostr);
+
+		std::string json_str = ostr.str();
+
+		// 分析结果
+		Poco::JSON::Parser parser;
+		Poco::Dynamic::Var json = parser.parse(json_str);
+		Poco::JSON::Object::Ptr jsonObject = json.extract<Poco::JSON::Object::Ptr>();
+
+		Poco::Dynamic::Var message = jsonObject->get("Message");
+		jsonObject = message.extract<Poco::JSON::Object::Ptr>();
+
+		Poco::Dynamic::Var result_code = jsonObject->get("OperResult");
+		errCode = atoi(result_code.toString().c_str());
+		if (errCode != 0)
+			return errCode;
+
+		device_status.device_id_ = govideo_device_id;
+
+		Poco::Dynamic::Var dev_status = jsonObject->get("DevStatus");
+		device_status.status_ = atoi(dev_status.toString().c_str());
+
+		Poco::Dynamic::Var channel_count = jsonObject->get("ChannelNum");
+		if (atoi(channel_count.toString().c_str()) > 0)
+		{
+			Poco::JSON::Array::Ptr channel_status_list = jsonObject->getArray("ChannelStatusList");
+			Poco::JSON::Array::ConstIterator iter = channel_status_list->begin();
+			for (; iter != channel_status_list->end(); ++iter)
+			{
+				Poco::JSON::Object::Ptr channel_status_json_object = iter->extract<Poco::JSON::Object::Ptr>();
+
+				Poco::Dynamic::Var channel_index = channel_status_json_object->get("ChnIndex");
+				Poco::Dynamic::Var channel_status = channel_status_json_object->get("Status");
+
+				int chn_index = atoi(channel_index.toString().c_str());
+				int chn_status = atoi(channel_status.toString().c_str());
+
+				device_status.chennal_status_.insert(std::pair<int, unsigned int>(chn_index, chn_status));
+			}
+		}
+		
+	}
+	catch (Poco::Net::NetException &ex)
+	{
+		std::string errstr = ex.displayText();
+		printf("从GoVideo注销登录失败！%s\n", errstr.c_str());
+	}
+
+	return 0;
+}
+
+int GxxGmGoVideo::GetAllDeviceStatus()
+{
+	std::vector<GOVIDEO_DEVICE_INFO *>::iterator iter;
+	for (iter = devices_.begin(); iter != devices_.end(); ++iter)
+	{
+		GOVIDEO_DEVICE_INFO *dev_info = *iter;
+		GOVIDEO_DEVICE_STATUS device_status_;
+		GetDeviceStatus(dev_info->gb28181_code_.c_str(), device_status_);
+
+		devices_status_.push_back(device_status_);
+	}
+
+	return 0;
+}
+
+int GxxGmGoVideo::GetRealStream(unsigned int device_id, std::string &stream_url)
+{
+	int errCode = 0;
+
+	try {
+		Poco::Net::HTTPClientSession *session = (Poco::Net::HTTPClientSession *)http_session_;
+
+		char body[4096] = {0};
+		sprintf_s(body, 4096,
+			"{\"Message\":{\"DeviceID\":\"%d\",\"ClientType\":\"107\",\"ChannelNum\":1,\"StreamType\":1,\"IPAddr\":\"10.10.16.59\"}}",
+			device_id);
+
+		char query_string[4096] = {0};
+		sprintf_s(query_string, 4096,
+			"/GoVideo/Device/GetStreamRequest"
+			);
+		std::string uri = query_string;
+		Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_POST, uri, Poco::Net::HTTPRequest::HTTP_1_1);
+		request.add("Content-Type", "application/json; charset=utf-8");
+		request.add("SequenceID", "10086");
+		request.add("Token", token_.c_str());
+
+		std::string http_body(body);
+		request.setContentLength((int)http_body.length());
+
+		session->sendRequest(request)<< http_body;
+
+		Poco::Net::HTTPResponse response;
+		std::istream &is = session->receiveResponse(response);
+
+		Poco::Net::HTTPResponse::HTTPStatus status = response.getStatus();
+		if (status != Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK)
+		{
+			return status;
+		}
+
+		std::ostringstream ostr;
+		Poco::StreamCopier::copyStream(is, ostr);
+
+		std::string json_str = ostr.str();
+
+		// 分析结果
+		Poco::JSON::Parser parser;
+		Poco::Dynamic::Var json = parser.parse(json_str);
+		Poco::JSON::Object::Ptr jsonObject = json.extract<Poco::JSON::Object::Ptr>();
+
+		Poco::Dynamic::Var message = jsonObject->get("Message");
+		jsonObject = message.extract<Poco::JSON::Object::Ptr>();
+		Poco::Dynamic::Var result_code = jsonObject->get("OperResult");
+		errCode = atoi(result_code.toString().c_str());
+		if (errCode != 0)
+			return errCode;
+
+		Poco::Dynamic::Var stream_uri = jsonObject->get("StreamURI");
+		stream_url = stream_uri.toString();
+	}
+	catch (Poco::Net::NetException &ex)
+	{
+		std::string errstr = ex.displayText();
+		printf("点流失败！%s\n", errstr.c_str());
+	}
 
 	return errCode;
 }
 
-int GxxGmGoVideo::GetRealStream(const char *device_id)
+int GxxGmGoVideo::GetRealStreamByGBCode(const char *device_gb28181_code, std::string &stream_url)
 {
 	int errCode = 0;
+
+	std::vector<GOVIDEO_DEVICE_STATUS>::iterator iter;
+	for (iter = devices_status_.begin(); iter != devices_status_.end(); ++iter)
+	{
+		GOVIDEO_DEVICE_STATUS *dev_status = &(*iter);
+		if (dev_status->gb28181_code_.compare(device_gb28181_code) == 0)
+		{
+			if (dev_status->status_ == 1)
+			{
+				// 设备不在线
+				errCode = -1;
+				break;
+			}
+
+			errCode = GetRealStream(dev_status->device_id_, stream_url);
+			break;
+		}
+	}
 
 	return errCode;
 }

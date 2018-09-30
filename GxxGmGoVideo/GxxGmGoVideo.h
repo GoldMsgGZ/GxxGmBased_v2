@@ -27,6 +27,14 @@ typedef struct _GOVIDEO_DEVICE_INFO_
 
 } GOVIDEO_DEVICE_INFO, *PGOVIDEO_DEVICE_INFO;
 
+typedef struct _GOVIDEO_DEVICE_STATUS_
+{
+	std::string gb28181_code_;
+	unsigned int device_id_;
+	unsigned int status_;
+	std::map<int, unsigned int> chennal_status_;
+} GOVIDEO_DEVICE_STATUS, *PGOVIDEO_DEVICE_STATUS;
+
 class GxxGmGoVideo
 {
 public:
@@ -42,24 +50,28 @@ public:
 	// 查询所有设备(通道)
 	int GetAllDevices();
 
-	// 查询设备状态
-	int GetDeviceStatus(const char *device_id);
+	// 查询设备状态，会得到设备在线状态，设备通道列表以及通道在线状态
+	int GetDeviceStatus(const char *device_gb28181_code, GOVIDEO_DEVICE_STATUS &device_status);
+
+	// 查询所有设备状态
+	int GetAllDeviceStatus();
 
 	// 接收GoVideo发来的设备变更信息
 
 	// 点流
-	int GetRealStream(const char *device_id);
+	int GetRealStream(unsigned int device_id, std::string &stream_url);
+	int GetRealStreamByGBCode(const char *device_gb28181_code, std::string &stream_url);
 
 	// 语音对讲
-	int StartTalk(const char *device_id);
+	int StartTalk(const char *device_id, std::string &stream_url);
 
 private:
 	void* http_session_;
 	std::string token_;
 
-private:
-	//std::map<unsigned int, GOVIDEO_DEVICE_INFO*> devices_;
-	std::vector<GOVIDEO_DEVICE_INFO*> devices_;
+public:
+	std::vector<GOVIDEO_DEVICE_INFO *> devices_;
+	std::vector<GOVIDEO_DEVICE_STATUS> devices_status_;
 
 private:
 	std::string host_;
