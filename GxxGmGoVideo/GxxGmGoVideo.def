@@ -3,6 +3,7 @@ LIBRARY	"GxxGmGoVideo"
 EXPORTS
 	??0GxxGmGoVideo@@QAE@XZ
 	??1GxxGmGoVideo@@QAE@XZ
+	?Initialize@GxxGmGoVideo@@QAEHH@Z
 	?Login@GxxGmGoVideo@@QAEHPBDG00H00@Z
 	?Logout@GxxGmGoVideo@@QAEHXZ
 	?GetAllDevices@GxxGmGoVideo@@QAEHXZ

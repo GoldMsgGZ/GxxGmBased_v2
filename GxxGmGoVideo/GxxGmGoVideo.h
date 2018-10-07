@@ -6,6 +6,10 @@
 #include <vector>
 #include <map>
 
+#include "Poco/Thread.h"
+
+class GxxGmHttpServer;
+
 typedef struct _GOVIDEO_DEVICE_INFO_
 {
 	unsigned int device_id_;
@@ -42,6 +46,9 @@ public:
 	~GxxGmGoVideo();
 
 public:
+	int Initialize(int http_port = 9900);
+
+public:
 	int Login(const char *govideo_ip, unsigned short govideo_port, const char *sequence_id = "admin", const char *login_id = "admin", int login_type = 107, const char *username = "admin", const char *password = "admin");
 	int Logout();
 
@@ -65,7 +72,15 @@ public:
 	// ”Ô“Ù∂‘Ω≤
 	int StartTalk(const char *device_id, std::string &stream_url);
 
-private:
+public:
+	Poco::Thread http_server_thread_;
+	static void HttpServerThread(void* param);
+
+public:
+	Poco::Thread hb_thread_;
+	static void HeartBeatThread(void* param);
+
+public:
 	void* http_session_;
 	std::string token_;
 
@@ -76,6 +91,9 @@ public:
 private:
 	std::string host_;
 	unsigned short port_;
+
+public:
+	GxxGmHttpServer *http_server_;
 };
 
 #endif//_GxxGmGoVideo_H_
