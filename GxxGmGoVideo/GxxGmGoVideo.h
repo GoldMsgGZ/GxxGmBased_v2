@@ -8,7 +8,11 @@
 
 #include "Poco/Thread.h"
 
+//#define USE_HTTPSERVER
+
+#ifdef USE_HTTPSERVER
 class GxxGmHttpServer;
+#endif
 
 typedef struct _GOVIDEO_DEVICE_INFO_
 {
@@ -92,8 +96,11 @@ private:
 	std::string host_;
 	unsigned short port_;
 
+#ifdef USE_HTTPSERVER
 public:
 	GxxGmHttpServer *http_server_;
+#endif
+
 };
 
 #endif//_GxxGmGoVideo_H_

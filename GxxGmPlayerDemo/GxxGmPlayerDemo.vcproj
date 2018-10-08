@@ -45,7 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\GxxGmGoVideo;..\ext\Poco\include"
+				AdditionalIncludeDirectories="..\GxxGmGoVideo;..\ext\Poco\include;..\GosuncnLib\GSPlaySDK\inc"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,9 +68,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="GxxGmGoVideo.lib"
+				AdditionalDependencies="GxxGmGoVideo.lib GSPlaySDK.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\Debug;..\ext\Poco\lib"
+				AdditionalLibraryDirectories="..\Debug;..\ext\Poco\lib;..\GosuncnLib\GSPlaySDK\lib\x86"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"

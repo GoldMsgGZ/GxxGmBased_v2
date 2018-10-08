@@ -208,14 +208,6 @@
 		<Filter
 			Name="HTTP·þÎñÆ÷"
 			>
-			<File
-				RelativePath=".\GxxGmHttpServer.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\GxxGmHttpServer.h"
-				>
-			</File>
 		</Filter>
 		<File
 			RelativePath=".\readme.txt"

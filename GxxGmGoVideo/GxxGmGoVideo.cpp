@@ -15,7 +15,10 @@
 #include "Poco/JSON/Query.h"
 #include "Poco/JSON/PrintHandler.h"
 
+#ifdef USE_HTTPSERVER
 #include "GxxGmHttpServer.h"
+#endif
+
 
 GxxGmGoVideo::GxxGmGoVideo()
 : http_session_(NULL)
@@ -465,6 +468,7 @@ int GxxGmGoVideo::GetRealStreamByGBCode(const char *device_gb28181_code, std::st
 
 void GxxGmGoVideo::HttpServerThread(void* param)
 {
+#ifdef USE_HTTPSERVER
 	int errCode = 0;
 	GxxGmGoVideo *govideo = (GxxGmGoVideo *)param;
 
@@ -481,6 +485,7 @@ void GxxGmGoVideo::HttpServerThread(void* param)
 
 		Sleep(1000);
 	}
+#endif
 }
 
 void GxxGmGoVideo::HeartBeatThread(void* param)

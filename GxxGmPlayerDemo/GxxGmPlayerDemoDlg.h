@@ -5,6 +5,7 @@
 #pragma once
 #include "afxwin.h"
 #include "GxxGmGoVideo.h"
+#include "GSPlaySDK.h"
 #include "afxcmn.h"
 
 
@@ -44,9 +45,19 @@ public:
 	GxxGmGoVideo govideo;
 
 public:
+	GSPlayHandle play_handle_;
+
+public:
 	afx_msg void OnBnClickedBtnLogin();
 	
 	afx_msg void OnBnClickedBtnGetOnlineDevice();
 	
 	afx_msg void OnNMDblclkListOnlineDev(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnBnClickedBtnOpenUrl();
+	afx_msg void OnBnClickedBtnCloseUrl();
+	afx_msg void OnBnClickedBtnPlay();
+	afx_msg void OnBnClickedBtnOpenSound();
+	afx_msg void OnBnClickedBtnCloseSound();
+	afx_msg void OnTRBNThumbPosChangingSliderVolume(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnClose();
 };

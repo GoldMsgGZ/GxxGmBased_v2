@@ -49,6 +49,7 @@ END_MESSAGE_MAP()
 
 CGxxGmPlayerDemoDlg::CGxxGmPlayerDemoDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CGxxGmPlayerDemoDlg::IDD, pParent)
+	, play_handle_(NULL)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -72,6 +73,13 @@ BEGIN_MESSAGE_MAP(CGxxGmPlayerDemoDlg, CDialog)
 	ON_BN_CLICKED(IDC_BTN_LOGIN, &CGxxGmPlayerDemoDlg::OnBnClickedBtnLogin)
 	ON_BN_CLICKED(IDC_BTN_GET_ONLINE_DEVICE, &CGxxGmPlayerDemoDlg::OnBnClickedBtnGetOnlineDevice)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_ONLINE_DEV, &CGxxGmPlayerDemoDlg::OnNMDblclkListOnlineDev)
+	ON_BN_CLICKED(IDC_BTN_OPEN_URL, &CGxxGmPlayerDemoDlg::OnBnClickedBtnOpenUrl)
+	ON_BN_CLICKED(IDC_BTN_CLOSE_URL, &CGxxGmPlayerDemoDlg::OnBnClickedBtnCloseUrl)
+	ON_BN_CLICKED(IDC_BTN_PLAY, &CGxxGmPlayerDemoDlg::OnBnClickedBtnPlay)
+	ON_BN_CLICKED(IDC_BTN_OPEN_SOUND, &CGxxGmPlayerDemoDlg::OnBnClickedBtnOpenSound)
+	ON_BN_CLICKED(IDC_BTN_CLOSE_SOUND, &CGxxGmPlayerDemoDlg::OnBnClickedBtnCloseSound)
+	ON_NOTIFY(TRBN_THUMBPOSCHANGING, IDC_SLIDER_VOLUME, &CGxxGmPlayerDemoDlg::OnTRBNThumbPosChangingSliderVolume)
+	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 
@@ -109,10 +117,18 @@ BOOL CGxxGmPlayerDemoDlg::OnInitDialog()
 	// TODO: 在此添加额外的初始化代码
 	m_cOnlineDevices.SetExtendedStyle(m_cOnlineDevices.GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 	m_cOnlineDevices.InsertColumn(0, _T("设备内部索引"), LVCFMT_LEFT, 100);
-	m_cOnlineDevices.InsertColumn(1, _T("设备国标编码"), LVCFMT_LEFT, 150);
+	m_cOnlineDevices.InsertColumn(1, _T("设备国标编码"), LVCFMT_LEFT, 180);
 
 	m_cGoVideoIP.SetWindowText(_T("10.10.9.176"));
 	m_cGoVideoPort.SetWindowText(_T("99"));
+
+	TCHAR msg[4096] = {0};
+	EnumGSPlayErrorCode err = GSPlay_Init();
+	if (err != EnumGSPlayErrorCode::GSPLAY_ERRCODE_SUCCESS)
+	{
+		_stprintf_s(msg, _T("初始化高新兴播放组件GSPlaySDK失败！错误码：%d"), err);
+		m_cState.AddString(msg);
+	}
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -257,7 +273,7 @@ void CGxxGmPlayerDemoDlg::OnNMDblclkListOnlineDev(NMHDR *pNMHDR, LRESULT *pResul
 	// 发起点流命令，获取URL
 	std::string rtsp_url;
 	int errCode = govideo.GetRealStream(internal_id, rtsp_url);
-	if (errCode == 0)
+	if (errCode != 0)
 	{
 		_stprintf_s(msg, _T("[%s]点流失败！！错误码：%d"), device_gbcode, errCode);
 		m_cState.AddString(msg);
@@ -268,4 +284,94 @@ void CGxxGmPlayerDemoDlg::OnNMDblclkListOnlineDev(NMHDR *pNMHDR, LRESULT *pResul
 	m_cVideoURL.SetWindowText(A2T(rtsp_url.c_str()));
 
 	*pResult = 0;
+}
+
+void CGxxGmPlayerDemoDlg::OnBnClickedBtnOpenUrl()
+{
+	TCHAR msg[4096] = {0};
+	
+	StruDeviceCaps stDeviceCaps;
+	EnumGSPlayErrorCode err = GSPlay_GetCapablity(&stDeviceCaps);
+	if (err != EnumGSPlayErrorCode::GSPLAY_ERRCODE_SUCCESS)
+	{
+		_stprintf_s(msg, _T("获取播放器能力失败！错误码：%d"), err);
+		m_cState.AddString(msg);
+		return ;
+	}
+
+	CWnd *pcwnd = GetDlgItem(IDC_STATIC_SCREEN);
+	HWND hWnd = pcwnd->GetSafeHwnd();
+
+	USES_CONVERSION;
+	CString rtsp_url;
+	m_cVideoURL.GetWindowText(rtsp_url);
+
+	StruGSMediaOpenInfo stGSMediaOpenInfo;
+	stGSMediaOpenInfo.eMode = EnumGSChannelMode::GSPlayMode_Real;
+	stGSMediaOpenInfo.eChannelType = EnumGSChannelType::CT_Both;
+	stGSMediaOpenInfo.hWnd = (Int64)hWnd;
+	stGSMediaOpenInfo.pszUrl = T2A(rtsp_url.GetBuffer(0));
+	stGSMediaOpenInfo.pszUser = NULL;
+	stGSMediaOpenInfo.eDelayMode = EnumGSDelayMode::DM_Balance;
+	stGSMediaOpenInfo.pPlayParam = NULL;
+
+	err = GSPlay_Open(stGSMediaOpenInfo, &play_handle_);
+	if (err != EnumGSPlayErrorCode::GSPLAY_ERRCODE_SUCCESS)
+	{
+		_stprintf_s(msg, _T("打开视频流[%s]失败！错误码：%d"), rtsp_url.GetBuffer(0), err);
+		m_cState.AddString(msg);
+	}
+	else
+	{
+		_stprintf_s(msg, _T("打开视频流[%s]成功！错误码：%d"), rtsp_url.GetBuffer(0), err);
+		m_cState.AddString(msg);
+	}
+}
+
+void CGxxGmPlayerDemoDlg::OnBnClickedBtnCloseUrl()
+{
+	GSPlay_Close(play_handle_);
+}
+
+void CGxxGmPlayerDemoDlg::OnBnClickedBtnPlay()
+{
+	TCHAR msg[4096] = {0};
+	
+	EnumGSPlayErrorCode err = GSPlay_Play(play_handle_);
+	if (err != EnumGSPlayErrorCode::GSPLAY_ERRCODE_SUCCESS)
+	{
+		_stprintf_s(msg, _T("播放视频流失败！错误码：%d"), err);
+		m_cState.AddString(msg);
+	}
+	else
+	{
+		_stprintf_s(msg, _T("播放视频流成功！错误码：%d"), err);
+		m_cState.AddString(msg);
+	}
+}
+
+void CGxxGmPlayerDemoDlg::OnBnClickedBtnOpenSound()
+{
+	// TODO: 在此添加控件通知处理程序代码
+}
+
+void CGxxGmPlayerDemoDlg::OnBnClickedBtnCloseSound()
+{
+	// TODO: 在此添加控件通知处理程序代码
+}
+
+void CGxxGmPlayerDemoDlg::OnTRBNThumbPosChangingSliderVolume(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	// 此功能要求 Windows Vista 或更高版本。
+	// _WIN32_WINNT 符号必须 >= 0x0600。
+	NMTRBTHUMBPOSCHANGING *pNMTPC = reinterpret_cast<NMTRBTHUMBPOSCHANGING *>(pNMHDR);
+	// TODO: 在此添加控件通知处理程序代码
+	*pResult = 0;
+}
+
+void CGxxGmPlayerDemoDlg::OnClose()
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	GSPlay_UnInit();
+	CDialog::OnClose();
 }
