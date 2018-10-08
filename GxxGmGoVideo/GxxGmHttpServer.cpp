@@ -89,6 +89,7 @@ Poco::Net::HTTPRequestHandler* GxxGmRequestHandlerFactory::createRequestHandler(
 //////////////////////////////////////////////////////////////////////////
 GxxGmHttpServer::GxxGmHttpServer()
 : instance_(NULL)
+, is_need_stop_(false)
 {
 	//
 }
@@ -106,7 +107,17 @@ int GxxGmHttpServer::main(const std::vector<std::string>& args)
 	// 从参数中获得服务监听端口
 	instance_ = new Poco::Net::HTTPServer(new GxxGmRequestHandlerFactory, Poco::Net::ServerSocket(9900), new Poco::Net::HTTPServerParams);
 	instance_->start();
-	Poco::Util::ServerApplication::waitForTerminationRequest();
+	//Poco::Util::ServerApplication::waitForTerminationRequest();
+	while (true)
+	{
+		Sleep(1000);
+
+		// 每隔1秒钟检查一次服务器的运行状态标记，若标记为退出
+		// 那么这里就跳出，并执行停止操作退出
+		if (is_need_stop_)
+			break;
+	}
+	instance_->stop();
 	return Poco::Util::Application::EXIT_OK;
 }
 
@@ -117,6 +128,7 @@ void GxxGmHttpServer::Start()
 
 void GxxGmHttpServer::Stop()
 {
-	instance_->stop();
+	//instance_->stop();
+	is_need_stop_ = true;
 }
 

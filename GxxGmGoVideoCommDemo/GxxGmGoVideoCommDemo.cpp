@@ -24,8 +24,9 @@ int _tmain(int argc, const TCHAR *argv[])
 
 	// Ê×ÏÈ£¬µÇÂ¼µ½GoVideo
 	GxxGmGoVideo govideo;
-	//govideo.Initialize();
-	//system("pause");
+	govideo.Initialize();
+	system("pause");
+	//govideo.Destroy();
 
 	int errCode = govideo.Login(str_govideo_ip, govideo_port, "cyfid111", "cyfid111", 107, "ad22min", "admin2222");
 	if (errCode != 0)

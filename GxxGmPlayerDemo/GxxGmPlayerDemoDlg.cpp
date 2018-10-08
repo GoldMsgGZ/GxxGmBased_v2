@@ -63,6 +63,7 @@ void CGxxGmPlayerDemoDlg::DoDataExchange(CDataExchange* pDX)
 	//DDX_Control(pDX, IDC_LIST_ONLINE_DEV, m_cOnlineDevices);
 	DDX_Control(pDX, IDC_LIST_STATE, m_cState);
 	DDX_Control(pDX, IDC_LIST_ONLINE_DEV, m_cOnlineDevices);
+	DDX_Control(pDX, IDC_SLIDER_VOLUME, m_cVolume);
 }
 
 BEGIN_MESSAGE_MAP(CGxxGmPlayerDemoDlg, CDialog)
@@ -352,12 +353,36 @@ void CGxxGmPlayerDemoDlg::OnBnClickedBtnPlay()
 
 void CGxxGmPlayerDemoDlg::OnBnClickedBtnOpenSound()
 {
-	// TODO: 在此添加控件通知处理程序代码
+	TCHAR msg[4096] = {0};
+
+	EnumGSPlayErrorCode err = GSPlay_PlaySound(play_handle_);
+	if (err != EnumGSPlayErrorCode::GSPLAY_ERRCODE_SUCCESS)
+	{
+		_stprintf_s(msg, _T("播放音频流失败！错误码：%d"), err);
+		m_cState.AddString(msg);
+	}
+	else
+	{
+		_stprintf_s(msg, _T("播放音频流成功！错误码：%d"), err);
+		m_cState.AddString(msg);
+	}
 }
 
 void CGxxGmPlayerDemoDlg::OnBnClickedBtnCloseSound()
 {
-	// TODO: 在此添加控件通知处理程序代码
+	TCHAR msg[4096] = {0};
+
+	EnumGSPlayErrorCode err = GSPlay_StopSound(play_handle_);
+	if (err != EnumGSPlayErrorCode::GSPLAY_ERRCODE_SUCCESS)
+	{
+		_stprintf_s(msg, _T("停止播放音频流失败！错误码：%d"), err);
+		m_cState.AddString(msg);
+	}
+	else
+	{
+		_stprintf_s(msg, _T("停止播放音频流成功！错误码：%d"), err);
+		m_cState.AddString(msg);
+	}
 }
 
 void CGxxGmPlayerDemoDlg::OnTRBNThumbPosChangingSliderVolume(NMHDR *pNMHDR, LRESULT *pResult)
@@ -365,7 +390,12 @@ void CGxxGmPlayerDemoDlg::OnTRBNThumbPosChangingSliderVolume(NMHDR *pNMHDR, LRES
 	// 此功能要求 Windows Vista 或更高版本。
 	// _WIN32_WINNT 符号必须 >= 0x0600。
 	NMTRBTHUMBPOSCHANGING *pNMTPC = reinterpret_cast<NMTRBTHUMBPOSCHANGING *>(pNMHDR);
-	// TODO: 在此添加控件通知处理程序代码
+	
+	TCHAR msg[4096] = {0};
+
+	// 得到
+	int result = m_cVolume.GetTic(0);
+
 	*pResult = 0;
 }
 

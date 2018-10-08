@@ -43,6 +43,7 @@ public:
 	void Stop();
 
 private:
+	bool is_need_stop_;
 	Poco::Net::HTTPServer *instance_;
 };
 

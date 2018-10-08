@@ -15,13 +15,13 @@
 #include "Poco/JSON/Query.h"
 #include "Poco/JSON/PrintHandler.h"
 
-#ifdef USE_HTTPSERVER
 #include "GxxGmHttpServer.h"
-#endif
+
 
 
 GxxGmGoVideo::GxxGmGoVideo()
 : http_session_(NULL)
+, http_server_(new GxxGmHttpServer())
 {
 	//
 }
@@ -35,6 +35,13 @@ GxxGmGoVideo::~GxxGmGoVideo()
 		delete session;
 	}
 	http_session_ = NULL;
+
+	if (http_server_)
+	{
+		http_server_->Stop();
+		delete http_server_;
+	}
+	http_server_ = NULL;
 }
 
 int GxxGmGoVideo::Initialize(int http_port /* = 9900 */)
@@ -46,6 +53,11 @@ int GxxGmGoVideo::Initialize(int http_port /* = 9900 */)
 	}
 
 	return 0;
+}
+
+void GxxGmGoVideo::Destroy()
+{
+	http_server_->Stop();
 }
 
 int GxxGmGoVideo::Login(const char *govideo_ip, unsigned short govideo_port, const char *sequence_id /* = "admin" */, const char *login_id /* = "admin" */, int login_type /* = 107 */, const char *username /* = "admin" */, const char *password /* = "admin" */)
@@ -89,6 +101,10 @@ int GxxGmGoVideo::Login(const char *govideo_ip, unsigned short govideo_port, con
 		errCode = atoi(result_code.toString().c_str());
 
 		// 登录成功了，启动心跳线程
+		if (!hb_thread_.isRunning())
+		{
+			hb_thread_.start(GxxGmGoVideo::HeartBeatThread, this);
+		}
 	}
 	catch (Poco::Net::NetException &ex)
 	{
@@ -468,24 +484,21 @@ int GxxGmGoVideo::GetRealStreamByGBCode(const char *device_gb28181_code, std::st
 
 void GxxGmGoVideo::HttpServerThread(void* param)
 {
-#ifdef USE_HTTPSERVER
 	int errCode = 0;
 	GxxGmGoVideo *govideo = (GxxGmGoVideo *)param;
 
-	govideo->http_server_ = new GxxGmHttpServer();
+	//govideo->http_server_ = new GxxGmHttpServer();
 
 	std::vector<std::string> params;
 	params.push_back("9900");
 	govideo->http_server_->run(params);
-	//govideo->http_server_->Start();
 
-	while (true)
-	{
-		// 等待退出标记
-
-		Sleep(1000);
-	}
-#endif
+// 	while (true)
+// 	{
+// 		// 等待退出标记
+// 
+// 		Sleep(1000);
+// 	}
 }
 
 void GxxGmGoVideo::HeartBeatThread(void* param)
@@ -495,6 +508,13 @@ void GxxGmGoVideo::HeartBeatThread(void* param)
 
 	while (true)
 	{
+		// 如果token为空，则不发送心跳
+		if (govideo->token_.empty())
+		{
+			Sleep(100);
+			continue;
+		}
+
 		try {
 			Poco::Net::HTTPClientSession *session = (Poco::Net::HTTPClientSession *)govideo->http_session_;
 

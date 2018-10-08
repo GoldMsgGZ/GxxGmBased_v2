@@ -60,4 +60,5 @@ public:
 	afx_msg void OnBnClickedBtnCloseSound();
 	afx_msg void OnTRBNThumbPosChangingSliderVolume(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnClose();
+	CSliderCtrl m_cVolume;
 };
