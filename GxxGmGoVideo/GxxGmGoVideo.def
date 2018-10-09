@@ -10,6 +10,7 @@ EXPORTS
 	?GetAllDevices@GxxGmGoVideo@@QAEHXZ
 	?GetDeviceStatus@GxxGmGoVideo@@QAEHPBDAAU_GOVIDEO_DEVICE_STATUS_@@@Z
 	?GetAllDeviceStatus@GxxGmGoVideo@@QAEHXZ
+	?SubscriptionMsg@GxxGmGoVideo@@QAEHHPBDH@Z
 	?GetRealStream@GxxGmGoVideo@@QAEHIAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
 	?GetRealStreamByGBCode@GxxGmGoVideo@@QAEHPBDAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
 	;?GetAllDevices@GxxGmGoVideo@@QAEHXZ
