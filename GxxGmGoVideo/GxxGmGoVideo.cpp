@@ -187,6 +187,8 @@ int GxxGmGoVideo::GetAllDevices()
 	int errCode = 0;
 	std::string errstr;
 
+	devices_.clear();
+
 	try {
 		Poco::Net::HTTPClientSession *session = (Poco::Net::HTTPClientSession *)http_session_;
 
@@ -418,6 +420,8 @@ int GxxGmGoVideo::GetDeviceStatus(const char *device_gb28181_code, GOVIDEO_DEVIC
 
 int GxxGmGoVideo::GetAllDeviceStatus()
 {
+	devices_status_.clear();
+
 	std::vector<GOVIDEO_DEVICE_INFO *>::iterator iter;
 	for (iter = devices_.begin(); iter != devices_.end(); ++iter)
 	{

@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="GxxGmGoVideo"
-	ProjectGUID="{E2962D7F-E77F-463A-8D59-134AC15187A2}"
-	RootNamespace="GxxGmGoVideo"
+	Name="PocoHttpServer"
+	ProjectGUID="{B181219F-9C93-46EA-BB02-8E36E8625DC6}"
+	RootNamespace="PocoHttpServer"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -20,7 +20,7 @@
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
+			ConfigurationType="1"
 			CharacterSet="1"
 			>
 			<Tool
@@ -42,7 +42,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\ext\Poco\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;GXXGMGOVIDEO_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -64,10 +64,8 @@
 				AdditionalDependencies="PocoFoundationD.lib PocoNetD.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\ext\Poco\lib"
-				ModuleDefinitionFile="GxxGmGoVideo.def"
 				GenerateDebugInformation="true"
-				GenerateMapFile="true"
-				SubSystem="2"
+				SubSystem="1"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -96,7 +94,7 @@
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
+			ConfigurationType="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -119,8 +117,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\ext\Poco\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;GXXGMGOVIDEO_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
@@ -138,12 +135,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="PocoFoundation.lib PocoNet.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\ext\Poco\lib"
-				ModuleDefinitionFile="GxxGmGoVideo.def"
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
@@ -180,11 +174,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\GxxGmGoVideo.cpp"
+				RelativePath=".\PocoHttpServer.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\GxxGmGoVideo.def"
+				RelativePath=".\stdafx.cpp"
 				>
 			</File>
 		</Filter>
@@ -194,11 +188,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\GxxGmGoVideo.h"
+				RelativePath=".\stdafx.h"
 				>
 			</File>
 			<File
-				RelativePath=".\GxxGmGoVideoError.h"
+				RelativePath=".\targetver.h"
 				>
 			</File>
 		</Filter>
@@ -208,20 +202,8 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
-		<Filter
-			Name="HTTP·þÎñÆ÷"
-			>
-			<File
-				RelativePath=".\GxxGmHttpServer.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\GxxGmHttpServer.h"
-				>
-			</File>
-		</Filter>
 		<File
-			RelativePath=".\readme.txt"
+			RelativePath=".\ReadMe.txt"
 			>
 		</File>
 	</Files>
