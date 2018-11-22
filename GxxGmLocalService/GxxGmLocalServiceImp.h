@@ -10,7 +10,7 @@ public:
 	~GxxGmLocalServiceImp();
 
 public:
-	virtual 
+
 };
 
 #endif//_GxxGmLocalServiceImp_H_
