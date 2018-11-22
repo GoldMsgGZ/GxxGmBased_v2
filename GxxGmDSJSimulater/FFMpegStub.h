@@ -34,6 +34,14 @@ public:
 public:
 	_avcodec_register_all		ptr_avcodec_register_all;
 	_av_copy_packet				ptr_av_copy_packet;
+	_avcodec_find_decoder		ptr_avcodec_find_decoder;
+	_avcodec_find_encoder		ptr_avcodec_find_encoder;
+	_avcodec_open2				ptr_avcodec_open2;
+	_avcodec_close				ptr_avcodec_close;
+	_avcodec_decode_video2		ptr_avcodec_decode_video2;
+	_avcodec_decode_audio4		ptr_avcodec_decode_audio4;
+	_avcodec_encode_audio2		ptr_avcodec_encode_audio2;
+	_avcodec_encode_video2		ptr_avcodec_encode_video2;
 
 public:
 	_av_free					ptr_av_free;

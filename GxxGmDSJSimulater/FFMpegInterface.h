@@ -39,6 +39,14 @@ typedef void (* _av_bitstream_filter_close)(AVBitStreamFilterContext *bsf);
 
 typedef void (* _avcodec_register_all)(void);
 typedef int (* _av_copy_packet)(AVPacket *dst, const AVPacket *src);
+typedef AVCodec* (* _avcodec_find_decoder)(enum AVCodecID id);
+typedef AVCodec* (* _avcodec_find_encoder)(enum AVCodecID id);
+typedef int (* _avcodec_open2)(AVCodecContext *avctx, const AVCodec *codec, AVDictionary **options);
+typedef int (* _avcodec_close)(AVCodecContext *avctx);
+typedef int (* _avcodec_decode_video2)(AVCodecContext *avctx, AVFrame *picture, int *got_picture_ptr, const AVPacket *avpkt);
+typedef int (* _avcodec_decode_audio4)(AVCodecContext *avctx, AVFrame *frame, int *got_frame_ptr, const AVPacket *avpkt);
+typedef int (* _avcodec_encode_audio2)(AVCodecContext *avctx, AVPacket *avpkt, const AVFrame *frame, int *got_packet_ptr);
+typedef int (* _avcodec_encode_video2)(AVCodecContext *avctx, AVPacket *avpkt, const AVFrame *frame, int *got_packet_ptr);
 
 //////////////////////////////////////////////////////////////////////////
 //

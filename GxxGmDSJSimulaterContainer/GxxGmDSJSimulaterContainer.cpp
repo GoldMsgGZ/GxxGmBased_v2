@@ -6,7 +6,7 @@
 
 int main(int argc, const char *argv[])
 {
-	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.2\n");
+	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.3\n");
 	printf("\n");
 	printf("功能说明：\n");
 	printf("1. 支持GB28181-2011 和 GB28181-2016两个版本的协议通信；\n");
@@ -14,7 +14,8 @@ int main(int argc, const char *argv[])
 	printf("3. 支持向接入平台发送扩展的设备基础信息，默认5秒发一次，配置文件可配频率；\n");
 	printf("4. 支持向接入平台发送扩展的设备定位信息，默认5秒发一次，配置文件可配频率；\n");
 	printf("5. 支持实时视频点流，流数据来源默认为video.gmf，配置文件可配其他格式视频文件，视频文件编码必须为H.264；\n");
-	printf("6. 修正无帧率视频的播放，默认按30pfs进行播放\n");
+	printf("6. 修正无帧率视频的播放，默认按30pfs进行播放；\n");
+	printf("7. 当视频源为G711时，可推送音频数据；\n");
 	printf("\n");
 	system("pause");
 
@@ -61,29 +62,38 @@ int main(int argc, const char *argv[])
 	char sip_net[4096] = {0};
 	char rtp_net[4096] = {0};
 	char stream_file[4096] = {0};
+	char platform_id[4096] = {0};
 
 	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "SIP_NET", "UDP", sip_net, 4096, config_path.c_str());
 	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "RTP_NET", "UDP", rtp_net, 4096, config_path.c_str());
 	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "SIM_STREAM_FILE", "video.gmf", stream_file, 4096, config_path.c_str());
+	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "PLATFORM_ID", "GM_SHENZHEN", platform_id, 4096, config_path.c_str());
 	int gb28181_hb_time = GetPrivateProfileIntA("GxxGmDSJSimulater", "GB28181_HB_TIME", 30, config_path.c_str());
 	int dev_baseinfo_time = GetPrivateProfileIntA("GxxGmDSJSimulater", "DEV_BASE_INFO_TIME", 5, config_path.c_str());
 	int dev_location_time = GetPrivateProfileIntA("GxxGmDSJSimulater", "DEV_LOCATION_TIME", 5, config_path.c_str());
+	int dev_imei_index_start = GetPrivateProfileIntA("GxxGmDSJSimulater", "DEVICE_IMEI_START ", 0, config_path.c_str());
 
 	std::vector<GxxGmDSJSimulater *> simulaters;
 
 	// 根据设备数量启动所有设备
 	for (int index = 0; index < simulater_count; ++index)
 	{
-		// 在这里计算模拟器端口号、国标码等信息
+		// 构建模拟器端口号
 		int current_client_port = local_port_start + index;
 		char current_client_port_string[64] = {0};
 		sprintf_s(current_client_port_string, 64, "%d", current_client_port);
 
+		// 构建模拟器国标编码
 		char current_client_device_index[8] = {0};
 		sprintf_s(current_client_device_index, "%07d", local_gbcode_id_start + index);
 
 		char current_client_gbcode[21] = {0};
 		sprintf_s(current_client_gbcode, 21, "%s%s", local_gbcode_pre, current_client_device_index);
+
+		// 构建模拟器IMEI
+		int current_client_imei_index = dev_imei_index_start + index;
+		char current_client_imei[64] = {0};
+		sprintf_s(current_client_imei, 64, "GxxGmSim%04d", current_client_imei_index);
 
 		// 计算RTP相关的端口信息
 		int current_client_rtp_port_begin = rtp_port_begin * (1 + index) + rtp_port_count * index + 1;
@@ -135,6 +145,8 @@ int main(int argc, const char *argv[])
 		init_info.gb28181_hb_time_ = gb28181_hb_time;
 		init_info.dev_baseinfo_time_ = dev_baseinfo_time;
 		init_info.dev_location_time_ = dev_location_time;
+		init_info.imei_ = current_client_imei;
+		init_info.platform_id_ = platform_id;
 
 		int errCode = simulater->Initialize(init_info);
 		if (errCode != 0)

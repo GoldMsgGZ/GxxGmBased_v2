@@ -46,12 +46,14 @@ public:
 
 public:
 	GSPlayHandle play_handle_;
+	static void CALLBACK _PFuncRawDataCB(StruGSPlayFrameData* pstMediaFrameData, void* pUser);
+	static void CALLBACK _PFuncDisplayCB(StruGSPlayFrameData* pstMediaFrameData, void* pUser);
+	static void CALLBACK _PFuncDrawCB(PDC pdc, void* pUser);
+	static void CALLBACK _PFuncMediaSatusCB(EnumMediaStatus eStatus, void* pStatusData, void* pUser);
 
 public:
 	afx_msg void OnBnClickedBtnLogin();
-	
 	afx_msg void OnBnClickedBtnGetOnlineDevice();
-	
 	afx_msg void OnNMDblclkListOnlineDev(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedBtnOpenUrl();
 	afx_msg void OnBnClickedBtnCloseUrl();

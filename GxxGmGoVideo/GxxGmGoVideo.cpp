@@ -14,6 +14,8 @@
 #include "Poco/JSON/JSONException.h"
 #include "Poco/JSON/Query.h"
 #include "Poco/JSON/PrintHandler.h"
+#include "Poco/Latin1Encoding.h"
+#include "Poco/TextConverter.h"
 
 #include "GxxGmHttpServer.h"
 
@@ -192,112 +194,122 @@ int GxxGmGoVideo::GetAllDevices()
 	try {
 		Poco::Net::HTTPClientSession *session = (Poco::Net::HTTPClientSession *)http_session_;
 
-		// 这里只做了从索引0开始查询500个，当设备接入更多的时候我们这里是需要轮询查多次的，直到返回的结果中为0的时候，我们停止查询
-		char query_string[4096] = {0};
-		sprintf_s(query_string, 4096,
-			"/GoVideo/ServerConfig/http://GoVideo/Serviceconfig/GetAllDeviceRequest?SequenceID=cyfiddev111&StartRow=0&DevCount=300&Token=%s&lag=0",
-			token_.c_str());
-		std::string uri = query_string;
-		Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_GET, uri, Poco::Net::HTTPRequest::HTTP_1_1);
-
-		// 在这里的时候悲剧了
-		session->sendRequest(request);
-
-		Poco::Net::HTTPResponse response;
-		std::istream &is = session->receiveResponse(response);
-
-		// 判断服务器返回信息
-		Poco::Net::HTTPResponse::HTTPStatus status = response.getStatus();
-		if (Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK != status)
+		int loop_index = 0;
+		int start_row = -1;
+		while (true)
 		{
-			errCode = status;
-			return errCode;
-		}
+			start_row = 500 * loop_index + 1;
 
-		std::ostringstream ostr;
-		Poco::StreamCopier::copyStream(is, ostr);
+			// 这里只做了从索引0开始查询500个，当设备接入更多的时候我们这里是需要轮询查多次的，直到返回的结果中为0的时候，我们停止查询
+			char query_string[4096] = {0};
+			sprintf_s(query_string, 4096,
+				"/GoVideo/ServerConfig/http://GoVideo/Serviceconfig/GetAllDeviceRequest?SequenceID=cyfiddev111&StartRow=%d&DevCount=500&Token=%s&lag=0",
+				start_row,
+				token_.c_str());
+			std::string uri = query_string;
+			Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_GET, uri, Poco::Net::HTTPRequest::HTTP_1_1);
 
-		std::string json_str = ostr.str();
-		if (json_str.empty())
-		{
-			return -1;
-		}
+			// 在这里的时候悲剧了
+			session->sendRequest(request);
 
-		// 将字符串转为UTF-8
-		wchar_t *tmp_buffer = new wchar_t[json_str.size() + 1024];
-		MultiByteToWideChar(CP_ACP, 0, json_str.c_str(), -1, tmp_buffer, json_str.size() + 1024);
-		char *json_str_utf8 = new char[json_str.size() + 1024];
-		WideCharToMultiByte(CP_UTF8, 0, tmp_buffer, -1, json_str_utf8, json_str.size() + 1024, NULL, NULL);
-		
-		delete tmp_buffer;
-		tmp_buffer = NULL;
+			Poco::Net::HTTPResponse response;
+			std::istream &is = session->receiveResponse(response);
 
-		json_str = json_str_utf8;
-
-		delete json_str_utf8;
-		json_str_utf8 = NULL;
-
-		// 分析结果
-		Poco::JSON::Parser parser;
-		Poco::Dynamic::Var json = parser.parse(json_str);
-		Poco::JSON::Object::Ptr jsonObject = json.extract<Poco::JSON::Object::Ptr>();
-
-		Poco::Dynamic::Var message = jsonObject->get("Message");
-		jsonObject = message.extract<Poco::JSON::Object::Ptr>();
-		Poco::Dynamic::Var result_code = jsonObject->get("OperResult");
-		errCode = atoi(result_code.toString().c_str());
-
-		Poco::Dynamic::Var result_count = jsonObject->get("DevTotal");
-		if (atoi(result_count.toString().c_str()) > 0)
-		{
-			Poco::JSON::Array::Ptr result_device_list = jsonObject->getArray("DeviceInfoList");
-			Poco::JSON::Array::ConstIterator iter = result_device_list->begin();
-			for (; iter != result_device_list->end(); ++iter)
+			// 判断服务器返回信息
+			Poco::Net::HTTPResponse::HTTPStatus status = response.getStatus();
+			if (Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK != status)
 			{
-				Poco::JSON::Object::Ptr device_info_json_object = iter->extract<Poco::JSON::Object::Ptr>();
-
-				Poco::Dynamic::Var device_id				= device_info_json_object->get("DeviceID");
-				Poco::Dynamic::Var device_index				= device_info_json_object->get("DevIndex");
-				Poco::Dynamic::Var device_name				= device_info_json_object->get("DeviceName");
-				Poco::Dynamic::Var model_id					= device_info_json_object->get("ModelID");
-				Poco::Dynamic::Var category_id				= device_info_json_object->get("CategoryID");
-				Poco::Dynamic::Var device_code				= device_info_json_object->get("DevCode");
-				Poco::Dynamic::Var device_connection_info	= device_info_json_object->get("DevConnectionInfo");
-				Poco::Dynamic::Var device_version			= device_info_json_object->get("DevVersion");
-				Poco::Dynamic::Var device_username			= device_info_json_object->get("DevUserName");
-				Poco::Dynamic::Var device_password			= device_info_json_object->get("DevPassword");
-				Poco::Dynamic::Var device_extra_info		= device_info_json_object->get("DevExInfo");
-				Poco::Dynamic::Var gb28181_code				= device_info_json_object->get("GB28181Code");
-				Poco::Dynamic::Var device_name_abbr			= device_info_json_object->get("DevNameAbbr");
-				Poco::Dynamic::Var version					= device_info_json_object->get("Version");
-				Poco::Dynamic::Var remark					= device_info_json_object->get("Remark");
-				Poco::Dynamic::Var dgw_server_id			= device_info_json_object->get("DGWServerID");
-
-				GOVIDEO_DEVICE_INFO *device_info = new GOVIDEO_DEVICE_INFO;
-
-				device_info->device_id_				= atoi(device_id.toString().c_str());
-				device_info->device_index_			= atoi(device_index.toString().c_str());
-				device_info->device_name_			= device_name.toString();
-				device_info->model_id_				= atoi(model_id.toString().c_str());
-				device_info->category_id_			= atoi(category_id.toString().c_str());
-				device_info->device_code_			= device_code.toString();
-				device_info->device_connection_info_	= device_connection_info.toString();
-				device_info->device_version_			= device_version.toString();
-				device_info->device_username_		= device_username.toString();
-				device_info->device_password_		= device_password.toString();
-				device_info->device_extra_info_		= device_extra_info.toString();
-				device_info->gb28181_code_			= gb28181_code.toString();
-				device_info->device_name_abbr_		= device_name_abbr.toString();
-				device_info->version_				= atoi(version.toString().c_str());
-				device_info->remark_					= remark.toString();
-				device_info->dgw_server_id_			= atoi(dgw_server_id.toString().c_str());
-
-				//devices_.insert(std::pair<unsigned int, GOVIDEO_DEVICE_INFO*>(device_info->device_id_, device_info));
-				devices_.push_back(device_info);
+				errCode = status;
+				return errCode;
 			}
+
+			std::ostringstream ostr;
+			Poco::StreamCopier::copyStream(is, ostr);
+
+			std::string json_str = ostr.str();
+			if (json_str.empty())
+			{
+				return -1;
+			}
+
+			// 将字符串转为UTF-8
+
+			Poco::Latin1Encoding latin1;
+			Poco::UTF8Encoding utf8;
+			Poco::TextConverter converter(latin1, utf8);
+			std::string strUtf8;
+			converter.convert(json_str, strUtf8);
+			json_str = strUtf8;
+
+			// 分析结果
+			Poco::JSON::Parser parser;
+			Poco::Dynamic::Var json = parser.parse(json_str);
+			Poco::JSON::Object::Ptr jsonObject = json.extract<Poco::JSON::Object::Ptr>();
+
+			Poco::Dynamic::Var message = jsonObject->get("Message");
+			jsonObject = message.extract<Poco::JSON::Object::Ptr>();
+			Poco::Dynamic::Var result_code = jsonObject->get("OperResult");
+			errCode = atoi(result_code.toString().c_str());
+
+			Poco::Dynamic::Var result_total_count = jsonObject->get("DevTotal");
+			Poco::Dynamic::Var result_current_count = jsonObject->get("DevCount");
+
+			int total_count = atoi(result_total_count.toString().c_str());
+			int current_count = atoi(result_current_count.toString().c_str());
+			if (current_count > 0)
+			{
+				Poco::JSON::Array::Ptr result_device_list = jsonObject->getArray("DeviceInfoList");
+				Poco::JSON::Array::ConstIterator iter = result_device_list->begin();
+				for (; iter != result_device_list->end(); ++iter)
+				{
+					Poco::JSON::Object::Ptr device_info_json_object = iter->extract<Poco::JSON::Object::Ptr>();
+
+					Poco::Dynamic::Var device_id				= device_info_json_object->get("DeviceID");
+					Poco::Dynamic::Var device_index				= device_info_json_object->get("DevIndex");
+					Poco::Dynamic::Var device_name				= device_info_json_object->get("DeviceName");
+					Poco::Dynamic::Var model_id					= device_info_json_object->get("ModelID");
+					Poco::Dynamic::Var category_id				= device_info_json_object->get("CategoryID");
+					Poco::Dynamic::Var device_code				= device_info_json_object->get("DevCode");
+					Poco::Dynamic::Var device_connection_info	= device_info_json_object->get("DevConnectionInfo");
+					Poco::Dynamic::Var device_version			= device_info_json_object->get("DevVersion");
+					Poco::Dynamic::Var device_username			= device_info_json_object->get("DevUserName");
+					Poco::Dynamic::Var device_password			= device_info_json_object->get("DevPassword");
+					Poco::Dynamic::Var device_extra_info		= device_info_json_object->get("DevExInfo");
+					Poco::Dynamic::Var gb28181_code				= device_info_json_object->get("GB28181Code");
+					Poco::Dynamic::Var device_name_abbr			= device_info_json_object->get("DevNameAbbr");
+					Poco::Dynamic::Var version					= device_info_json_object->get("Version");
+					Poco::Dynamic::Var remark					= device_info_json_object->get("Remark");
+					Poco::Dynamic::Var dgw_server_id			= device_info_json_object->get("DGWServerID");
+
+					GOVIDEO_DEVICE_INFO *device_info = new GOVIDEO_DEVICE_INFO;
+
+					device_info->device_id_				= atoi(device_id.toString().c_str());
+					device_info->device_index_			= atoi(device_index.toString().c_str());
+					device_info->device_name_			= device_name.toString();
+					device_info->model_id_				= atoi(model_id.toString().c_str());
+					device_info->category_id_			= atoi(category_id.toString().c_str());
+					device_info->device_code_			= device_code.toString();
+					device_info->device_connection_info_	= device_connection_info.toString();
+					device_info->device_version_			= device_version.toString();
+					device_info->device_username_		= device_username.toString();
+					device_info->device_password_		= device_password.toString();
+					device_info->device_extra_info_		= device_extra_info.toString();
+					device_info->gb28181_code_			= gb28181_code.toString();
+					device_info->device_name_abbr_		= device_name_abbr.toString();
+					device_info->version_				= atoi(version.toString().c_str());
+					device_info->remark_					= remark.toString();
+					device_info->dgw_server_id_			= atoi(dgw_server_id.toString().c_str());
+
+					//devices_.insert(std::pair<unsigned int, GOVIDEO_DEVICE_INFO*>(device_info->device_id_, device_info));
+					devices_.push_back(device_info);
+				}
+			}
+
+			if (devices_.size() >= total_count)
+				break;
+
+			++loop_index;
 		}
-		
-		
 	}
 	catch (Poco::Net::NetException &ex)
 	{

@@ -171,6 +171,7 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 
 	AVStream *video_stream = NULL;
 	AVCodecID video_codec_id = AV_CODEC_ID_NONE;
+	AVCodecID audio_codec_id = AV_CODEC_ID_NONE;
 	EnumGSPSCodecType gxx_codec_id = EnumGSPSCodecType::GS_MPEGPS_CODEC_NONE;
 	int video_frame_rate = 0;
 
@@ -224,6 +225,7 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 		else if (input_format_context->streams[index]->codec->codec_type == AVMEDIA_TYPE_AUDIO)
 		{
 			audio_stream_index = index;
+			audio_codec_id = input_format_context->streams[index]->codec->codec_id;
 		}
 	}
 
@@ -267,7 +269,7 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 
 				StruESStreamDesc es_stream_desc;
 				es_stream_desc.eVideoCodecs = gxx_codec_id;
-				es_stream_desc.eAudioCodecs = GS_MPEGPS_CODEC_A_G711U;
+				es_stream_desc.eAudioCodecs = GS_MPEGPS_CODEC_A_G711;
 
 				StruESFrameInfo es_frame_info;
 				es_frame_info.eCodec = gxx_codec_id;
@@ -298,7 +300,7 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 						GSRTP_ERR err = GSRTPServer_InputStream(current_token_, &rtp_frame);
 						if (err != GSRTP_SUCCESS)
 						{
-							printf("发送RTP包失败！错误码：%d\n", err);
+							printf("发送视频RTP包失败！错误码：%d\n", err);
 						}
 
 						delete [] ps_frame->pBuffer;
@@ -334,6 +336,24 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 			else if (pkt.stream_index == audio_stream_index)
 			{
 				// 音频帧，模拟器暂不处理吧
+				if ((audio_codec_id == AV_CODEC_ID_MP2) || (audio_codec_id == AV_CODEC_ID_PCM_ALAW) || (audio_codec_id == AV_CODEC_ID_PCM_MULAW))
+				{
+					// audio_codec_id为192的时候这里我们单方面认为是G711
+					// 直接拿出音频数据扔到包内
+					StruRtpFrame rtp_frame;
+					rtp_frame.eFrameType = RTP_FRAME_PS;
+					rtp_frame.iCodeID = 0x00000400;
+					rtp_frame.iTimeStamp = pkt.pts;
+					rtp_frame.iSSRC = ssrc_;
+					rtp_frame.pFrame = (char*)pkt.data;
+					rtp_frame.iLenght = pkt.size;
+
+					GSRTP_ERR err = GSRTPServer_InputStream(current_token_, &rtp_frame);
+					if (err != GSRTP_SUCCESS)
+					{
+						printf("发送音频RTP包失败！错误码：%d\n", err);
+					}
+				}
 			}
 
 			ffmpeg_.ptr_av_free_packet(&pkt);

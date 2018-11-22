@@ -13,6 +13,8 @@
 #include "Poco/FileChannel.h"
 #include "Poco/AutoPtr.h"
 
+class GxxGmWordSpeaker;
+
 struct SimulaterInitInfo
 {
 	std::string local_ip_;
@@ -35,9 +37,25 @@ struct SimulaterInitInfo
 	int gb28181_hb_time_;
 	int dev_baseinfo_time_;
 	int dev_location_time_;
+
+	std::string imei_;
+	std::string platform_id_;
 };
 
-class GxxGmDSJSimulater
+class GxxGmDSJSimulaterNotifer
+{
+public:
+	// 收到设备主动绑定回复
+	virtual void RecvBindUser(const char *result) = 0;
+
+	// 收到远程绑定用户请求
+	virtual void RecvRemoteBindUser() = 0;
+
+	// 收到警情
+	virtual void RecvEmergency(const char *emergency_id, const char *start_time, const char *end_time) = 0;
+};
+
+class GxxGmDSJSimulater : public GxxGmDSJSimulaterNotifer
 {
 public:
 	GxxGmDSJSimulater();
@@ -45,11 +63,12 @@ public:
 
 public:
 	// 开机
-	//int Initialize(const char *local_ip, const char *local_port, const char *local_gbcode, const char *server_ip, const char *server_port, const char *server_gbcode, const char *username, const char *password, int is_manual_port, unsigned short begin_port, unsigned short end_port);
 	int Initialize(struct SimulaterInitInfo &init_info);
 
 	// 关机
 	void Destroy();
+
+	void SetNotifer(GxxGmDSJSimulaterNotifer *notifer);
 
 public:
 	// 设置设备基本信息
@@ -61,7 +80,7 @@ public:
 
 public:
 	// 发送绑定用户请求
-	int SendBindUserInfo(const char *platform_id, const char *device_imei, const char *user_id, const char *password);
+	int SendBindUserInfo(const char *user_id, const char *password);
 	// 发送设备基本信息
 	int SendBaseInfo();
 	// 发送设备定位信息
@@ -85,9 +104,20 @@ public:
 	static SIP_REPSOND_CODE _ExtendRqeustCallBack(SESSION_HANDLE hSession, EnumExtendType eType, const char * czTargetDevID, void * pMsg, void * pUserData);
 
 public:
+	// 收到设备主动绑定回复
+	virtual void RecvBindUser(const char *result);
+	// 收到远程绑定用户请求
+	virtual void RecvRemoteBindUser();
+	// 收到警情
+	virtual void RecvEmergency(const char *emergency_id, const char *start_time, const char *end_time);
+
+public:
 	static void GB28181HeartbeatThreadFun(void *param);
 	Poco::Thread gb28181_heartbeat_thread_;
 	bool is_gb28181_heartbeat_thread_need_exit_;
+
+public:
+	StruRegistMsg reg_msg;
 
 public:
 	std::string local_ip_;			// 执法仪IP
@@ -106,19 +136,38 @@ public:
 	HANDLE log_file_handle_;
 
 public:
-	int gb28181_hb_time_;
-	int dev_baseinfo_time_;
-	int dev_location_time_;
+	int gb28181_hb_time_;		// 保活心跳间隔时间
+	int dev_baseinfo_time_;		// 基础信息间隔时间
+	int dev_location_time_;		// 定位信息间隔时间
+
+	std::string imei_;			// 模拟器IMEI
+	std::string platform_id_;
 
 	DEVICE_BASE_INFO base_info_;
 	DEVICE_LOCATION_INFO location_info_;
 	DEVICE_EXCEPTION_INFO exception_info_;
 
 public:
-	std::string bind_user_id_;
+	// 水印部分内容
+	std::string dev_name_;
+	std::string frame_rate_;
+	std::string bit_rate_;
+	std::string trans_resolution_;
+
+	std::string machine_id_;
+	std::string bind_user_id_;		// 这个也和本地文件录像以及文件上传关联
+	std::string bind_user_name_;	// 这个也和本地文件录像以及文件上传关联
+	std::string dep_name_;
+	std::string dep_id_;
+	std::string show_location_;
+	std::string show_datetime_;
 
 public:
 	GxxGmDSJSimulaterStreamMgr stream_mgr_;
+	GxxGmDSJSimulaterNotifer *notifer_;
+
+public:
+	GxxGmWordSpeaker *speaker_;
 };
 
 #endif//_GxxGmDSJSimulater_H_
