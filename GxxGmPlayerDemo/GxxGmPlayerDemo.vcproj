@@ -128,6 +128,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="..\GxxGmGoVideo;..\ext\Poco\include;..\GosuncnLib\GSPlaySDK\inc"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG"
 				MinimalRebuild="false"
 				RuntimeLibrary="2"
@@ -150,7 +151,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="GxxGmGoVideo.lib GSPlaySDK.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="..\Release;..\ext\Poco\lib;..\GosuncnLib\GSPlaySDK\lib\x86"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"

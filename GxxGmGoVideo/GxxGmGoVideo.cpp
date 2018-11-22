@@ -46,10 +46,20 @@ GxxGmGoVideo::~GxxGmGoVideo()
 
 int GxxGmGoVideo::Initialize(int http_port /* = 9900 */)
 {
+	int errCode = 0;
+	std::string errStr;
 	// 启动一个线程，单独运行HTTP SERVER
-	if (!http_server_thread_.isRunning())
+	try
 	{
-		http_server_thread_.start(GxxGmGoVideo::HttpServerThread, this);
+		if (!http_server_thread_.isRunning())
+		{
+			http_server_thread_.start(GxxGmGoVideo::HttpServerThread, this);
+		}
+	}
+	catch (Poco::Exception &ex)
+	{
+		errCode = ex.code();
+		errStr = ex.displayText();
 	}
 
 	return 0;
@@ -63,6 +73,7 @@ void GxxGmGoVideo::Destroy()
 int GxxGmGoVideo::Login(const char *govideo_ip, unsigned short govideo_port, const char *sequence_id /* = "admin" */, const char *login_id /* = "admin" */, int login_type /* = 107 */, const char *username /* = "admin" */, const char *password /* = "admin" */)
 {
 	int errCode = 0;
+	std::string errstr;
 
 	try {
 		host_ = govideo_ip;
@@ -100,16 +111,22 @@ int GxxGmGoVideo::Login(const char *govideo_ip, unsigned short govideo_port, con
 		token_ = token.toString();
 		errCode = atoi(result_code.toString().c_str());
 
-		// 登录成功了，启动心跳线程
-		if (!hb_thread_.isRunning())
-		{
-			hb_thread_.start(GxxGmGoVideo::HeartBeatThread, this);
-		}
+		//// 登录成功了，启动心跳线程
+		//if (!hb_thread_.isRunning())
+		//{
+		//	hb_thread_.start(GxxGmGoVideo::HeartBeatThread, this);
+		//}
 	}
 	catch (Poco::Net::NetException &ex)
 	{
-		std::string errstr = ex.displayText();
+		errCode = ex.code();
+		errstr = ex.displayText();
 		printf("登录到GoVideo失败！%s\n", errstr.c_str());
+	}
+	catch (Poco::Exception &ex)
+	{
+		errCode = ex.code();
+		errstr = ex.displayText();
 	}
 
 	return errCode;
@@ -118,6 +135,7 @@ int GxxGmGoVideo::Login(const char *govideo_ip, unsigned short govideo_port, con
 int GxxGmGoVideo::Logout()
 {
 	int errCode = 0;
+	std::string errstr;
 
 	try {
 		Poco::Net::HTTPClientSession *session = (Poco::Net::HTTPClientSession *)http_session_;
@@ -151,8 +169,14 @@ int GxxGmGoVideo::Logout()
 	}
 	catch (Poco::Net::NetException &ex)
 	{
-		std::string errstr = ex.displayText();
+		errCode = ex.code();
+		errstr = ex.displayText();
 		printf("从GoVideo注销登录失败！%s\n", errstr.c_str());
+	}
+	catch (Poco::Exception &ex)
+	{
+		errCode = ex.code();
+		errstr = ex.displayText();
 	}
 
 	return 0;
@@ -161,6 +185,9 @@ int GxxGmGoVideo::Logout()
 int GxxGmGoVideo::GetAllDevices()
 {
 	int errCode = 0;
+	std::string errstr;
+
+	devices_.clear();
 
 	try {
 		Poco::Net::HTTPClientSession *session = (Poco::Net::HTTPClientSession *)http_session_;
@@ -173,6 +200,7 @@ int GxxGmGoVideo::GetAllDevices()
 		std::string uri = query_string;
 		Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_GET, uri, Poco::Net::HTTPRequest::HTTP_1_1);
 
+		// 在这里的时候悲剧了
 		session->sendRequest(request);
 
 		Poco::Net::HTTPResponse response;
@@ -273,13 +301,20 @@ int GxxGmGoVideo::GetAllDevices()
 	}
 	catch (Poco::Net::NetException &ex)
 	{
-		std::string errstr = ex.displayText();
+		errCode = ex.code();
+		errstr = ex.displayText();
 		printf("从GoVideo获取所有设备信息失败！%s\n", errstr.c_str());
 	}
 	catch (Poco::JSON::JSONException &ex)
 	{
-		std::string errstr = ex.displayText();
+		errCode = ex.code();
+		errstr = ex.displayText();
 		printf("从GoVideo获取所有设备信息失败！%s\n", errstr.c_str());
+	}
+	catch (Poco::Exception &ex)
+	{
+		errCode = ex.code();
+		errstr = ex.displayText();
 	}
 
 	return errCode;
@@ -288,6 +323,7 @@ int GxxGmGoVideo::GetAllDevices()
 int GxxGmGoVideo::GetDeviceStatus(const char *device_gb28181_code, GOVIDEO_DEVICE_STATUS &device_status)
 {
 	int errCode = 0;
+	std::string errstr;
 
 	// 首先在已经查询到的设备列表里面读取GoVideo注册的设备id
 	unsigned int govideo_device_id = 0;
@@ -369,8 +405,14 @@ int GxxGmGoVideo::GetDeviceStatus(const char *device_gb28181_code, GOVIDEO_DEVIC
 	}
 	catch (Poco::Net::NetException &ex)
 	{
-		std::string errstr = ex.displayText();
+		errCode = ex.code();
+		errstr = ex.displayText();
 		printf("从GoVideo注销登录失败！%s\n", errstr.c_str());
+	}
+	catch (Poco::Exception &ex)
+	{
+		errCode = ex.code();
+		errstr = ex.displayText();
 	}
 
 	return 0;
@@ -378,6 +420,8 @@ int GxxGmGoVideo::GetDeviceStatus(const char *device_gb28181_code, GOVIDEO_DEVIC
 
 int GxxGmGoVideo::GetAllDeviceStatus()
 {
+	devices_status_.clear();
+
 	std::vector<GOVIDEO_DEVICE_INFO *>::iterator iter;
 	for (iter = devices_.begin(); iter != devices_.end(); ++iter)
 	{
@@ -391,9 +435,79 @@ int GxxGmGoVideo::GetAllDeviceStatus()
 	return 0;
 }
 
+int GxxGmGoVideo::SubscriptionMsg(int subscript_type, const char *http_server_ip, int http_server_port)
+{
+	int errCode = 0;
+	std::string errstr;
+
+	try {
+		Poco::Net::HTTPClientSession *session = (Poco::Net::HTTPClientSession *)http_session_;
+
+		char body[4096] = {0};
+		sprintf_s(body, 4096,
+			"{\"Message\":{\"SubscribeType\":\"%d\",\"ConsumerAddress\":\"http://%s:%d/notify_receiver\",\"SubscribeTopic\":\"0\"}}",
+			subscript_type, http_server_ip, http_server_port);
+
+		char query_string[4096] = {0};
+		sprintf_s(query_string, 4096,
+			"/GoVideo/Device/SetSubscribeRequest"
+			);
+		std::string uri = query_string;
+		Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_POST, uri, Poco::Net::HTTPRequest::HTTP_1_1);
+		request.add("Content-Type", "application/json; charset=utf-8");
+		request.add("SequenceID", "10086");
+		request.add("Token", token_.c_str());
+
+		std::string http_body(body);
+		request.setContentLength((int)http_body.length());
+
+		session->sendRequest(request)<< http_body;
+
+		Poco::Net::HTTPResponse response;
+		std::istream &is = session->receiveResponse(response);
+
+		Poco::Net::HTTPResponse::HTTPStatus status = response.getStatus();
+		if (status != Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK)
+		{
+			return status;
+		}
+
+		std::ostringstream ostr;
+		Poco::StreamCopier::copyStream(is, ostr);
+
+		std::string json_str = ostr.str();
+
+		// 分析结果
+		Poco::JSON::Parser parser;
+		Poco::Dynamic::Var json = parser.parse(json_str);
+		Poco::JSON::Object::Ptr jsonObject = json.extract<Poco::JSON::Object::Ptr>();
+
+		Poco::Dynamic::Var message = jsonObject->get("Message");
+		jsonObject = message.extract<Poco::JSON::Object::Ptr>();
+		Poco::Dynamic::Var result_code = jsonObject->get("OperResult");
+		errCode = atoi(result_code.toString().c_str());
+		if (errCode != 0)
+			return errCode;
+	}
+	catch (Poco::Net::NetException &ex)
+	{
+		errCode = ex.code();
+		errstr = ex.displayText();
+		printf("订阅GoVideo推送消息失败！%s\n", errstr.c_str());
+	}
+	catch (Poco::Exception &ex)
+	{
+		errCode = ex.code();
+		errstr = ex.displayText();
+	}
+
+	return errCode;
+}
+
 int GxxGmGoVideo::GetRealStream(unsigned int device_id, std::string &stream_url)
 {
 	int errCode = 0;
+	std::string errstr;
 
 	try {
 		Poco::Net::HTTPClientSession *session = (Poco::Net::HTTPClientSession *)http_session_;
@@ -449,8 +563,14 @@ int GxxGmGoVideo::GetRealStream(unsigned int device_id, std::string &stream_url)
 	}
 	catch (Poco::Net::NetException &ex)
 	{
-		std::string errstr = ex.displayText();
+		errCode = ex.code();
+		errstr = ex.displayText();
 		printf("点流失败！%s\n", errstr.c_str());
+	}
+	catch (Poco::Exception &ex)
+	{
+		errCode = ex.code();
+		errstr = ex.displayText();
 	}
 
 	return errCode;
@@ -493,22 +613,21 @@ void GxxGmGoVideo::HttpServerThread(void* param)
 	params.push_back("9900");
 	govideo->http_server_->run(params);
 
-// 	while (true)
-// 	{
-// 		// 等待退出标记
-// 
-// 		Sleep(1000);
-// 	}
+	// 这里等待100毫秒的意义在于让Http服务应用跑起来
+	Sleep(100);
 }
 
 void GxxGmGoVideo::HeartBeatThread(void* param)
 {
 	int errCode = 0;
+	std::string errstr;
+
 	GxxGmGoVideo *govideo = (GxxGmGoVideo *)param;
 
 	while (true)
 	{
 		// 如果token为空，则不发送心跳
+		// 实际情况，似乎是按照文档要求发送了心跳，也返回65-系统不支持
 		if (govideo->token_.empty())
 		{
 			Sleep(100);
@@ -530,7 +649,7 @@ void GxxGmGoVideo::HeartBeatThread(void* param)
 
 			request.setContentLength(0);
 
-			session->sendRequest(request);
+			session->sendRequest(request)<<"";
 
 			Poco::Net::HTTPResponse response;
 			std::istream &is = session->receiveResponse(response);
@@ -546,6 +665,11 @@ void GxxGmGoVideo::HeartBeatThread(void* param)
 			Poco::StreamCopier::copyStream(is, ostr);
 
 			std::string json_str = ostr.str();
+			if (json_str.empty())
+			{
+				Sleep(5000);
+				continue;
+			}
 
 			// 分析结果
 			Poco::JSON::Parser parser;
@@ -562,8 +686,14 @@ void GxxGmGoVideo::HeartBeatThread(void* param)
 		}
 		catch (Poco::Net::NetException &ex)
 		{
-			std::string errstr = ex.displayText();
+			errCode = ex.code();
+			errstr = ex.displayText();
 			printf("点流失败！%s\n", errstr.c_str());
+		}
+		catch (Poco::Exception &ex)
+		{
+			errCode = ex.code();
+			errstr = ex.displayText();
 		}
 	}
 

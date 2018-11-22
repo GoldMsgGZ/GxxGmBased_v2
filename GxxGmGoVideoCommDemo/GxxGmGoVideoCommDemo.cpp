@@ -25,8 +25,9 @@ int _tmain(int argc, const TCHAR *argv[])
 	// 首先，登录到GoVideo
 	GxxGmGoVideo govideo;
 	govideo.Initialize();
-	system("pause");
+	//system("pause");
 	//govideo.Destroy();
+	Sleep(10);
 
 	int errCode = govideo.Login(str_govideo_ip, govideo_port, "cyfid111", "cyfid111", 107, "ad22min", "admin2222");
 	if (errCode != 0)
@@ -48,6 +49,14 @@ int _tmain(int argc, const TCHAR *argv[])
 	if (errCode != 0)
 	{
 		printf("获取所有设备状态信息失败！错误码：%d\n", errCode);
+		return errCode;
+	}
+
+	// 订阅消息
+	errCode = govideo.SubscriptionMsg(0, "10.10.2.102", 9900);
+	if (errCode != 0)
+	{
+		printf("订阅GoVideo消息失败！错误码：%d\n", errCode);
 		return errCode;
 	}
 

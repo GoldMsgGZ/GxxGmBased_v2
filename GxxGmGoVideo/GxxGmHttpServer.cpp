@@ -97,27 +97,43 @@ GxxGmHttpServer::GxxGmHttpServer()
 GxxGmHttpServer::~GxxGmHttpServer()
 {
 	//
-	instance_->stopAll();
-	delete instance_;
-	instance_ = NULL;
+	if (instance_)
+	{
+		instance_->stopAll();
+		delete instance_;
+		instance_ = NULL;
+	}
+	
 }
 
 int GxxGmHttpServer::main(const std::vector<std::string>& args)
 {
+	int errCode = 0;
+	std::string errStr;
 	// 从参数中获得服务监听端口
 	instance_ = new Poco::Net::HTTPServer(new GxxGmRequestHandlerFactory, Poco::Net::ServerSocket(9900), new Poco::Net::HTTPServerParams);
-	instance_->start();
-	//Poco::Util::ServerApplication::waitForTerminationRequest();
-	while (true)
-	{
-		Sleep(1000);
 
-		// 每隔1秒钟检查一次服务器的运行状态标记，若标记为退出
-		// 那么这里就跳出，并执行停止操作退出
-		if (is_need_stop_)
-			break;
+	try
+	{
+		instance_->start();
+		//Poco::Util::ServerApplication::waitForTerminationRequest();
+		while (true)
+		{
+			Sleep(1000);
+
+			// 每隔1秒钟检查一次服务器的运行状态标记，若标记为退出
+			// 那么这里就跳出，并执行停止操作退出
+			if (is_need_stop_)
+				break;
+		}
+		instance_->stop();
 	}
-	instance_->stop();
+	catch (Poco::Exception ex)
+	{
+		errCode = ex.code();
+		errStr = ex.displayText();
+	}
+	
 	return Poco::Util::Application::EXIT_OK;
 }
 

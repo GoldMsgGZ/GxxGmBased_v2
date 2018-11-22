@@ -64,7 +64,8 @@ public:
 	// 查询所有设备状态
 	int GetAllDeviceStatus();
 
-	// 接收GoVideo发来的设备变更信息
+	// 订阅所有GoVideo消息
+	int SubscriptionMsg(int subscript_type, const char *http_server_ip, int http_server_port);
 
 	// 点流
 	int GetRealStream(unsigned int device_id, std::string &stream_url);
