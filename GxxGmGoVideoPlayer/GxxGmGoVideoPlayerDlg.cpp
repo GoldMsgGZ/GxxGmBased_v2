@@ -265,7 +265,7 @@ void CGxxGmGoVideoPlayerDlg::OnNMDblclkListOnlineDevices(NMHDR *pNMHDR, LRESULT 
 
 	// 发起点流命令，获取URL
 	std::string rtsp_url;
-	int errCode = govideo.GetRealStream(internal_id, rtsp_url);
+	int errCode = govideo.GetRealStream(internal_id, rtsp_url, enStreamAgentType::StreamAgentRtmp);
 	if (errCode != 0)
 	{
 		_stprintf_s(msg, _T("[%s]点流失败！！错误码：%d"), device_gbcode, errCode);

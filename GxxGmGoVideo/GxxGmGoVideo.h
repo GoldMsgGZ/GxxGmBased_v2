@@ -10,6 +10,16 @@
 
 class GxxGmHttpServer;
 
+enum enStreamAgentType
+{
+	StreamAgentNone = 0,
+	StreamAgentRtsp,
+	StreamAgentRtmp,
+	StreamAgentRtp,
+	StreamAgentWebRTC,
+	StreamAgentHttpFlv
+};
+
 typedef struct _GOVIDEO_DEVICE_INFO_
 {
 	unsigned int device_id_;
@@ -68,7 +78,7 @@ public:
 	int SubscriptionMsg(int subscript_type, const char *http_server_ip, int http_server_port);
 
 	// µ„¡˜
-	int GetRealStream(unsigned int device_id, std::string &stream_url);
+	int GetRealStream(unsigned int device_id, std::string &stream_url, enum enStreamAgentType stream_type = StreamAgentNone);
 	int GetRealStreamByGBCode(const char *device_gb28181_code, std::string &stream_url);
 
 	// ”Ô“Ù∂‘Ω≤

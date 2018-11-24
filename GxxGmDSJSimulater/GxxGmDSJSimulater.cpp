@@ -804,6 +804,27 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_NotifyInfo_CallBackFunc(EnumNotifyType eTyp
 {
 	GxxGmDSJSimulater *simulater = (GxxGmDSJSimulater *)pUserData;
 
+	switch (eType)
+	{
+	case EnumNotifyType::eNOTIFY_BROADCAST:
+		// 接收到语音广播
+		break;
+	case EnumNotifyType::eNOTIFY_CATASUBS:
+		// 接收到目录订阅
+		break;
+	case EnumNotifyType::eNOTIFY_ALARMSUBS:
+		// 接收到告警订阅
+		break;
+	case EnumNotifyType::eNOTIFY_MOBILEPOSSUB:
+		// 接收到移动设备定位订阅，启动线程，推送定位信息
+		break;
+	case EnumNotifyType::eNOTIFY_SUBSEXPIRED:
+		// 终止订阅
+		break;
+	default:
+		break;
+	}
+
 	return SIP_RESPONSE_CODE_SUCCESS;
 }
 

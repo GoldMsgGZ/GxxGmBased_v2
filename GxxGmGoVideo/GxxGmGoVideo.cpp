@@ -516,7 +516,7 @@ int GxxGmGoVideo::SubscriptionMsg(int subscript_type, const char *http_server_ip
 	return errCode;
 }
 
-int GxxGmGoVideo::GetRealStream(unsigned int device_id, std::string &stream_url)
+int GxxGmGoVideo::GetRealStream(unsigned int device_id, std::string &stream_url, enum enStreamAgentType stream_type /* = StreamAgentNone */)
 {
 	int errCode = 0;
 	std::string errstr;
@@ -526,8 +526,8 @@ int GxxGmGoVideo::GetRealStream(unsigned int device_id, std::string &stream_url)
 
 		char body[4096] = {0};
 		sprintf_s(body, 4096,
-			"{\"Message\":{\"DeviceID\":\"%d\",\"ClientType\":\"107\",\"ChannelNum\":1,\"StreamType\":1,\"IPAddr\":\"10.10.16.59\"}}",
-			device_id);
+			"{\"Message\":{\"DeviceID\":\"%d\",\"ClientType\":\"107\",\"ChannelNum\":1,\"StreamType\":1, \"DirectDevice\":1, \"StreamAgentType\":%d, \"IPAddr\":\"10.10.16.59\",\"Encode\":{\"Video\":{}, \"Audio\":{}, \"Standardstream\":1}}}",
+			device_id, stream_type);
 
 		char query_string[4096] = {0};
 		sprintf_s(query_string, 4096,
