@@ -49,4 +49,5 @@ public:
 	afx_msg void OnBnClickedBtnStop();
 	afx_msg void OnNMDblclkListOnlineDevices(NMHDR *pNMHDR, LRESULT *pResult);
 	
+	afx_msg void OnBnClickedBtnStreamAnalyze();
 };

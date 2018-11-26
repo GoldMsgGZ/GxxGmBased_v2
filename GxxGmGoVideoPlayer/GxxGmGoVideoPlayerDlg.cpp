@@ -10,6 +10,28 @@
 #define new DEBUG_NEW
 #endif
 
+#define __STDC_CONSTANT_MACROS
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include "libavformat/avformat.h"
+#include "libavcodec/avcodec.h"
+#include "libavfilter/avfilter.h"
+#include "libavutil/avutil.h"
+#ifdef __cplusplus
+};
+#endif
+
+#pragma comment(lib, "avcodec.lib")
+#pragma comment(lib, "avdevice.lib")
+#pragma comment(lib, "avfilter.lib")
+#pragma comment(lib, "avformat.lib")
+#pragma comment(lib, "avutil.lib")
+#pragma comment(lib, "postproc.lib")
+#pragma comment(lib, "swresample.lib")
+#pragma comment(lib, "swscale.lib")
+
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
@@ -51,6 +73,10 @@ CGxxGmGoVideoPlayerDlg::CGxxGmGoVideoPlayerDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CGxxGmGoVideoPlayerDlg::IDD, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+
+	av_register_all();
+	avformat_network_init();
+	avcodec_register_all();
 }
 
 void CGxxGmGoVideoPlayerDlg::DoDataExchange(CDataExchange* pDX)
@@ -72,6 +98,7 @@ BEGIN_MESSAGE_MAP(CGxxGmGoVideoPlayerDlg, CDialog)
 	ON_BN_CLICKED(IDC_BTN_UPDATE_ONLINE_DEVICES, &CGxxGmGoVideoPlayerDlg::OnBnClickedBtnUpdateOnlineDevices)
 	ON_BN_CLICKED(IDC_BTN_STOP, &CGxxGmGoVideoPlayerDlg::OnBnClickedBtnStop)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_ONLINE_DEVICES, &CGxxGmGoVideoPlayerDlg::OnNMDblclkListOnlineDevices)
+	ON_BN_CLICKED(IDC_BTN_STREAM_ANALYZE, &CGxxGmGoVideoPlayerDlg::OnBnClickedBtnStreamAnalyze)
 END_MESSAGE_MAP()
 
 
@@ -115,6 +142,8 @@ BOOL CGxxGmGoVideoPlayerDlg::OnInitDialog()
 
 	m_cCmsIp.SetWindowText(_T("10.10.9.18"));
 	m_cCmsPort.SetWindowText(_T("99"));
+
+	// 初始化VLC
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -276,5 +305,78 @@ void CGxxGmGoVideoPlayerDlg::OnNMDblclkListOnlineDevices(NMHDR *pNMHDR, LRESULT 
 	USES_CONVERSION;
 	m_cVideoURL.SetWindowText(A2T(rtsp_url.c_str()));
 
+	// 点击按钮，开始播放
+	OnBnClickedBtnStreamAnalyze();
+
 	*pResult = 0;
+}
+
+void CGxxGmGoVideoPlayerDlg::OnBnClickedBtnStreamAnalyze()
+{
+	char msg[4096] = {0};
+
+	// 使用FFmpeg进行流分析
+	CString strVideoURL;
+	m_cVideoURL.GetWindowText(strVideoURL);
+
+	USES_CONVERSION;
+	const char *url = T2A(strVideoURL.GetBuffer(0));
+
+	AVFormatContext *rtmp_fmtctx = NULL;
+	int errCode = avformat_open_input(&rtmp_fmtctx, url, NULL, NULL);
+	if (errCode < 0)
+	{
+		av_strerror(errCode, msg, 4096);
+		m_cState.AddString(A2T(msg));
+		return ;
+	}
+
+	errCode = avformat_find_stream_info(rtmp_fmtctx, NULL);
+	if (errCode < 0)
+	{
+		av_strerror(errCode, msg, 4096);
+		m_cState.AddString(A2T(msg));
+
+		avformat_close_input(&rtmp_fmtctx);
+		return ;
+	}
+
+	int video_stream_index = -1;
+	int audio_stream_index = -1;
+
+	AVStream *video_stream = NULL;
+	AVStream *audio_stream = NULL;
+
+	AVCodecID video_codec_id = AV_CODEC_ID_NONE;
+	AVCodecID audio_codec_id = AV_CODEC_ID_NONE;
+
+	AVCodecContext *video_codec_ctx = NULL;
+	AVCodecContext *audio_codec_ctx = NULL;
+
+	AVCodec *video_codec = NULL;
+	AVCodec *audio_codec = NULL;
+
+	int stream_count = rtmp_fmtctx->nb_streams;
+	for (int index = 0; index < stream_count; ++index)
+	{
+		AVStream *stream = rtmp_fmtctx->streams[index];
+		if (stream->codec->codec_type == AVMEDIA_TYPE_VIDEO)
+		{
+			video_stream_index = index;
+			video_stream = stream;
+			video_codec_ctx = video_stream->codec;
+			video_codec_id = video_codec_ctx->codec_id;
+
+			video_codec = avcodec_find_decoder(video_codec_id);
+		}
+		else if (stream->codec->codec_type == AVMEDIA_TYPE_AUDIO)
+		{
+			audio_stream_index = index;
+			audio_stream = stream;
+			audio_codec_ctx = audio_stream->codec;
+			audio_codec_id = audio_codec_ctx->codec_id;
+
+			audio_codec = avcodec_find_decoder(audio_codec_id);
+		}
+	}
 }

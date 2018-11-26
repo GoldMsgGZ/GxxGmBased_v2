@@ -15,8 +15,10 @@
 #define IDC_STATIC_SCREEN               1005
 #define IDC_BTN_STOP                    1006
 #define IDC_LIST_STATE                  1007
-#define IDC_EDIT1                       1008
 #define IDC_EDIT_STREAM_URL             1008
+#define IDC_BTN_STREAM_ANALYZE          1009
+#define IDC_BTN_STREAM_ANALYZE2         1010
+#define IDC_BTN_PLAY                    1010
 
 // Next default values for new objects
 // 
