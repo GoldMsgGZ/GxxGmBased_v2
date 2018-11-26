@@ -6,8 +6,14 @@
 #include "GxxGmGoVideoPlayer.h"
 #include "GxxGmGoVideoPlayerDlg.h"
 
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
+#endif
+
+#ifndef INT64_C
+#define INT64_C(c) (c ## LL)
+#define UINT64_C(c) (c ## ULL)
 #endif
 
 #define __STDC_CONSTANT_MACROS
@@ -99,6 +105,8 @@ BEGIN_MESSAGE_MAP(CGxxGmGoVideoPlayerDlg, CDialog)
 	ON_BN_CLICKED(IDC_BTN_STOP, &CGxxGmGoVideoPlayerDlg::OnBnClickedBtnStop)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_ONLINE_DEVICES, &CGxxGmGoVideoPlayerDlg::OnNMDblclkListOnlineDevices)
 	ON_BN_CLICKED(IDC_BTN_STREAM_ANALYZE, &CGxxGmGoVideoPlayerDlg::OnBnClickedBtnStreamAnalyze)
+	ON_BN_CLICKED(IDC_BTN_PLAY, &CGxxGmGoVideoPlayerDlg::OnBnClickedBtnPlay)
+	ON_BN_CLICKED(IDC_BTN_GXX_PROTOCOL_STACK, &CGxxGmGoVideoPlayerDlg::OnBnClickedBtnGxxProtocolStack)
 END_MESSAGE_MAP()
 
 
@@ -144,6 +152,18 @@ BOOL CGxxGmGoVideoPlayerDlg::OnInitDialog()
 	m_cCmsPort.SetWindowText(_T("99"));
 
 	// 初始化VLC
+	HWND screen_handle = NULL;
+	CWnd *pcwnd = GetDlgItem(IDC_STATIC_SCREEN);
+	screen_handle = pcwnd->GetSafeHwnd();
+
+	const char* const m_vlcArgs[] = {
+		"-I", "dummy",
+		"--ignore-config",
+	};
+
+	m_vlcInst = libvlc_new(sizeof(m_vlcArgs) / sizeof(m_vlcArgs[0]), m_vlcArgs);
+	m_vlcMplay = libvlc_media_player_new(m_vlcInst);
+	libvlc_media_player_set_hwnd(m_vlcMplay, screen_handle);
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -270,7 +290,7 @@ void CGxxGmGoVideoPlayerDlg::OnBnClickedBtnUpdateOnlineDevices()
 
 void CGxxGmGoVideoPlayerDlg::OnBnClickedBtnStop()
 {
-	// 停止播放
+	libvlc_media_player_stop(m_vlcMplay);
 }
 
 void CGxxGmGoVideoPlayerDlg::OnNMDblclkListOnlineDevices(NMHDR *pNMHDR, LRESULT *pResult)
@@ -306,6 +326,7 @@ void CGxxGmGoVideoPlayerDlg::OnNMDblclkListOnlineDevices(NMHDR *pNMHDR, LRESULT 
 	m_cVideoURL.SetWindowText(A2T(rtsp_url.c_str()));
 
 	// 点击按钮，开始播放
+	//OnBnClickedBtnPlay();
 	OnBnClickedBtnStreamAnalyze();
 
 	*pResult = 0;
@@ -379,4 +400,23 @@ void CGxxGmGoVideoPlayerDlg::OnBnClickedBtnStreamAnalyze()
 			audio_codec = avcodec_find_decoder(audio_codec_id);
 		}
 	}
+}
+
+void CGxxGmGoVideoPlayerDlg::OnBnClickedBtnPlay()
+{
+	CString strVideoURL;
+	m_cVideoURL.GetWindowText(strVideoURL);
+
+	USES_CONVERSION;
+	const char *url = T2A(strVideoURL.GetBuffer(0));
+
+	m_vlcMedia = libvlc_media_new_location(m_vlcInst, url);
+	libvlc_media_player_set_media (m_vlcMplay, m_vlcMedia);
+	libvlc_media_release(m_vlcMedia);
+	libvlc_media_player_play(m_vlcMplay);
+}
+
+void CGxxGmGoVideoPlayerDlg::OnBnClickedBtnGxxProtocolStack()
+{
+	// TODO: 在此添加控件通知处理程序代码
 }

@@ -6,6 +6,7 @@
 #include "afxwin.h"
 #include "afxcmn.h"
 #include "GxxGmGoVideo.h"
+#include "vlc/vlc.h"
 
 
 // CGxxGmGoVideoPlayerDlg ¶Ô»°¿ò
@@ -44,10 +45,17 @@ public:
 	GxxGmGoVideo govideo;
 
 public:
+	libvlc_instance_t		*m_vlcInst;
+	libvlc_media_player_t	*m_vlcMplay;
+	libvlc_media_t			*m_vlcMedia;
+
+public:
 	afx_msg void OnBnClickedBtnLoginCms();
 	afx_msg void OnBnClickedBtnUpdateOnlineDevices();
 	afx_msg void OnBnClickedBtnStop();
 	afx_msg void OnNMDblclkListOnlineDevices(NMHDR *pNMHDR, LRESULT *pResult);
 	
 	afx_msg void OnBnClickedBtnStreamAnalyze();
+	afx_msg void OnBnClickedBtnPlay();
+	afx_msg void OnBnClickedBtnGxxProtocolStack();
 };

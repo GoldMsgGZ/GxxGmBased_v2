@@ -19,6 +19,8 @@
 #define IDC_BTN_STREAM_ANALYZE          1009
 #define IDC_BTN_STREAM_ANALYZE2         1010
 #define IDC_BTN_PLAY                    1010
+#define IDC_BTN_PLAY2                   1011
+#define IDC_BTN_GXX_PROTOCOL_STACK      1011
 
 // Next default values for new objects
 // 

@@ -526,7 +526,7 @@ int GxxGmGoVideo::GetRealStream(unsigned int device_id, std::string &stream_url,
 
 		char body[4096] = {0};
 		sprintf_s(body, 4096,
-			"{\"Message\":{\"DeviceID\":\"%d\",\"ClientType\":\"107\",\"ChannelNum\":1,\"StreamType\":1, \"DirectDevice\":1, \"StreamAgentType\":%d, \"IPAddr\":\"10.10.16.59\",\"Encode\":{\"Standardstream\":1}}}",
+			"{\"Message\":{\"DeviceID\":\"%d\",\"ClientType\":\"107\",\"ChannelNum\":1,\"StreamType\":1, \"DirectDevice\":1, \"StreamAgentType\":%d, \"IPAddr\":\"10.10.16.59\",\"Standardstream\":1}}",
 			device_id, stream_type);
 
 		char query_string[4096] = {0};
