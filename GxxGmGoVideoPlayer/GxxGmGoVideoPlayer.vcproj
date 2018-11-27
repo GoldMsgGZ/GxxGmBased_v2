@@ -68,7 +68,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="GxxGmGoVideo.lib libvlc.lib GSRtmpServer.lib"
+				AdditionalDependencies="GxxGmGoVideo.lib libvlc.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\Debug;..\ext\Poco\lib;..\ext\FFmpeg\3.4\lib\x86;..\ext\VLC\lib;..\GosuncnLib\RtmpStack"
 				GenerateDebugInformation="true"

@@ -210,6 +210,8 @@ void GxxGmDSJSimulater::Destroy()
 
 	CloseHandle(log_file_handle_);
 	log_file_handle_ = NULL;
+
+	is_standard_gb28181_mobile_position_ = false;
 }
 
 void GxxGmDSJSimulater::SetNotifer(GxxGmDSJSimulaterNotifer *notifer)
@@ -817,6 +819,8 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_NotifyInfo_CallBackFunc(EnumNotifyType eTyp
 		break;
 	case EnumNotifyType::eNOTIFY_MOBILEPOSSUB:
 		// 接收到移动设备定位订阅，启动线程，推送定位信息
+		// 标记开启定位上报工作线程
+		is_standard_gb28181_mobile_position_ = true;
 		break;
 	case EnumNotifyType::eNOTIFY_SUBSEXPIRED:
 		// 终止订阅

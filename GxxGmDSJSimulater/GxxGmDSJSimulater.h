@@ -115,6 +115,7 @@ public:
 	static void GB28181HeartbeatThreadFun(void *param);
 	Poco::Thread gb28181_heartbeat_thread_;
 	bool is_gb28181_heartbeat_thread_need_exit_;
+	bool is_standard_gb28181_mobile_position_;
 
 public:
 	StruRegistMsg reg_msg;

@@ -11,33 +11,6 @@
 #define new DEBUG_NEW
 #endif
 
-#ifndef INT64_C
-#define INT64_C(c) (c ## LL)
-#define UINT64_C(c) (c ## ULL)
-#endif
-
-#define __STDC_CONSTANT_MACROS
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-#include "libavformat/avformat.h"
-#include "libavcodec/avcodec.h"
-#include "libavfilter/avfilter.h"
-#include "libavutil/avutil.h"
-#ifdef __cplusplus
-};
-#endif
-
-#pragma comment(lib, "avcodec.lib")
-#pragma comment(lib, "avdevice.lib")
-#pragma comment(lib, "avfilter.lib")
-#pragma comment(lib, "avformat.lib")
-#pragma comment(lib, "avutil.lib")
-#pragma comment(lib, "postproc.lib")
-#pragma comment(lib, "swresample.lib")
-#pragma comment(lib, "swscale.lib")
-
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
@@ -77,6 +50,8 @@ END_MESSAGE_MAP()
 
 CGxxGmGoVideoPlayerDlg::CGxxGmGoVideoPlayerDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CGxxGmGoVideoPlayerDlg::IDD, pParent)
+	, ffmpeg_thread_handle(NULL)
+	, rtmp_fmtctx(NULL)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
@@ -327,7 +302,7 @@ void CGxxGmGoVideoPlayerDlg::OnNMDblclkListOnlineDevices(NMHDR *pNMHDR, LRESULT 
 
 	// 点击按钮，开始播放
 	//OnBnClickedBtnPlay();
-	OnBnClickedBtnStreamAnalyze();
+	//OnBnClickedBtnStreamAnalyze();
 
 	*pResult = 0;
 }
@@ -336,68 +311,40 @@ void CGxxGmGoVideoPlayerDlg::OnBnClickedBtnStreamAnalyze()
 {
 	char msg[4096] = {0};
 
-	// 使用FFmpeg进行流分析
-	CString strVideoURL;
-	m_cVideoURL.GetWindowText(strVideoURL);
+	DWORD dwExitCode = 0;
+	GetExitCodeThread(ffmpeg_thread_handle, &dwExitCode);
 
-	USES_CONVERSION;
-	const char *url = T2A(strVideoURL.GetBuffer(0));
-
-	AVFormatContext *rtmp_fmtctx = NULL;
-	int errCode = avformat_open_input(&rtmp_fmtctx, url, NULL, NULL);
-	if (errCode < 0)
+	if (dwExitCode == STILL_ACTIVE)
 	{
-		av_strerror(errCode, msg, 4096);
-		m_cState.AddString(A2T(msg));
 		return ;
 	}
-
-	errCode = avformat_find_stream_info(rtmp_fmtctx, NULL);
-	if (errCode < 0)
+	else
 	{
-		av_strerror(errCode, msg, 4096);
-		m_cState.AddString(A2T(msg));
+		// 使用FFmpeg进行流分析
+		CString strVideoURL;
+		m_cVideoURL.GetWindowText(strVideoURL);
 
-		avformat_close_input(&rtmp_fmtctx);
-		return ;
-	}
+		USES_CONVERSION;
+		const char *url = T2A(strVideoURL.GetBuffer(0));
 
-	int video_stream_index = -1;
-	int audio_stream_index = -1;
-
-	AVStream *video_stream = NULL;
-	AVStream *audio_stream = NULL;
-
-	AVCodecID video_codec_id = AV_CODEC_ID_NONE;
-	AVCodecID audio_codec_id = AV_CODEC_ID_NONE;
-
-	AVCodecContext *video_codec_ctx = NULL;
-	AVCodecContext *audio_codec_ctx = NULL;
-
-	AVCodec *video_codec = NULL;
-	AVCodec *audio_codec = NULL;
-
-	int stream_count = rtmp_fmtctx->nb_streams;
-	for (int index = 0; index < stream_count; ++index)
-	{
-		AVStream *stream = rtmp_fmtctx->streams[index];
-		if (stream->codec->codec_type == AVMEDIA_TYPE_VIDEO)
+		rtmp_fmtctx = NULL;
+		int errCode = avformat_open_input(&rtmp_fmtctx, url, NULL, NULL);
+		if (errCode < 0)
 		{
-			video_stream_index = index;
-			video_stream = stream;
-			video_codec_ctx = video_stream->codec;
-			video_codec_id = video_codec_ctx->codec_id;
-
-			video_codec = avcodec_find_decoder(video_codec_id);
+			av_strerror(errCode, msg, 4096);
+			m_cState.AddString(A2T(msg));
+			return ;
 		}
-		else if (stream->codec->codec_type == AVMEDIA_TYPE_AUDIO)
-		{
-			audio_stream_index = index;
-			audio_stream = stream;
-			audio_codec_ctx = audio_stream->codec;
-			audio_codec_id = audio_codec_ctx->codec_id;
 
-			audio_codec = avcodec_find_decoder(audio_codec_id);
+		ffmpeg_thread_handle = CreateThread(NULL, 0, CGxxGmGoVideoPlayerDlg::FFMpeggThread, this, 0, NULL);
+		if (NULL == ffmpeg_thread_handle)
+		{
+			int errCode = GetLastError();
+			sprintf_s(msg, 4096, "启动FFMpeg工作线程失败！错误码：%d", errCode);
+
+			USES_CONVERSION;
+			m_cState.AddString(A2T(msg));
+			return ;
 		}
 	}
 }
@@ -419,4 +366,112 @@ void CGxxGmGoVideoPlayerDlg::OnBnClickedBtnPlay()
 void CGxxGmGoVideoPlayerDlg::OnBnClickedBtnGxxProtocolStack()
 {
 	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+DWORD CGxxGmGoVideoPlayerDlg::FFMpeggThread(LPVOID lpParam)
+{
+	CGxxGmGoVideoPlayerDlg *dlg = (CGxxGmGoVideoPlayerDlg *)lpParam;
+	char msg[4096] = {0};
+
+	USES_CONVERSION;
+	int errCode = avformat_find_stream_info(dlg->rtmp_fmtctx, NULL);
+	if (errCode < 0)
+	{
+		av_strerror(errCode, msg, 4096);
+		dlg->m_cState.AddString(A2T(msg));
+
+		avformat_close_input(&dlg->rtmp_fmtctx);
+		return errCode;
+	}
+
+	int video_stream_index = -1;
+	int audio_stream_index = -1;
+
+	AVStream *video_stream = NULL;
+	AVStream *audio_stream = NULL;
+
+	AVCodecID video_codec_id = AV_CODEC_ID_NONE;
+	AVCodecID audio_codec_id = AV_CODEC_ID_NONE;
+
+	AVCodecContext *video_codec_ctx = NULL;
+	AVCodecContext *audio_codec_ctx = NULL;
+
+	AVCodec *video_codec = NULL;
+	AVCodec *audio_codec = NULL;
+
+	int stream_count = dlg->rtmp_fmtctx->nb_streams;
+	for (int index = 0; index < stream_count; ++index)
+	{
+		AVStream *stream = dlg->rtmp_fmtctx->streams[index];
+		if (stream->codec->codec_type == AVMEDIA_TYPE_VIDEO)
+		{
+			video_stream_index = index;
+			video_stream = stream;
+			video_codec_ctx = video_stream->codec;
+			video_codec_id = video_codec_ctx->codec_id;
+
+			video_codec = avcodec_find_decoder(video_codec_id);
+			if (video_codec == NULL)
+			{
+				sprintf_s(msg, 4096, "未找到解码器%d。", video_codec_id);
+				dlg->m_cState.AddString(A2T(msg));
+
+				avformat_close_input(&dlg->rtmp_fmtctx);
+				return errCode;
+			}
+
+			errCode = avcodec_open2(video_codec_ctx, video_codec, NULL);
+			if (errCode < 0)
+			{
+				av_strerror(errCode, msg, 4096);
+				dlg->m_cState.AddString(A2T(msg));
+
+				avformat_close_input(&dlg->rtmp_fmtctx);
+				return errCode;
+			}
+		}
+		else if (stream->codec->codec_type == AVMEDIA_TYPE_AUDIO)
+		{
+			audio_stream_index = index;
+			audio_stream = stream;
+			audio_codec_ctx = audio_stream->codec;
+			audio_codec_id = audio_codec_ctx->codec_id;
+
+			audio_codec = avcodec_find_decoder(audio_codec_id);
+			if (video_codec == NULL)
+			{
+				sprintf_s(msg, 4096, "未找到解码器%d。", audio_codec_id);
+				dlg->m_cState.AddString(A2T(msg));
+
+				avformat_close_input(&dlg->rtmp_fmtctx);
+				return errCode;
+			}
+
+			errCode = avcodec_open2(audio_codec_ctx, audio_codec, NULL);
+			if (errCode < 0)
+			{
+				av_strerror(errCode, msg, 4096);
+				dlg->m_cState.AddString(A2T(msg));
+
+				avformat_close_input(&dlg->rtmp_fmtctx);
+				return errCode;
+			}
+		}
+	}
+
+	// 读取媒体帧
+	while (true)
+	{
+		AVPacket pkt;
+		errCode = av_read_frame(dlg->rtmp_fmtctx, &pkt);
+		if (errCode < 0)
+		{
+			break;
+		}
+
+		if
+	}
+
+	return 0;
 }
