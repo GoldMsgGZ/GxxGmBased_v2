@@ -85,6 +85,7 @@ public:
 	int SendBaseInfo();
 	// 发送设备定位信息
 	int SendLocationInfo();
+	int SendLocationInfoEx();
 	// 发送设备异常信息
 	int SendExceptionInfo();
 	// 发送设备告警信息
@@ -137,6 +138,7 @@ public:
 	HANDLE log_file_handle_;
 
 public:
+	int mobile_position_sub_id_;
 	int gb28181_hb_time_;		// 保活心跳间隔时间
 	int dev_baseinfo_time_;		// 基础信息间隔时间
 	int dev_location_time_;		// 定位信息间隔时间

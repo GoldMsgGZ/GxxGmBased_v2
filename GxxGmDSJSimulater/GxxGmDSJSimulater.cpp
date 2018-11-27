@@ -380,6 +380,39 @@ int GxxGmDSJSimulater::SendLocationInfo()
 	return err;
 }
 
+int GxxGmDSJSimulater::SendLocationInfoEx()
+{
+	// 这里比较特别，每次发之前，时间我们最好重新计算一下
+	SYSTEMTIME st;
+	GetLocalTime(&st);
+	char current_time[128] = {0};
+	sprintf_s(current_time, 128, "%d-%02d-%02d %02d:%02d:%02d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+
+	StruMobilePosNotifyInfo position;
+	strcpy_s(position.czGBCode, STR_GBCODE_LEN, local_gbcode_.c_str());
+	strcpy_s(position.czDateTime, STR_DATETIME_LEN, current_time);
+	position.dLongitude = atof(location_info_.longitude_.c_str());
+	position.dLatitude = atof(location_info_.latitude_.c_str());
+	position.dSpeed = atof(location_info_.speed_.c_str());
+	position.dDirection = atof(location_info_.direction_.c_str());
+	position.iAltitude = atoi(location_info_.height_.c_str());
+
+	// 调用接口，发送透传信息
+	StruConnectParam connention_param;
+	strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, server_ip_.c_str());
+	strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, server_gbcode_.c_str());
+	connention_param.iPort = atoi(server_port_.c_str());
+
+	GS28181_ERR err = GB28181Agent_MobilePosNotify(agent_, mobile_position_sub_id_, &position);
+	if (err != GS28181_ERR_SUCCESS)
+	{
+		// 
+		printf("[%s]发送设备定位信息失败！错误码：%d\n", local_gbcode_.c_str(), err);
+	}
+
+	return err;
+}
+
 int GxxGmDSJSimulater::SendExceptionInfo()
 {
 	const char *msg_format = "<SubCmdType>DeviceException</SubCmdType> \
@@ -818,9 +851,15 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_NotifyInfo_CallBackFunc(EnumNotifyType eTyp
 		// 接收到告警订阅
 		break;
 	case EnumNotifyType::eNOTIFY_MOBILEPOSSUB:
-		// 接收到移动设备定位订阅，启动线程，推送定位信息
-		// 标记开启定位上报工作线程
-		is_standard_gb28181_mobile_position_ = true;
+		{
+			// 接收到移动设备定位订阅，启动线程，推送定位信息
+			// 标记开启定位上报工作线程
+			simulater->is_standard_gb28181_mobile_position_ = true;
+
+			// 得到订阅信息，提取订阅ID
+			StruMobilePosSubInfo *mobile_position_sub_info = (StruMobilePosSubInfo *)pMsg;
+			simulater->mobile_position_sub_id_ = mobile_position_sub_info->iSubID;
+		}
 		break;
 	case EnumNotifyType::eNOTIFY_SUBSEXPIRED:
 		// 终止订阅
@@ -1075,8 +1114,19 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 		if (location_count == simulater->dev_location_time_)
 		{
 			// 发送定位信息
-			simulater->SendLocationInfo();
+			if (simulater->is_standard_gb28181_mobile_position_)
+			{
+				// 发送标准GB28181-2016定位信息
+				simulater->SendLocationInfoEx();
+			}
+			else
+			{
+				// 发送扩展定位信息
+				simulater->SendLocationInfo();
+			}
 			location_count = 0;
 		}
+
+		
 	}
 }
