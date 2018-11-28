@@ -469,8 +469,6 @@ DWORD CGxxGmGoVideoPlayerDlg::FFMpeggThread(LPVOID lpParam)
 		{
 			break;
 		}
-
-		if
 	}
 
 	return 0;

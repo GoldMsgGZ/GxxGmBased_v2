@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="lib28181AgentSDK.lib GSRtpServer.lib GMFLib.lib PSFormat.lib avcodec.lib avdevice.lib avfilter.lib avformat.lib avutil.lib postproc.lib swresample.lib swscale.lib GxxGmWordSpeaker.lib tinyxml2d.lib"
+				AdditionalDependencies="lib28181AgentSDK.lib GSRtpServer.lib GMFLib.lib PSFormat.lib avcodec.lib avdevice.lib avfilter.lib avformat.lib avutil.lib postproc.lib swresample.lib swscale.lib tinyxml2d.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\ext\Poco\lib;..\GosuncnLib\28181\lib\x86;..\GosuncnLib\GSRtpStack\lib\x86;..\GosuncnLib\GMFLib;..\GosuncnLib\PSFormat\lib\x86;..\ext\FFmpeg\3.4\lib\x86;..\ext\GxxGm\WordSpeaker\x86;..\ext\TinyXML2\lib\Debug"
 				ModuleDefinitionFile="GxxGmDSJSimulater.def"

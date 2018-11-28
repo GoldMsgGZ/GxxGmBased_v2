@@ -128,6 +128,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="..\GxxGmGoVideo;..\ext\Poco\include;..\ext\FFmpeg\3.4\include;..\ext\VLC\include;..\GosuncnLib\RtmpStack"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG"
 				MinimalRebuild="false"
 				RuntimeLibrary="2"
@@ -150,11 +151,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="GxxGmGoVideo.lib libvlc.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="..\Release;..\ext\Poco\lib;..\ext\FFmpeg\3.4\lib\x86;..\ext\VLC\lib;..\GosuncnLib\RtmpStack"
 				GenerateDebugInformation="true"
 				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
+				OptimizeReferences="0"
+				EnableCOMDATFolding="0"
 				TargetMachine="1"
 			/>
 			<Tool

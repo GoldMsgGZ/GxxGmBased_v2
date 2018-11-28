@@ -44,6 +44,8 @@ public:
 		if (request_body.size() > 0)
 			std::cout<<request_body.c_str()<<std::endl;
 
+		std::cout<<std::endl;
+
 		// ÏìÓ¦ÐÅÏ¢
 		response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
 		std::ostream &out = response.send();
@@ -64,7 +66,7 @@ class GxxGmServerApp : public Poco::Util::ServerApplication
 protected:
 	int main(const std::vector<std::string>& args)
 	{
-		int port = 8080;
+		int port = 9999;
 		if (args.size() > 0)
 			port = atoi(args[0].c_str());
 		

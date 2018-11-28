@@ -9,7 +9,6 @@
 #include "Poco/TextConverter.h"
 #include "Poco/UTF8Encoding.h"
 
-#include "GxxGmWordSpeaker.h"
 #include "tinyxml2.h"
 
 #define USE_REALSTREAM
@@ -25,6 +24,11 @@
 //#pragma comment(lib, "avformat.lib")
 #endif
 
+#ifdef _USE_SPEAKER_
+#include "GxxGmWordSpeaker.h"
+#pragma comment(lib, "GxxGmWordSpeaker.lib")
+#endif
+
 GxxGmDSJSimulater::GxxGmDSJSimulater()
 : agent_(NULL)
 , is_gb28181_heartbeat_thread_need_exit_(false)
@@ -32,7 +36,9 @@ GxxGmDSJSimulater::GxxGmDSJSimulater()
 , gb28181_hb_time_(30)
 , dev_baseinfo_time_(5)
 , dev_location_time_(5)
+#ifdef _USE_SPEAKER_
 , speaker_(new GxxGmWordSpeaker())
+#endif
 , notifer_(this)
 {
 	// 
@@ -40,16 +46,19 @@ GxxGmDSJSimulater::GxxGmDSJSimulater()
 
 GxxGmDSJSimulater::~GxxGmDSJSimulater()
 {
-	// 
+#ifdef _USE_SPEAKER_
 	if (speaker_)
 		delete speaker_;
+#endif
 }
 
 int GxxGmDSJSimulater::Initialize(struct SimulaterInitInfo &init_info)
 {
 	int errCode = 0;
 
+#ifdef _USE_SPEAKER_
 	errCode = speaker_->Initialize();
+#endif
 
 	// 初始化协议栈
 	agent_ = GB28181Agent_Init(2, 16, Enum28181Version::eVERSION_2016, 3000);
