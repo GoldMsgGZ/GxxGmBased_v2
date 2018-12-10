@@ -40,6 +40,7 @@ GxxGmDSJSimulater::GxxGmDSJSimulater()
 , speaker_(new GxxGmWordSpeaker())
 #endif
 , notifer_(this)
+, is_standard_gb28181_mobile_position_(false)
 {
 	// 
 }
