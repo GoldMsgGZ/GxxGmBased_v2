@@ -76,8 +76,8 @@ int main(int argc, const char *argv[])
 
 	char location_latitude[4096] = {0};
 	char location_longtitude[4096] = {0};
-	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "DEV_LOCATION_LATITUDE", "0.000000", location_latitude, 4096, config_path.c_str());
-	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "DEV_LOCATION_LONGTITUDE", "0.000000", location_longtitude, 4096, config_path.c_str());
+	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "DEV_LOCATION_LATITUDE", "23.174992", location_latitude, 4096, config_path.c_str());
+	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "DEV_LOCATION_LONGTITUDE", "113.456393", location_longtitude, 4096, config_path.c_str());
 
 	std::vector<GxxGmDSJSimulater *> simulaters;
 
