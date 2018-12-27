@@ -119,7 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\GosuncnLib\GSRtpStack\inc;..\GosuncnLib\28181\inc;..\GosuncnLib\PSFormat\inc;..\ext\Poco\include;..\ext\FFmpeg\3.4\include"
+				AdditionalIncludeDirectories="..\GosuncnLib\GSRtpStack\inc;..\GosuncnLib\28181\inc;..\GosuncnLib\GMFLib;..\GosuncnLib\PSFormat\inc;..\ext\Poco\include;..\ext\FFmpeg\3.4\include;..\ext\GxxGm\WordSpeaker;..\ext\TinyXML2\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;GXXGMDSJSIMULATER_EXPORTS;__STDC_CONSTANT_MACROS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -138,9 +138,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="lib28181AgentSDK.lib GSRtpServer.lib PSFormat.lib"
+				AdditionalDependencies="lib28181AgentSDK.lib GSRtpServer.lib GMFLib.lib PSFormat.lib avcodec.lib avdevice.lib avfilter.lib avformat.lib avutil.lib postproc.lib swresample.lib swscale.lib tinyxml2.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\ext\Poco\lib;..\GosuncnLib\28181\lib\x86;..\GosuncnLib\GSRtpStack\lib\x86;..\GosuncnLib\GMFLib;..\GosuncnLib\PSFormat\lib\x86;..\ext\FFmpeg\3.4\lib\x86"
+				AdditionalLibraryDirectories="..\ext\Poco\lib;..\GosuncnLib\28181\lib\x86;..\GosuncnLib\GSRtpStack\lib\x86;..\GosuncnLib\GMFLib;..\GosuncnLib\PSFormat\lib\x86;..\ext\FFmpeg\3.4\lib\x86;..\ext\GxxGm\WordSpeaker\x86;..\ext\TinyXML2\lib\Release"
 				ModuleDefinitionFile="GxxGmDSJSimulater.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"

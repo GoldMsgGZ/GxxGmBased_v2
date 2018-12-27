@@ -6,7 +6,7 @@
 
 int main(int argc, const char *argv[])
 {
-	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.3\n");
+	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.4\n");
 	printf("\n");
 	printf("功能说明：\n");
 	printf("1. 支持GB28181-2011 和 GB28181-2016两个版本的协议通信；\n");
@@ -16,6 +16,7 @@ int main(int argc, const char *argv[])
 	printf("5. 支持实时视频点流，流数据来源默认为video.gmf，配置文件可配其他格式视频文件，视频文件编码必须为H.264；\n");
 	printf("6. 修正无帧率视频的播放，默认按30pfs进行播放；\n");
 	printf("7. 当视频源为G711时，可推送音频数据；\n");
+	printf("8. 模拟器可配置定位坐标；\n");
 	printf("\n");
 	system("pause");
 
@@ -73,6 +74,11 @@ int main(int argc, const char *argv[])
 	int dev_location_time = GetPrivateProfileIntA("GxxGmDSJSimulater", "DEV_LOCATION_TIME", 5, config_path.c_str());
 	int dev_imei_index_start = GetPrivateProfileIntA("GxxGmDSJSimulater", "DEVICE_IMEI_START ", 0, config_path.c_str());
 
+	char location_latitude[4096] = {0};
+	char location_longtitude[4096] = {0};
+	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "DEV_LOCATION_LATITUDE", "0.000000", location_latitude, 4096, config_path.c_str());
+	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "DEV_LOCATION_LONGTITUDE", "0.000000", location_longtitude, 4096, config_path.c_str());
+
 	std::vector<GxxGmDSJSimulater *> simulaters;
 
 	// 根据设备数量启动所有设备
@@ -118,8 +124,8 @@ int main(int argc, const char *argv[])
 		location_info.division_ns_ = LOCATION_INFO_DivisionN;
 		location_info.division_ew_ = LOCATION_INFO_DivisionE;
 		location_info.radius_ = "3";
-		location_info.longitude_ = "113.463612";
-		location_info.latitude_ = "23.18003";
+		location_info.longitude_ = location_longtitude;
+		location_info.latitude_ = location_latitude;
 		location_info.direction_ = "0";
 		location_info.speed_ = "0";
 		location_info.height_ = "0";
