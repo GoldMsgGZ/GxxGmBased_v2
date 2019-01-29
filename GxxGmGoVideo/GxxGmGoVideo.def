@@ -7,6 +7,7 @@ EXPORTS
 	?Destroy@GxxGmGoVideo@@QAEXXZ
 	?Login@GxxGmGoVideo@@QAEHPBDG00H00@Z
 	?Logout@GxxGmGoVideo@@QAEHXZ
+	?GetDeviceGatewayList@GxxGmGoVideo@@QAEHXZ
 	?GetAllDevices@GxxGmGoVideo@@QAEHXZ
 	?GetDeviceStatus@GxxGmGoVideo@@QAEHPBDAAU_GOVIDEO_DEVICE_STATUS_@@@Z
 	?GetAllDeviceStatus@GxxGmGoVideo@@QAEHXZ

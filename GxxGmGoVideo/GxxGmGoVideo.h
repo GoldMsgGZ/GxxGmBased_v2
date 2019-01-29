@@ -20,6 +20,23 @@ enum enStreamAgentType
 	StreamAgentHttpFlv
 };
 
+typedef struct _GOVIDEO_SERVICE_INFO_
+{
+	std::string service_id_;
+	std::string service_name_;
+	std::string service_type_id_;
+	std::string service_descript_;
+	std::string service_ip_;
+	std::string service_port_;
+	std::string username_;
+	std::string password_;
+	std::string is_dns_;
+	std::string gbcode_;
+	std::string version_;
+	std::string license_info_;
+
+} GOVIDEO_SERVICE_INFO, *PGOVIDEO_SERVICE_INFO;
+
 typedef struct _GOVIDEO_DEVICE_INFO_
 {
 	unsigned int device_id_;
@@ -81,10 +98,10 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 
 	// 注册设备
-	int RegisterDevice();
+	//int RegisterDevice();
 
 	// 注销设备
-	int UnregisterDevice();
+	//int UnregisterDevice();
 
 public:
 	
@@ -120,6 +137,8 @@ public:
 	std::string token_;
 
 public:
+	std::vector<GOVIDEO_SERVICE_INFO> govideo_services_;
+
 	std::vector<GOVIDEO_DEVICE_INFO *> devices_;
 	std::vector<GOVIDEO_DEVICE_STATUS> devices_status_;
 

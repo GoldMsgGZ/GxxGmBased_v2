@@ -184,6 +184,121 @@ int GxxGmGoVideo::Logout()
 	return 0;
 }
 
+int GxxGmGoVideo::GetDeviceGatewayList()
+{
+	int errCode = 0;
+	std::string errstr;
+
+	try {
+		// 发送请求，查询当前运行服务
+		Poco::Net::HTTPClientSession *session = (Poco::Net::HTTPClientSession *)http_session_;
+
+		char query_string[4096] = {0};
+		sprintf_s(query_string, 4096,
+			"/GoVideo/Serviceconfig/GetAllServerRequest?SequenceID=5&Token=%s&StartRow=1&RowNum=200",
+			token_.c_str());
+		std::string uri = query_string;
+		Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_GET, uri, Poco::Net::HTTPRequest::HTTP_1_1);
+
+		session->sendRequest(request);
+
+		Poco::Net::HTTPResponse response;
+		std::istream &is = session->receiveResponse(response);
+
+		// 判断服务器返回信息
+		Poco::Net::HTTPResponse::HTTPStatus status = response.getStatus();
+		if (Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK != status)
+		{
+			errCode = status;
+			return errCode;
+		}
+
+		std::ostringstream ostr;
+		Poco::StreamCopier::copyStream(is, ostr);
+
+		std::string json_str = ostr.str();
+		if (json_str.empty())
+		{
+			return -1;
+		}
+
+		// 将字符串转为UTF-8
+
+		Poco::Latin1Encoding latin1;
+		Poco::UTF8Encoding utf8;
+		Poco::TextConverter converter(latin1, utf8);
+		std::string strUtf8;
+		converter.convert(json_str, strUtf8);
+		json_str = strUtf8;
+
+		// 分析结果
+		Poco::JSON::Parser parser;
+		Poco::Dynamic::Var json = parser.parse(json_str);
+		Poco::JSON::Object::Ptr jsonObject = json.extract<Poco::JSON::Object::Ptr>();
+
+		Poco::Dynamic::Var message = jsonObject->get("Message");
+		jsonObject = message.extract<Poco::JSON::Object::Ptr>();
+
+		Poco::Dynamic::Var result_code = jsonObject->get("OperResult");
+		errCode = atoi(result_code.toString().c_str());
+		if (errCode != 0)
+			return errCode;
+
+		// 获取所有服务数量
+		Poco::Dynamic::Var total_count = jsonObject->get("ServNum");
+		int service_total_count = atoi(total_count.toString().c_str());
+
+		// 获取服务列表
+		if (service_total_count > 0)
+		{
+			Poco::JSON::Array::Ptr result_service_list = jsonObject->getArray("ServiceInfoList");
+			Poco::JSON::Array::ConstIterator iter = result_service_list->begin();
+			for (; iter != result_service_list->end(); ++iter)
+			{
+				Poco::JSON::Object::Ptr service_info_json_object = iter->extract<Poco::JSON::Object::Ptr>();
+
+				Poco::Dynamic::Var service_id				= service_info_json_object->get("ServID");
+				Poco::Dynamic::Var service_name				= service_info_json_object->get("ServName");
+				Poco::Dynamic::Var service_type_id			= service_info_json_object->get("ServTypeID");
+				Poco::Dynamic::Var service_descript			= service_info_json_object->get("ServDesc");
+				Poco::Dynamic::Var service_ip				= service_info_json_object->get("ServIP");
+				Poco::Dynamic::Var service_port				= service_info_json_object->get("ServPort");
+				Poco::Dynamic::Var username					= service_info_json_object->get("UserName");
+				Poco::Dynamic::Var password					= service_info_json_object->get("Password");
+				Poco::Dynamic::Var is_dns					= service_info_json_object->get("ISDNS");
+				Poco::Dynamic::Var gbcode					= service_info_json_object->get("GBCode");
+				Poco::Dynamic::Var version					= service_info_json_object->get("Version");
+				Poco::Dynamic::Var license_info				= service_info_json_object->get("LicenseInfo");
+
+				// 入容器
+				GOVIDEO_SERVICE_INFO service_info;
+				service_info.service_id_		= service_id.toString();
+				service_info.service_name_		= service_name.toString();
+				service_info.service_type_id_	= service_type_id.toString();
+				service_info.service_descript_	= service_descript.toString();
+				service_info.service_ip_		= service_ip.toString();
+				service_info.service_port_		= service_port.toString();
+				service_info.username_			= username.toString();
+				service_info.password_			= password.toString();
+				service_info.is_dns_			= is_dns.toString();
+				service_info.gbcode_			= gbcode.toString();
+				service_info.version_			= version.toString();
+				service_info.license_info_		= license_info.toString();
+
+				govideo_services_.push_back(service_info);
+			}
+		}
+		
+	}
+	catch (Poco::Exception ex)
+	{
+		errCode = ex.code();
+		errstr = ex.displayText();
+	}
+
+	return errCode;
+}
+
 int GxxGmGoVideo::GetAllDevices()
 {
 	int errCode = 0;

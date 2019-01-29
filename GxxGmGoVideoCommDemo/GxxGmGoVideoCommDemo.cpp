@@ -36,6 +36,9 @@ int _tmain(int argc, const TCHAR *argv[])
 		return errCode;
 	}
 
+	// 获取设备接入信息
+	errCode = govideo.GetDeviceGatewayList();
+
 	// 获取所有设备信息
 	errCode = govideo.GetAllDevices();
 	if (errCode != 0)
