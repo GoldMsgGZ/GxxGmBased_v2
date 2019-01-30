@@ -1,0 +1,309 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文(中华人民共和国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
+    "LANGUAGE 4, 2\r\n"
+    "#pragma code_page(936)\r\n"
+    "#include ""res\\GxxGmGoVideoMgr.rc2""  // 非 Microsoft Visual C++ 编辑的资源\r\n"
+    "#include ""l.CHS\\afxres.rc""      // 标准组件\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\GxxGmGoVideoMgr.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 170, 62
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关于 GxxGmGoVideoMgr"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,14,14,21,20
+    LTEXT           "GxxGmGoVideoMgr，1.0 版",IDC_STATIC,42,14,114,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2019",IDC_STATIC,42,26,114,8
+    DEFPUSHBUTTON   "确定",IDOK,113,41,50,14,WS_GROUP
+END
+
+IDD_GXXGMGOVIDEOMGR_DIALOG DIALOGEX 0, 0, 558, 380
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "GxxGmGoVideoMgr"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "确定",IDOK,209,359,50,14,NOT WS_VISIBLE
+    PUSHBUTTON      "取消",IDCANCEL,501,359,50,14,NOT WS_VISIBLE
+    CONTROL         "",IDC_TAB_MAIN,"SysTabControl32",0x0,7,7,544,366
+END
+
+IDD_CHILDDLG_DEVMGR DIALOGEX 0, 0, 632, 377
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "确定",IDOK,215,292,50,14,NOT WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON      "取消",IDCANCEL,262,296,50,14,NOT WS_VISIBLE | WS_DISABLED
+    LTEXT           "设备管理",IDC_STATIC,273,7,33,8,NOT WS_VISIBLE
+    LTEXT           "设备管理",IDC_STATIC,7,362,33,8,NOT WS_VISIBLE
+    LTEXT           "设备管理",IDC_STATIC,592,362,33,8,NOT WS_VISIBLE
+    LTEXT           "设备管理",IDC_STATIC,316,7,33,8,NOT WS_VISIBLE
+    LTEXT           "设备接入网关列表",IDC_STATIC,7,7,65,8
+    CONTROL         "",IDC_LIST_DGWS,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,21,206,349
+    LTEXT           "设备列表",IDC_STATIC,216,7,33,8
+    CONTROL         "",IDC_LIST_DEVS,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,216,21,409,297
+    PUSHBUTTON      "注册设备",IDC_BTN_REGISTER,215,319,50,14
+    PUSHBUTTON      "移除设备",IDC_BTN_REMOVE,575,319,50,14
+    PUSHBUTTON      "修改设备",IDC_BTN_MODIFY,266,319,50,14
+    PUSHBUTTON      "刷新",IDC_BTN_REFRESH_SERVICES,164,7,50,14
+    PUSHBUTTON      "刷新",IDC_BTN_REFRESH_DEVICES,575,7,50,14
+END
+
+IDD_CHILDDLG_SERVICESTATE DIALOGEX 0, 0, 632, 377
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "确定",IDOK,205,356,50,14,NOT WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON      "取消",IDCANCEL,264,356,50,14,NOT WS_VISIBLE | WS_DISABLED
+    LTEXT           "服务状态",IDC_STATIC,243,7,33,8
+    LTEXT           "服务状态",IDC_STATIC,7,362,33,8
+    LTEXT           "服务状态",IDC_STATIC,297,7,33,8
+    LTEXT           "服务状态",IDC_STATIC,592,362,33,8
+    LTEXT           "已注册的服务",IDC_STATIC,7,10,73,8
+    CONTROL         "",IDC_LIST_SERVICES,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,21,491,152
+    PUSHBUTTON      "刷新",IDC_BTN_REFRESH_ONLINESERVICE,449,7,50,14
+    PUSHBUTTON      "注册服务",IDC_BTN_REGISTER_SERVICE,575,7,50,14
+    LTEXT           "服务类型",IDC_STATIC,514,23,33,8
+    LTEXT           "服务名称",IDC_STATIC,514,36,33,8
+    LTEXT           "版本号",IDC_STATIC,522,51,25,8
+    LTEXT           "服务说明",IDC_STATIC,514,65,33,8
+    LTEXT           "IP地址",IDC_STATIC,523,80,24,8
+    LTEXT           "端口号",IDC_STATIC,522,94,25,8
+    LTEXT           "用户名",IDC_STATIC,522,108,25,8
+    LTEXT           "密码",IDC_STATIC,530,121,17,8
+    LTEXT           "域名解析",IDC_STATIC,514,164,33,8
+    LTEXT           "国标编码",IDC_STATIC,514,136,33,8
+    LTEXT           "许可证",IDC_STATIC,522,150,25,8
+    COMBOBOX        IDC_COMBO_SERVICE_TYPE,548,20,77,30,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDIT_SERVICE_NAME,548,34,77,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_VERSION,548,48,77,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_SERVICE_DETAIL,548,62,77,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_IPADDRESS,548,76,77,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_PORT,548,91,77,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_USERNAME,548,105,77,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_PASSWORD,548,119,77,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_GBCODE,548,133,77,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_LICENSE,548,147,77,14,ES_AUTOHSCROLL
+    COMBOBOX        IDC_COMBO_IS_DNS,548,162,77,30,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,503,21,1,152
+END
+
+IDD_DIALOG1 DIALOGEX 0, 0, 218, 101
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "登录到GoVideo"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT_IP,69,20,121,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_PWD,69,38,121,14,ES_AUTOHSCROLL | ES_NUMBER
+    PUSHBUTTON      "确定",IDOK,7,80,50,14,NOT WS_VISIBLE
+    PUSHBUTTON      "取消",IDCANCEL,61,80,50,14,NOT WS_VISIBLE
+    LTEXT           "GoVideo-IP",IDC_STATIC,22,22,36,8
+    LTEXT           "GoVideo-Port",IDC_STATIC,22,41,43,8
+    DEFPUSHBUTTON   "登录",IDC_BTN_LOGIN,45,60,50,17
+    PUSHBUTTON      "退出",IDC_BTN_CANCEL,112,60,50,17
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080403a8"
+        BEGIN
+            VALUE "CompanyName", "TODO: <公司名>"
+            VALUE "FileDescription", "TODO: <文件说明>"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "GxxGmGoVideoMgr.exe"
+            VALUE "LegalCopyright", "TODO: (C) <公司名>。保留所有权利。"
+            VALUE "OriginalFilename", "GxxGmGoVideoMgr.exe"
+            VALUE "ProductName", "TODO: <产品名>"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 936
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 163
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 55
+    END
+
+    IDD_GXXGMGOVIDEOMGR_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 551
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 373
+    END
+
+    IDD_CHILDDLG_DEVMGR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 625
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 370
+    END
+
+    IDD_CHILDDLG_SERVICESTATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 625
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 370
+    END
+
+    IDD_DIALOG1, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 211
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 94
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// HTML
+//
+
+IDR_HTML_GXXGMDEVMGRDLG HTML                    "GxxGmDevMgrDlg.htm"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_ABOUTBOX            "关于 GxxGmGoVideoMgr(&A)..."
+END
+
+#endif    // 中文(中华人民共和国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE 4, 2
+#pragma code_page(936)
+#include "res\GxxGmGoVideoMgr.rc2"  // 非 Microsoft Visual C++ 编辑的资源
+#include "l.CHS\afxres.rc"      // 标准组件
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

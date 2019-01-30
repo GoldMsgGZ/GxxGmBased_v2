@@ -190,6 +190,9 @@ int GxxGmGoVideo::GetDeviceGatewayList()
 	std::string errstr;
 
 	try {
+
+		govideo_services_.clear();
+
 		// 发送请求，查询当前运行服务
 		Poco::Net::HTTPClientSession *session = (Poco::Net::HTTPClientSession *)http_session_;
 
