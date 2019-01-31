@@ -24,15 +24,12 @@ protected:
 
 public:
 	GxxGmGoVideo *govideo_;
-	CListCtrl m_cDGWList;
-	CListCtrl m_cDevList;
 
 public:
-	afx_msg void OnBnClickedBtnRefreshServices();
-	afx_msg void OnBnClickedBtnRefreshDevices();
-	afx_msg void OnNMClickListDgws(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnBnClickedBtnRegister();
-	afx_msg void OnBnClickedBtnModify();
+	CListCtrl m_cDGWList;
+	CListCtrl m_cDevList;
+	int current_select_dgw_id_;
+
 	CEdit m_cDevID;
 	CEdit m_cDevName;
 	CComboBox m_cModelID;
@@ -47,4 +44,13 @@ public:
 	CEdit m_cNameAbbr;
 	CEdit m_cDevVersion;
 	CComboBox m_cDGWs;
+
+public:
+	afx_msg void OnBnClickedBtnRefreshServices();
+	afx_msg void OnBnClickedBtnRefreshDevices();
+	afx_msg void OnNMClickListDgws(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnBnClickedBtnRegister();
+	afx_msg void OnBnClickedBtnModify();
+	
+	afx_msg void OnLvnKeydownListDevs(NMHDR *pNMHDR, LRESULT *pResult);
 };

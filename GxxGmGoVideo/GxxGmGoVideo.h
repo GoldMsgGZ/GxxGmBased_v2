@@ -8,6 +8,12 @@
 
 #include "Poco/Thread.h"
 
+#ifdef GXXGMGOVIDEO_EXPORTS
+#define DLL_API __declspec(dllexport)
+#else
+#define DLL_API __declspec(dllimport)
+#endif
+
 class GxxGmHttpServer;
 
 enum enStreamAgentType
@@ -66,7 +72,7 @@ typedef struct _GOVIDEO_DEVICE_STATUS_
 	std::map<int, unsigned int> chennal_status_;
 } GOVIDEO_DEVICE_STATUS, *PGOVIDEO_DEVICE_STATUS;
 
-class GxxGmGoVideo
+class DLL_API GxxGmGoVideo
 {
 public:
 	GxxGmGoVideo();
@@ -98,10 +104,10 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 
 	// 注册设备
-	int RegisterDevice(const GOVIDEO_DEVICE_INFO &device_info);
+	int RegisterDevice(GOVIDEO_DEVICE_INFO &device_info);
 
 	// 修改设备
-	int ModifyDevice(const GOVIDEO_DEVICE_INFO &device_info);
+	int ModifyDevice(GOVIDEO_DEVICE_INFO &device_info);
 
 	// 注销设备
 	int UnregisterDevice(const char *device_id);

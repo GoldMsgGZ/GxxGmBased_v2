@@ -12,6 +12,7 @@ IMPLEMENT_DYNAMIC(CGxxGmDevMgrDlg, CDialog)
 
 CGxxGmDevMgrDlg::CGxxGmDevMgrDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CGxxGmDevMgrDlg::IDD, pParent)
+	, current_select_dgw_id_(-1)
 {
 
 }
@@ -48,6 +49,7 @@ BEGIN_MESSAGE_MAP(CGxxGmDevMgrDlg, CDialog)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_DGWS, &CGxxGmDevMgrDlg::OnNMClickListDgws)
 	ON_BN_CLICKED(IDC_BTN_REGISTER, &CGxxGmDevMgrDlg::OnBnClickedBtnRegister)
 	ON_BN_CLICKED(IDC_BTN_MODIFY, &CGxxGmDevMgrDlg::OnBnClickedBtnModify)
+	ON_NOTIFY(LVN_KEYDOWN, IDC_LIST_DEVS, &CGxxGmDevMgrDlg::OnLvnKeydownListDevs)
 END_MESSAGE_MAP()
 
 
@@ -125,19 +127,23 @@ void CGxxGmDevMgrDlg::OnBnClickedBtnRefreshDevices()
 	std::vector<GOVIDEO_DEVICE_INFO *>::iterator iter;
 	for (iter = govideo_->devices_.begin(); iter != govideo_->devices_.end(); ++iter)
 	{
-		int count = m_cDevList.GetItemCount();
+		GOVIDEO_DEVICE_INFO *device_info = *iter;
+		if ((current_select_dgw_id_ == -1)) || (current_select_dgw_id_ == device_info->dgw_server_id_))
+		{
+			int count = m_cDevList.GetItemCount();
 
-		TCHAR str_val[64] = {0};
-		_stprintf_s(str_val, 64, _T("%d"), count);
-		m_cDevList.InsertItem(count, str_val);
+			TCHAR str_val[64] = {0};
+			_stprintf_s(str_val, 64, _T("%d"), count);
+			m_cDevList.InsertItem(count, str_val);
 
-		_stprintf_s(str_val, 64, _T("%d"), (*iter)->device_id_);
-		m_cDevList.SetItemText(count, 1, str_val);
+			_stprintf_s(str_val, 64, _T("%d"), (*iter)->device_id_);
+			m_cDevList.SetItemText(count, 1, str_val);
 
-		m_cDevList.SetItemText(count, 2, A2T((*iter)->gb28181_code_.c_str()));
+			m_cDevList.SetItemText(count, 2, A2T((*iter)->gb28181_code_.c_str()));
 
-		_stprintf_s(str_val, 64, _T("%d"), (*iter)->model_id_);
-		m_cDevList.SetItemText(count, 3, str_val);
+			_stprintf_s(str_val, 64, _T("%d"), (*iter)->model_id_);
+			m_cDevList.SetItemText(count, 3, str_val);
+		}
 	}
 }
 
@@ -150,7 +156,7 @@ void CGxxGmDevMgrDlg::OnNMClickListDgws(NMHDR *pNMHDR, LRESULT *pResult)
 	if (service_id_str.IsEmpty())
 		return ;
 
-	int dgw_id = _ttoi(service_id_str.GetBuffer(0));
+	current_select_dgw_id_ = _ttoi(service_id_str.GetBuffer(0));
 
 	m_cDevList.DeleteAllItems();
 
@@ -161,7 +167,7 @@ void CGxxGmDevMgrDlg::OnNMClickListDgws(NMHDR *pNMHDR, LRESULT *pResult)
 	{
 		GOVIDEO_DEVICE_INFO *device_info = *iter;
 
-		if (device_info->dgw_server_id_ == dgw_id)
+		if (device_info->dgw_server_id_ == current_select_dgw_id_)
 		{
 			int count = m_cDevList.GetItemCount();
 
@@ -185,6 +191,9 @@ void CGxxGmDevMgrDlg::OnNMClickListDgws(NMHDR *pNMHDR, LRESULT *pResult)
 void CGxxGmDevMgrDlg::OnBnClickedBtnRegister()
 {
 	// 注册设备,从控件中拿出数据
+	CString device_id;
+	m_cDevID.GetWindowText(device_id);
+
 	CString device_name;
 	m_cDevName.GetWindowText(device_name);
 
@@ -224,11 +233,146 @@ void CGxxGmDevMgrDlg::OnBnClickedBtnRegister()
 	CString dgw_id;
 	m_cDGWs.GetWindowText(dgw_id);
 
+	GOVIDEO_DEVICE_INFO device_info;
+	device_info.device_id_ == 0;
+	device_info.device_name_ = T2A(device_name.GetBuffer(0));
+	device_info.model_id_ = _ttoi(model_id.GetBuffer(0));
+	device_info.category_id_ = _ttoi(category_id.GetBuffer(0));
+	device_info.device_connection_info_ = T2A(conn_info.GetBuffer(0));
+	device_info.version_ = _ttoi(cfg_version.GetBuffer(0));
+	device_info.device_username_ = T2A(username.GetBuffer(0));
+	device_info.device_password_ = T2A(password.GetBuffer(0));
+	device_info.device_code_ = T2A(dev_code.GetBuffer(0));
+	device_info.device_extra_info_ = T2A(dev_ext_info.GetBuffer(0));
+	device_info.gb28181_code_ = T2A(gbcode.GetBuffer(0));
+	device_info.device_name_abbr_ = T2A(name_abbr.GetBuffer(0));
+	device_info.device_version_ = T2A(dev_version.GetBuffer(0));
+	device_info.dgw_server_id_ = _ttoi(dgw_id.GetBuffer(0));
+
 	// 调用添加设备接口
-	//int errCode = govideo_;
+	int errCode = govideo_->RegisterDevice(device_info);
+	if (errCode != 0)
+		MessageBox(_T("注册设备失败！"), _T("错误"), MB_OK|MB_ICONERROR);
+	else
+	{
+		MessageBox(_T("注册设备成功！"), _T("提示"), MB_OK|MB_ICONINFORMATION);
+
+		OnBnClickedBtnRefreshDevices();
+	}
 }
 
 void CGxxGmDevMgrDlg::OnBnClickedBtnModify()
 {
-	// TODO: 在此添加控件通知处理程序代码
+	// 
+	CString device_id;
+	m_cDevID.GetWindowText(device_id);
+
+	CString device_name;
+	m_cDevName.GetWindowText(device_name);
+
+	CString model_id;
+	m_cModelID.GetWindowText(model_id);
+
+	CString category_id;
+	m_cCategoryID.GetWindowText(category_id);
+
+	CString conn_info;
+	m_cConnInfo.GetWindowText(conn_info);
+
+	CString cfg_version;
+	m_cCfgVersion.GetWindowText(cfg_version);
+
+	CString username;
+	m_cUsername.GetWindowText(username);
+
+	CString password;
+	m_cPassword.GetWindowText(password);
+
+	CString dev_code;
+	m_cDevCode.GetWindowText(dev_code);
+
+	CString dev_ext_info;
+	m_cExtInfo.GetWindowText(dev_ext_info);
+
+	CString gbcode;
+	m_cDevGBCdeo.GetWindowText(gbcode);
+
+	CString name_abbr;
+	m_cNameAbbr.GetWindowText(name_abbr);
+
+	CString dev_version;
+	m_cDevVersion.GetWindowText(dev_version);
+
+	CString dgw_id;
+	m_cDGWs.GetWindowText(dgw_id);
+
+	GOVIDEO_DEVICE_INFO device_info;
+	device_info.device_id_ == _ttoi(device_id.GetBuffer(0));
+	device_info.device_name_ = T2A(device_name.GetBuffer(0));
+	device_info.model_id_ = _ttoi(model_id.GetBuffer(0));
+	device_info.category_id_ = _ttoi(category_id.GetBuffer(0));
+	device_info.device_connection_info_ = T2A(conn_info.GetBuffer(0));
+	device_info.version_ = _ttoi(cfg_version.GetBuffer(0));
+	device_info.device_username_ = T2A(username.GetBuffer(0));
+	device_info.device_password_ = T2A(password.GetBuffer(0));
+	device_info.device_code_ = T2A(dev_code.GetBuffer(0));
+	device_info.device_extra_info_ = T2A(dev_ext_info.GetBuffer(0));
+	device_info.gb28181_code_ = T2A(gbcode.GetBuffer(0));
+	device_info.device_name_abbr_ = T2A(name_abbr.GetBuffer(0));
+	device_info.device_version_ = T2A(dev_version.GetBuffer(0));
+	device_info.dgw_server_id_ = _ttoi(dgw_id.GetBuffer(0));
+
+	// 调用添加设备接口
+	int errCode = govideo_->RegisterDevice(device_info);
+	if (errCode != 0)
+		MessageBox(_T("修改设备失败！"), _T("错误"), MB_OK|MB_ICONERROR);
+	else
+	{
+		MessageBox(_T("修改设备成功！"), _T("提示"), MB_OK|MB_ICONINFORMATION);
+
+		OnBnClickedBtnRefreshDevices();
+	}
+}
+
+void CGxxGmDevMgrDlg::OnLvnKeydownListDevs(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMLVKEYDOWN pLVKeyDow = reinterpret_cast<LPNMLVKEYDOWN>(pNMHDR);
+	
+	// 找到删除键
+	if (pLVKeyDow->wVKey == VK_DELETE)
+	{
+		INT_PTR ret = MessageBox(_T("确定要移除选中的设备吗？"), _T("警告"), MB_OKCANCEL|MB_ICONMASK);
+		if (ret != IDOK)
+			return ;
+
+		// 找到当前选中的行
+		POSITION pos = m_cDevList.GetFirstSelectedItemPosition();
+		if (pos == NULL)
+			return ;
+
+		do 
+		{
+			int index = m_cDevList.GetNextSelectedItem(pos);
+			if (index != -1)
+			{
+				// 拿到设备内部id
+				CString dev_id = m_cDevList.GetItemText(index, 1);
+
+				// 先调用GoVideo的删除服务接口，成功后再调用界面移除记录
+				int errCode = govideo_->UnregisterDevice(T2A(dev_id.GetBuffer(0)));
+				if (errCode == 0)
+					m_cDevList.DeleteItem(index);
+				else
+				{
+					MessageBox(_T("移除设备失败！"), _T("错误"), MB_OK|MB_ICONERROR);
+					return ;
+				}
+			}
+			else
+				break;
+
+		} while (true);
+	}
+
+	*pResult = 0;
 }

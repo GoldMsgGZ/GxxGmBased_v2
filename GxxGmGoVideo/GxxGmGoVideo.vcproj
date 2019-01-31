@@ -64,7 +64,7 @@
 				AdditionalDependencies="PocoFoundationD.lib PocoNetD.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\ext\Poco\lib"
-				ModuleDefinitionFile="GxxGmGoVideo.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="true"
 				GenerateMapFile="true"
 				SubSystem="2"

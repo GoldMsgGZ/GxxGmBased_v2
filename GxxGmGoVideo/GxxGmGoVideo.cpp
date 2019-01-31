@@ -302,7 +302,7 @@ int GxxGmGoVideo::GetDeviceGatewayList()
 	return errCode;
 }
 
-int GxxGmGoVideo::RegisterDevice(const GOVIDEO_DEVICE_INFO &device_info)
+int GxxGmGoVideo::RegisterDevice(GOVIDEO_DEVICE_INFO &device_info)
 {
 	int errCode = 0;
 	std::string errstr;
@@ -373,7 +373,7 @@ int GxxGmGoVideo::RegisterDevice(const GOVIDEO_DEVICE_INFO &device_info)
 	return errCode;
 }
 
-int GxxGmGoVideo::ModifyDevice(const GOVIDEO_DEVICE_INFO &device_info)
+int GxxGmGoVideo::ModifyDevice(GOVIDEO_DEVICE_INFO &device_info)
 {
 	int errCode = 0;
 
