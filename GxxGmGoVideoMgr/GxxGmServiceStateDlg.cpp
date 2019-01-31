@@ -62,6 +62,8 @@ void CGxxGmServiceStateDlg::OnBnClickedBtnRefreshOnlineservice()
 	USES_CONVERSION;
 	int errCode = govideo_->GetDeviceGatewayList();
 
+	m_cRunningServiceList.DeleteAllItems();
+
 	std::vector<GOVIDEO_SERVICE_INFO>::iterator iter;
 	for (iter = govideo_->govideo_services_.begin(); iter != govideo_->govideo_services_.end(); ++iter)
 	{

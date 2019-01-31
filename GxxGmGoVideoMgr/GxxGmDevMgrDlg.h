@@ -2,6 +2,7 @@
 #include "afxcmn.h"
 
 #include "..\GxxGmGoVideo\GxxGmGoVideo.h"
+#include "afxwin.h"
 
 // CGxxGmDevMgrDlg ¶Ô»°¿ò
 
@@ -30,4 +31,20 @@ public:
 	afx_msg void OnBnClickedBtnRefreshServices();
 	afx_msg void OnBnClickedBtnRefreshDevices();
 	afx_msg void OnNMClickListDgws(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnBnClickedBtnRegister();
+	afx_msg void OnBnClickedBtnModify();
+	CEdit m_cDevID;
+	CEdit m_cDevName;
+	CComboBox m_cModelID;
+	CComboBox m_cCategoryID;
+	CEdit m_cConnInfo;
+	CEdit m_cCfgVersion;
+	CEdit m_cUsername;
+	CEdit m_cPassword;
+	CEdit m_cDevCode;
+	CEdit m_cExtInfo;
+	CEdit m_cDevGBCdeo;
+	CEdit m_cNameAbbr;
+	CEdit m_cDevVersion;
+	CComboBox m_cDGWs;
 };

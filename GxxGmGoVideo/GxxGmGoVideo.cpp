@@ -302,6 +302,91 @@ int GxxGmGoVideo::GetDeviceGatewayList()
 	return errCode;
 }
 
+int GxxGmGoVideo::RegisterDevice(const GOVIDEO_DEVICE_INFO &device_info)
+{
+	int errCode = 0;
+	std::string errstr;
+
+	device_info.device_id_ = 0;
+
+	try {
+		// 发送请求，查询当前运行服务
+		Poco::Net::HTTPClientSession *session = (Poco::Net::HTTPClientSession *)http_session_;
+
+		char query_string[4096] = {0};
+		sprintf_s(query_string, 4096,
+			"/GoVideo/Serviceconfig/GetAllServerRequest?SequenceID=5&Token=%s&StartRow=1&RowNum=200",
+			token_.c_str());
+		std::string uri = query_string;
+		Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_GET, uri, Poco::Net::HTTPRequest::HTTP_1_1);
+
+		session->sendRequest(request);
+
+		Poco::Net::HTTPResponse response;
+		std::istream &is = session->receiveResponse(response);
+
+		// 判断服务器返回信息
+		Poco::Net::HTTPResponse::HTTPStatus status = response.getStatus();
+		if (Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK != status)
+		{
+			errCode = status;
+			return errCode;
+		}
+
+		std::ostringstream ostr;
+		Poco::StreamCopier::copyStream(is, ostr);
+
+		std::string json_str = ostr.str();
+		if (json_str.empty())
+		{
+			return -1;
+		}
+
+		// 将字符串转为UTF-8
+
+		Poco::Latin1Encoding latin1;
+		Poco::UTF8Encoding utf8;
+		Poco::TextConverter converter(latin1, utf8);
+		std::string strUtf8;
+		converter.convert(json_str, strUtf8);
+		json_str = strUtf8;
+
+		// 分析结果
+		Poco::JSON::Parser parser;
+		Poco::Dynamic::Var json = parser.parse(json_str);
+		Poco::JSON::Object::Ptr jsonObject = json.extract<Poco::JSON::Object::Ptr>();
+
+		Poco::Dynamic::Var message = jsonObject->get("Message");
+		jsonObject = message.extract<Poco::JSON::Object::Ptr>();
+
+		Poco::Dynamic::Var result_code = jsonObject->get("OperResult");
+		errCode = atoi(result_code.toString().c_str());
+		if (errCode != 0)
+			return errCode;
+	}
+	catch (Poco::Exception ex)
+	{
+		errCode = ex.code();
+		errstr = ex.displayText();
+	}
+	
+	return errCode;
+}
+
+int GxxGmGoVideo::ModifyDevice(const GOVIDEO_DEVICE_INFO &device_info)
+{
+	int errCode = 0;
+
+	return errCode;
+}
+
+int GxxGmGoVideo::UnregisterDevice(const char *device_id)
+{
+	int errCode = 0;
+
+	return errCode;
+}
+
 int GxxGmGoVideo::GetAllDevices()
 {
 	int errCode = 0;

@@ -98,10 +98,13 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 
 	// 注册设备
-	//int RegisterDevice();
+	int RegisterDevice(const GOVIDEO_DEVICE_INFO &device_info);
+
+	// 修改设备
+	int ModifyDevice(const GOVIDEO_DEVICE_INFO &device_info);
 
 	// 注销设备
-	//int UnregisterDevice();
+	int UnregisterDevice(const char *device_id);
 
 public:
 	

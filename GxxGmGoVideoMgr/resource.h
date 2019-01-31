@@ -39,19 +39,31 @@
 #define IDC_BUTTON5                     1025
 #define IDC_BTN_REFRESH_DEVICES         1025
 #define IDC_EDIT1                       1026
+#define IDC_EDIT_CONNECTION_INFO        1026
 #define IDC_EDIT2                       1027
+#define IDC_EDIT_DEVNAME                1027
 #define IDC_COMBO1                      1028
+#define IDC_COMBO_CATEGORYID            1028
 #define IDC_COMBO2                      1029
+#define IDC_COMBO_MODELID               1029
 #define IDC_EDIT3                       1030
+#define IDC_EDIT_DEVID                  1030
 #define IDC_EDIT4                       1031
 #define IDC_EDIT5                       1032
+#define IDC_EDIT_CFG_VERSION            1032
 #define IDC_EDIT6                       1033
+#define IDC_EDIT_DEVICE_CODE            1033
 #define IDC_EDIT7                       1034
 #define IDC_EDIT8                       1035
+#define IDC_EDIT_DEV_GBCODE             1035
 #define IDC_EDIT9                       1036
+#define IDC_EDIT_EXT_INFO               1036
 #define IDC_EDIT10                      1037
+#define IDC_EDIT_DEV_VERSION            1037
 #define IDC_EDIT11                      1038
+#define IDC_EDIT_DEV_NAME_ABBR          1038
 #define IDC_COMBO3                      1039
+#define IDC_COMBO_DGW_ID                1039
 
 // Next default values for new objects
 // 
