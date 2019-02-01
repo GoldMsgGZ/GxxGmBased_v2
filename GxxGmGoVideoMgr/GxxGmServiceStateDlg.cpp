@@ -44,6 +44,7 @@ BEGIN_MESSAGE_MAP(CGxxGmServiceStateDlg, CDialog)
 	ON_NOTIFY(LVN_KEYDOWN, IDC_LIST_SERVICES, &CGxxGmServiceStateDlg::OnLvnKeydownListServices)
 	ON_BN_CLICKED(IDC_BTN_REGISTER_SERVICE, &CGxxGmServiceStateDlg::OnBnClickedBtnRegisterService)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_SERVICES, &CGxxGmServiceStateDlg::OnNMClickListServices)
+	ON_BN_CLICKED(IDC_BTN_MODIFY_SERVICE, &CGxxGmServiceStateDlg::OnBnClickedBtnModifyService)
 END_MESSAGE_MAP()
 
 
@@ -118,6 +119,7 @@ void CGxxGmServiceStateDlg::OnLvnKeydownListServices(NMHDR *pNMHDR, LRESULT *pRe
 	LPNMLVKEYDOWN pLVKeyDow = reinterpret_cast<LPNMLVKEYDOWN>(pNMHDR);
 	
 	// 找到删除键
+	USES_CONVERSION;
 	if (pLVKeyDow->wVKey == VK_DELETE)
 	{
 		INT_PTR ret = MessageBox(_T("确定要删除选中的服务吗？"), _T("警告"), MB_OKCANCEL|MB_ICONMASK);
@@ -134,7 +136,16 @@ void CGxxGmServiceStateDlg::OnLvnKeydownListServices(NMHDR *pNMHDR, LRESULT *pRe
 			int index = m_cRunningServiceList.GetNextSelectedItem(pos);
 			if (index != -1)
 			{
-				// 先调用GoVideo的删除服务接口，成功后再调用界面移除记录		
+				// 先调用GoVideo的删除服务接口，成功后再调用界面移除记录
+				CString serv_id = m_cRunningServiceList.GetItemText(index, 0);
+				int errCode = govideo_->UnregisterService(T2A(serv_id.GetBuffer(0)));
+				if (errCode != 0)
+				{
+					MessageBox(_T("移除服务失败！"), _T("错误"), MB_OK|MB_ICONERROR);
+					return ;
+				}
+
+				govideo_->DataUpdate();
 				m_cRunningServiceList.DeleteItem(index);
 			}
 			else
@@ -231,7 +242,9 @@ void CGxxGmServiceStateDlg::OnBnClickedBtnRegisterService()
 		MessageBox(_T("注册服务失败！"), _T("错误"), MB_OK|MB_ICONERROR);
 	else
 	{
-		MessageBox(_T("注册服务成功！"), _T("错误"), MB_OK|MB_ICONERROR);
+		MessageBox(_T("注册服务成功！"), _T("提示"), MB_OK|MB_ICONINFORMATION);
+
+		govideo_->DataUpdate();
 		
 		// 刷新列表
 		OnBnClickedBtnRefreshOnlineservice();
@@ -257,25 +270,25 @@ void CGxxGmServiceStateDlg::OnNMClickListServices(NMHDR *pNMHDR, LRESULT *pResul
 			{
 				m_cServID.SetWindowText(serv_id);
 
-				if (service_info.service_type_id_ == 102)
+				if (service_info.service_type_id_.compare("102") == 0)
 					m_cServType.SetCurSel(1);
-				else if (service_info.service_type_id_ == 105)
+				else if (service_info.service_type_id_.compare("105") == 0)
 					m_cServType.SetCurSel(2);
-				else if (service_info.service_type_id_ == 106)
+				else if (service_info.service_type_id_.compare("106") == 0)
 					m_cServType.SetCurSel(3);
-				else if (service_info.service_type_id_ == 110)
+				else if (service_info.service_type_id_.compare("110") == 0)
 					m_cServType.SetCurSel(4);
-				else if (service_info.service_type_id_ == 120)
+				else if (service_info.service_type_id_.compare("120") == 0)
 					m_cServType.SetCurSel(5);
-				else if (service_info.service_type_id_ == 130)
+				else if (service_info.service_type_id_.compare("130") == 0)
 					m_cServType.SetCurSel(6);
-				else if (service_info.service_type_id_ == 150)
+				else if (service_info.service_type_id_.compare("150") == 0)
 					m_cServType.SetCurSel(7);
-				else if (service_info.service_type_id_ == 160)
+				else if (service_info.service_type_id_.compare("160") == 0)
 					m_cServType.SetCurSel(8);
-				else if (service_info.service_type_id_ == 170)
+				else if (service_info.service_type_id_.compare("170") == 0)
 					m_cServType.SetCurSel(9);
-				else if (service_info.service_type_id_ == 180)
+				else if (service_info.service_type_id_.compare("180") == 0)
 					m_cServType.SetCurSel(10);
 
 				m_cServType.SetCurSel(0);
@@ -295,4 +308,101 @@ void CGxxGmServiceStateDlg::OnNMClickListServices(NMHDR *pNMHDR, LRESULT *pResul
 	
 
 	*pResult = 0;
+}
+
+void CGxxGmServiceStateDlg::OnBnClickedBtnModifyService()
+{
+	CString serv_type;
+	m_cServType.GetWindowText(serv_type);
+	if (serv_type.IsEmpty())
+	{
+		MessageBox(_T("未选择设备类型！"), _T("提示"), MB_OK|MB_ICONINFORMATION);
+		return ;
+	}
+
+	std::string serv_type_id = "102";
+	if (serv_type.CompareNoCase(_T("设备网关")) == 0)
+		serv_type_id = "102";
+	else if (serv_type.CompareNoCase(_T("告警管理服务")) == 0)
+		serv_type_id = "105";
+	else if (serv_type.CompareNoCase(_T("录像存储服务")) == 0)
+		serv_type_id = "106";
+	else if (serv_type.CompareNoCase(_T("电视墙管理服务")) == 0)
+		serv_type_id = "110";
+	else if (serv_type.CompareNoCase(_T("中心管理服务")) == 0)
+		serv_type_id = "120";
+	else if (serv_type.CompareNoCase(_T("业务管理服务")) == 0)
+		serv_type_id = "130";
+	else if (serv_type.CompareNoCase(_T("流媒体服务")) == 0)
+		serv_type_id = "150";
+	else if (serv_type.CompareNoCase(_T("录像点播服务")) == 0)
+		serv_type_id = "160";
+	else if (serv_type.CompareNoCase(_T("语音对讲服务")) == 0)
+		serv_type_id = "170";
+	else if (serv_type.CompareNoCase(_T("28181联网网关服务")) == 0)
+		serv_type_id = "180";
+
+	CString serv_name;
+	m_cServName.GetWindowText(serv_name);
+
+	CString serv_version;
+	m_cServVersion.GetWindowText(serv_version);
+
+	CString serv_detail;
+	m_cServDetail.GetWindowText(serv_detail);
+
+	CString serv_ip;
+	m_cServIP.GetWindowText(serv_ip);
+
+	CString serv_port;
+	m_cServPort.GetWindowText(serv_port);
+
+	CString serv_username;
+	m_cUsername.GetWindowText(serv_username);
+
+	CString serv_password;
+	m_cPassword.GetWindowText(serv_password);
+
+	CString serv_gbcode;
+	m_cServGBCode.GetWindowText(serv_gbcode);
+
+	CString serv_license;
+	m_cServLicense.GetWindowText(serv_license);
+
+	CString serv_isdns;
+	m_cIsDNS.GetWindowText(serv_isdns);
+
+	std::string is_dns = "0";
+	if (serv_isdns.CompareNoCase(_T("是")) == 0)
+		is_dns = "1";
+
+	CString serv_id;
+	m_cServID.GetWindowText(serv_id);
+
+	USES_CONVERSION;
+	GOVIDEO_SERVICE_INFO service_info;
+	service_info.service_id_ = T2A(serv_id.GetBuffer(0));
+	service_info.service_name_ = T2A(serv_name.GetBuffer(0));
+	service_info.service_type_id_ = serv_type_id;
+	service_info.service_descript_ = T2A(serv_detail.GetBuffer(0));
+	service_info.service_ip_ = T2A(serv_ip.GetBuffer(0));
+	service_info.service_port_ = T2A(serv_port.GetBuffer(0));
+	service_info.username_ = T2A(serv_username.GetBuffer(0));
+	service_info.password_ = T2A(serv_password.GetBuffer(0));
+	service_info.gbcode_ = T2A(serv_gbcode.GetBuffer(0));
+	service_info.license_info_ = T2A(serv_license.GetBuffer(0));
+	service_info.is_dns_ = is_dns;
+
+	int errCode = govideo_->ModifyService(service_info);
+	if (errCode != 0)
+		MessageBox(_T("修改服务失败！"), _T("错误"), MB_OK|MB_ICONERROR);
+	else
+	{
+		MessageBox(_T("修改服务成功！"), _T("提示"), MB_OK|MB_ICONINFORMATION);
+
+		govideo_->DataUpdate();
+
+		// 刷新列表
+		OnBnClickedBtnRefreshOnlineservice();
+	}
 }

@@ -34,6 +34,8 @@
 #define IDC_EDIT_PASSWORD2              1019
 #define IDC_EDIT_SERV_ID                1019
 #define IDC_LIST_DEVS                   1020
+#define IDC_BTN_REGISTER_SERVICE2       1020
+#define IDC_BTN_MODIFY_SERVICE          1020
 #define IDC_BTN_REGISTER                1021
 #define IDC_BTN_REMOVE                  1022
 #define IDC_BTN_MODIFY                  1023

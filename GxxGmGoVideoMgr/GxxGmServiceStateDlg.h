@@ -43,4 +43,5 @@ public:
 	CComboBox m_cIsDNS;
 	afx_msg void OnNMClickListServices(NMHDR *pNMHDR, LRESULT *pResult);
 	CEdit m_cServID;
+	afx_msg void OnBnClickedBtnModifyService();
 };

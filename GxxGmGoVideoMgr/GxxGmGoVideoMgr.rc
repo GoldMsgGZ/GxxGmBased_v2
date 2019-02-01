@@ -158,7 +158,7 @@ BEGIN
     LTEXT           "已注册的服务",IDC_STATIC,7,10,73,8
     CONTROL         "",IDC_LIST_SERVICES,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,21,618,152
     PUSHBUTTON      "刷新",IDC_BTN_REFRESH_ONLINESERVICE,575,7,50,14
-    PUSHBUTTON      "注册服务",IDC_BTN_REGISTER_SERVICE,417,282,50,14
+    PUSHBUTTON      "注册服务",IDC_BTN_REGISTER_SERVICE,357,193,50,14
     LTEXT           "服务类型",IDC_STATIC,9,196,33,8
     LTEXT           "服务名称",IDC_STATIC,9,209,33,8
     LTEXT           "版本号",IDC_STATIC,17,224,25,8
@@ -184,6 +184,7 @@ BEGIN
     CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,185,618,1
     LTEXT           "服务ID",IDC_STATIC,243,237,24,8
     EDITTEXT        IDC_EDIT_SERV_ID,267,235,77,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "修改服务",IDC_BTN_MODIFY_SERVICE,357,210,50,14
 END
 
 IDD_DIALOG1 DIALOGEX 0, 0, 218, 101
@@ -224,13 +225,11 @@ BEGIN
     BEGIN
         BLOCK "080403a8"
         BEGIN
-            VALUE "CompanyName", "TODO: <公司名>"
-            VALUE "FileDescription", "TODO: <文件说明>"
             VALUE "FileVersion", "1.0.0.1"
             VALUE "InternalName", "GxxGmGoVideoMgr.exe"
-            VALUE "LegalCopyright", "TODO: (C) <公司名>。保留所有权利。"
+            VALUE "LegalCopyright", "保留所有权利。"
             VALUE "OriginalFilename", "GxxGmGoVideoMgr.exe"
-            VALUE "ProductName", "TODO: <产品名>"
+            VALUE "ProductName", "GoVideo 管理工具"
             VALUE "ProductVersion", "1.0.0.1"
         END
     END

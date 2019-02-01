@@ -61,7 +61,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="PocoFoundationD.lib PocoNetD.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\ext\Poco\lib"
 				ModuleDefinitionFile=""
@@ -138,10 +137,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="PocoFoundation.lib PocoNet.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\ext\Poco\lib"
-				ModuleDefinitionFile="GxxGmGoVideo.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"

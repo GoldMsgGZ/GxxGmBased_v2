@@ -114,6 +114,7 @@ BOOL CGxxGmDevMgrDlg::OnInitDialog()
 	m_cExtInfo.SetWindowText(_T("null"));
 	m_cNameAbbr.SetWindowText(_T("null"));
 	m_cDevVersion.SetWindowText(_T("0"));
+	m_cConnInfo.SetWindowText(_T("[LinkMode:1][Ip:0.0.0.0][Port:8000][Mac:][CodeID:]"));
 
 	OnBnClickedBtnRefreshServices();
 
@@ -322,6 +323,8 @@ void CGxxGmDevMgrDlg::OnBnClickedBtnRegister()
 		m_cNameAbbr.SetWindowText(_T(""));
 		m_cDevVersion.SetWindowText(_T(""));
 
+		govideo_->DataUpdate();
+
 		OnBnClickedBtnRefreshDevices();
 	}
 }
@@ -389,12 +392,14 @@ void CGxxGmDevMgrDlg::OnBnClickedBtnModify()
 	device_info.dgw_server_id_ = _ttoi(dgw_id.GetBuffer(0));
 
 	// 调用添加设备接口
-	int errCode = govideo_->RegisterDevice(device_info);
+	int errCode = govideo_->ModifyDevice(device_info);
 	if (errCode != 0)
 		MessageBox(_T("修改设备失败！"), _T("错误"), MB_OK|MB_ICONERROR);
 	else
 	{
 		MessageBox(_T("修改设备成功！"), _T("提示"), MB_OK|MB_ICONINFORMATION);
+
+		govideo_->DataUpdate();
 
 		OnBnClickedBtnRefreshDevices();
 	}
@@ -434,6 +439,8 @@ void CGxxGmDevMgrDlg::OnLvnKeydownListDevs(NMHDR *pNMHDR, LRESULT *pResult)
 					MessageBox(_T("移除设备失败！"), _T("错误"), MB_OK|MB_ICONERROR);
 					return ;
 				}
+
+				govideo_->DataUpdate();
 			}
 			else
 				break;
