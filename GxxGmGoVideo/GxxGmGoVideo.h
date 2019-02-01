@@ -51,7 +51,7 @@ typedef struct _GOVIDEO_DEVICE_INFO_
 	unsigned int model_id_;
 	unsigned int category_id_;
 	std::string device_code_;
-	std::string device_connection_info_;
+	std::string device_ip_;
 	std::string device_version_;
 	std::string device_username_;
 	std::string device_password_;
@@ -93,8 +93,7 @@ public:
 	//
 	//////////////////////////////////////////////////////////////////////////
 
-	// 获取设备接入网关列表
-	int GetDeviceGatewayList();
+	
 
 public:
 	//////////////////////////////////////////////////////////////////////////
@@ -111,6 +110,25 @@ public:
 
 	// 注销设备
 	int UnregisterDevice(const char *device_id);
+
+public:
+	//////////////////////////////////////////////////////////////////////////
+	//
+	// GoVideo服务相关
+	//
+	//////////////////////////////////////////////////////////////////////////
+
+	// 注册服务
+	int RegisterService(GOVIDEO_SERVICE_INFO &service_info);
+
+	// 修改服务
+	int ModifyService(GOVIDEO_SERVICE_INFO &service_info);
+
+	// 注销服务
+	int UnregisterService(const char *service_id);
+
+	// 获取服务列表
+	int GetDeviceGatewayList();
 
 public:
 	

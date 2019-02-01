@@ -194,6 +194,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GxxGmWSSimulator", "GxxGmWSSimulator\GxxGmWSSimulator.vcproj", "{4E23D67D-8DEA-4731-AF9A-0A731357803A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GxxGmGoVideoMgr", "GxxGmGoVideoMgr\GxxGmGoVideoMgr.vcproj", "{4FE987FB-5A53-4606-9E9E-79B788C7BDD4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E2962D7F-E77F-463A-8D59-134AC15187A2} = {E2962D7F-E77F-463A-8D59-134AC15187A2}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

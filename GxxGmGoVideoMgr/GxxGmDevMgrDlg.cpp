@@ -50,6 +50,7 @@ BEGIN_MESSAGE_MAP(CGxxGmDevMgrDlg, CDialog)
 	ON_BN_CLICKED(IDC_BTN_REGISTER, &CGxxGmDevMgrDlg::OnBnClickedBtnRegister)
 	ON_BN_CLICKED(IDC_BTN_MODIFY, &CGxxGmDevMgrDlg::OnBnClickedBtnModify)
 	ON_NOTIFY(LVN_KEYDOWN, IDC_LIST_DEVS, &CGxxGmDevMgrDlg::OnLvnKeydownListDevs)
+	ON_NOTIFY(NM_CLICK, IDC_LIST_DEVS, &CGxxGmDevMgrDlg::OnNMClickListDevs)
 END_MESSAGE_MAP()
 
 
@@ -60,15 +61,59 @@ BOOL CGxxGmDevMgrDlg::OnInitDialog()
 
 	m_cDGWList.SetExtendedStyle(m_cDGWList.GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 	m_cDGWList.InsertColumn(0, _T("服务ID"), LVCFMT_LEFT, 60);
-	m_cDGWList.InsertColumn(1, _T("服务名称"), LVCFMT_LEFT, 60);
+	m_cDGWList.InsertColumn(1, _T("服务名称"), LVCFMT_LEFT, 80);
 	m_cDGWList.InsertColumn(2, _T("服务地址"), LVCFMT_LEFT, 140);
 
 	m_cDevList.SetExtendedStyle(m_cDevList.GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
-	m_cDevList.InsertColumn(0, _T("序号"), LVCFMT_LEFT, 60);
-	m_cDevList.InsertColumn(1, _T("设备内部ID"), LVCFMT_LEFT, 60);
-	m_cDevList.InsertColumn(2, _T("设备国标ID"), LVCFMT_LEFT, 100);
-	m_cDevList.InsertColumn(3, _T("设备厂商"), LVCFMT_LEFT, 80);
+	m_cDevList.InsertColumn(0, _T("序号"), LVCFMT_LEFT, 80);
+	m_cDevList.InsertColumn(1, _T("设备内部ID"), LVCFMT_LEFT, 100);
+	m_cDevList.InsertColumn(2, _T("设备名称"), LVCFMT_LEFT, 120);
+	m_cDevList.InsertColumn(3, _T("设备国标ID"), LVCFMT_LEFT, 160);
+	m_cDevList.InsertColumn(4, _T("设备厂商"), LVCFMT_LEFT, 80);
 	//m_cDevList.InsertColumn(4, _T("设备版本"), LVCFMT_LEFT, 80);
+
+	// 厂商类型
+	//m_cModelID.AddString(_T("30001"));	// HIK-DEV
+	//m_cModelID.AddString(_T("70001"));	// ZBen-IPC
+	//m_cModelID.AddString(_T("100001"));	// DAH
+	//m_cModelID.AddString(_T("150001"));	// GXXIPC
+	//m_cModelID.AddString(_T("160001"));	// HIK_CVR
+	//m_cModelID.AddString(_T("170001"));	// JG-IPC
+	m_cModelID.AddString(_T("180001"));	// GXXLTE
+	//m_cModelID.AddString(_T("190001"));	// PACOM-IPC
+	//m_cModelID.AddString(_T("210001"));	// XIHUA
+	//m_cModelID.AddString(_T("220001"));	// UNIVIEW_NVR
+	//m_cModelID.AddString(_T("230001"));	// UNIVIEW-IPC
+	//m_cModelID.AddString(_T("240001"));	// ROCOSEE-NVR
+	//m_cModelID.AddString(_T("250001"));	// TM-NVR
+	//m_cModelID.AddString(_T("260001"));	// QiYang-DVR
+	//m_cModelID.AddString(_T("270001"));	// JingYang-IPC
+	//m_cModelID.AddString(_T("280001"));	// HuaWei-IPC
+	//m_cModelID.AddString(_T("290001"));	// Tiandy-IPC
+	//m_cModelID.AddString(_T("300001"));	// GXX-APP
+	//m_cModelID.AddString(_T("310001"));	// YX-DVR
+	//m_cModelID.AddString(_T("320001"));	// QH-DVR
+	//m_cModelID.AddString(_T("330001"));	// UV-DEV-2017
+	//m_cModelID.AddString(_T("340001"));	// HONEYWELL-NVR
+	//m_cModelID.AddString(_T("350001"));	// HIKEHOME
+	//m_cModelID.AddString(_T("360001"));	// VSK_DEV
+	//m_cModelID.AddString(_T("370001"));	// TDWY_PASSIVE
+	m_cModelID.AddString(_T("1000001"));	// GB28181
+	//m_cModelID.AddString(_T("1010001"));	// ONVIF
+	m_cModelID.SetCurSel(1);
+
+	// 设备门类
+	m_cCategoryID.AddString(_T("1"));
+	m_cCategoryID.SetCurSel(0);
+
+	// 默认选项
+	//m_cConnInfo.SetWindowText(_T("0.0.0.0"));
+	m_cCfgVersion.SetWindowText(_T("2019"));
+	m_cUsername.SetWindowText(_T("admin"));
+	m_cPassword.SetWindowText(_T("admin"));
+	m_cExtInfo.SetWindowText(_T("null"));
+	m_cNameAbbr.SetWindowText(_T("null"));
+	m_cDevVersion.SetWindowText(_T("0"));
 
 	OnBnClickedBtnRefreshServices();
 
@@ -128,7 +173,7 @@ void CGxxGmDevMgrDlg::OnBnClickedBtnRefreshDevices()
 	for (iter = govideo_->devices_.begin(); iter != govideo_->devices_.end(); ++iter)
 	{
 		GOVIDEO_DEVICE_INFO *device_info = *iter;
-		if ((current_select_dgw_id_ == -1)) || (current_select_dgw_id_ == device_info->dgw_server_id_))
+		if ((current_select_dgw_id_ == -1) || (current_select_dgw_id_ == device_info->dgw_server_id_))
 		{
 			int count = m_cDevList.GetItemCount();
 
@@ -139,10 +184,12 @@ void CGxxGmDevMgrDlg::OnBnClickedBtnRefreshDevices()
 			_stprintf_s(str_val, 64, _T("%d"), (*iter)->device_id_);
 			m_cDevList.SetItemText(count, 1, str_val);
 
-			m_cDevList.SetItemText(count, 2, A2T((*iter)->gb28181_code_.c_str()));
+			m_cDevList.SetItemText(count, 2, A2T((*iter)->device_name_.c_str()));
+
+			m_cDevList.SetItemText(count, 3, A2T((*iter)->gb28181_code_.c_str()));
 
 			_stprintf_s(str_val, 64, _T("%d"), (*iter)->model_id_);
-			m_cDevList.SetItemText(count, 3, str_val);
+			m_cDevList.SetItemText(count, 4, str_val);
 		}
 	}
 }
@@ -178,12 +225,17 @@ void CGxxGmDevMgrDlg::OnNMClickListDgws(NMHDR *pNMHDR, LRESULT *pResult)
 			_stprintf_s(str_val, 64, _T("%d"), (*iter)->device_id_);
 			m_cDevList.SetItemText(count, 1, str_val);
 
-			m_cDevList.SetItemText(count, 2, A2T((*iter)->gb28181_code_.c_str()));
+			m_cDevList.SetItemText(count, 2, A2T((*iter)->device_name_.c_str()));
+
+			m_cDevList.SetItemText(count, 3, A2T((*iter)->gb28181_code_.c_str()));
 
 			_stprintf_s(str_val, 64, _T("%d"), (*iter)->model_id_);
-			m_cDevList.SetItemText(count, 3, str_val);
+			m_cDevList.SetItemText(count, 4, str_val);
 		}
 	}
+
+	// 然后将下面的DGWID下拉框调整为选中的DGW
+	m_cDGWs.SetWindowText(service_id_str);
 
 	*pResult = 0;
 }
@@ -233,12 +285,13 @@ void CGxxGmDevMgrDlg::OnBnClickedBtnRegister()
 	CString dgw_id;
 	m_cDGWs.GetWindowText(dgw_id);
 
+	USES_CONVERSION;
 	GOVIDEO_DEVICE_INFO device_info;
-	device_info.device_id_ == 0;
+	device_info.device_id_ = 0;
 	device_info.device_name_ = T2A(device_name.GetBuffer(0));
 	device_info.model_id_ = _ttoi(model_id.GetBuffer(0));
 	device_info.category_id_ = _ttoi(category_id.GetBuffer(0));
-	device_info.device_connection_info_ = T2A(conn_info.GetBuffer(0));
+	device_info.device_ip_ = T2A(conn_info.GetBuffer(0));
 	device_info.version_ = _ttoi(cfg_version.GetBuffer(0));
 	device_info.device_username_ = T2A(username.GetBuffer(0));
 	device_info.device_password_ = T2A(password.GetBuffer(0));
@@ -256,6 +309,18 @@ void CGxxGmDevMgrDlg::OnBnClickedBtnRegister()
 	else
 	{
 		MessageBox(_T("注册设备成功！"), _T("提示"), MB_OK|MB_ICONINFORMATION);
+
+		m_cDevID.SetWindowText(_T(""));
+		m_cDevName.SetWindowText(_T(""));
+		m_cConnInfo.SetWindowText(_T(""));
+		m_cCfgVersion.SetWindowText(_T(""));
+		m_cUsername.SetWindowText(_T(""));
+		m_cPassword.SetWindowText(_T(""));
+		m_cDevCode.SetWindowText(_T(""));
+		m_cExtInfo.SetWindowText(_T(""));
+		m_cDevGBCdeo.SetWindowText(_T(""));
+		m_cNameAbbr.SetWindowText(_T(""));
+		m_cDevVersion.SetWindowText(_T(""));
 
 		OnBnClickedBtnRefreshDevices();
 	}
@@ -306,12 +371,13 @@ void CGxxGmDevMgrDlg::OnBnClickedBtnModify()
 	CString dgw_id;
 	m_cDGWs.GetWindowText(dgw_id);
 
+	USES_CONVERSION;
 	GOVIDEO_DEVICE_INFO device_info;
-	device_info.device_id_ == _ttoi(device_id.GetBuffer(0));
+	device_info.device_id_ = _ttoi(device_id.GetBuffer(0));
 	device_info.device_name_ = T2A(device_name.GetBuffer(0));
 	device_info.model_id_ = _ttoi(model_id.GetBuffer(0));
 	device_info.category_id_ = _ttoi(category_id.GetBuffer(0));
-	device_info.device_connection_info_ = T2A(conn_info.GetBuffer(0));
+	device_info.device_ip_ = T2A(conn_info.GetBuffer(0));
 	device_info.version_ = _ttoi(cfg_version.GetBuffer(0));
 	device_info.device_username_ = T2A(username.GetBuffer(0));
 	device_info.device_password_ = T2A(password.GetBuffer(0));
@@ -338,6 +404,7 @@ void CGxxGmDevMgrDlg::OnLvnKeydownListDevs(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLVKEYDOWN pLVKeyDow = reinterpret_cast<LPNMLVKEYDOWN>(pNMHDR);
 	
+	USES_CONVERSION;
 	// 找到删除键
 	if (pLVKeyDow->wVKey == VK_DELETE)
 	{
@@ -372,6 +439,77 @@ void CGxxGmDevMgrDlg::OnLvnKeydownListDevs(NMHDR *pNMHDR, LRESULT *pResult)
 				break;
 
 		} while (true);
+	}
+
+	*pResult = 0;
+}
+
+void CGxxGmDevMgrDlg::OnNMClickListDevs(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+	
+	int selected_item_index = pNMItemActivate->iItem;
+
+	// 得到设备内部ID
+	CString internal_id = m_cDevList.GetItemText(selected_item_index, 1);
+	int device_id = _ttoi(internal_id.GetBuffer(0));
+
+	// 寻找该设备
+	USES_CONVERSION;
+	std::vector<GOVIDEO_DEVICE_INFO *>::iterator iter;
+	for (iter = govideo_->devices_.begin(); iter != govideo_->devices_.end(); ++iter)
+	{
+		GOVIDEO_DEVICE_INFO *device_info = *iter;
+
+		if (device_info->device_id_ == device_id)
+		{
+			// 开始填入相关控件
+			CString val;
+			
+			val.Format(_T("%d"), device_info->device_id_);
+			m_cDevID.SetWindowText(val);
+
+			val.Format(_T("%s"), A2T(device_info->device_name_.c_str()));
+			m_cDevName.SetWindowText(val);
+
+			val.Format(_T("%d"), device_info->model_id_);
+			m_cModelID.SetWindowText(val);
+
+			val.Format(_T("%d"), device_info->category_id_);
+			m_cCategoryID.SetWindowText(val);
+
+			val.Format(_T("%s"), A2T(device_info->device_ip_.c_str()));
+			m_cConnInfo.SetWindowText(val);
+
+			val.Format(_T("%s"), A2T(device_info->device_version_.c_str()));
+			m_cCfgVersion.SetWindowText(val);
+
+			val.Format(_T("%s"), A2T(device_info->device_username_.c_str()));
+			m_cUsername.SetWindowText(val);
+
+			val.Format(_T("%s"), A2T(device_info->device_password_.c_str()));
+			m_cPassword.SetWindowText(val);
+
+			val.Format(_T("%s"), A2T(device_info->device_code_.c_str()));
+			m_cDevCode.SetWindowText(val);
+
+			val.Format(_T("%s"), A2T(device_info->device_extra_info_.c_str()));
+			m_cExtInfo.SetWindowText(val);
+
+			val.Format(_T("%s"), A2T(device_info->gb28181_code_.c_str()));
+			m_cDevGBCdeo.SetWindowText(val);
+
+			val.Format(_T("%s"), A2T(device_info->device_name_abbr_.c_str()));
+			m_cNameAbbr.SetWindowText(val);
+
+			val.Format(_T("%d"), device_info->version_);
+			m_cDevVersion.SetWindowText(val);
+
+			val.Format(_T("%d"), device_info->dgw_server_id_);
+			m_cDGWs.SetWindowText(val);
+
+			break;
+		}
 	}
 
 	*pResult = 0;

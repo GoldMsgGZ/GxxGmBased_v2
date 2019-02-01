@@ -2,6 +2,7 @@
 
 #include "..\GxxGmGoVideo\GxxGmGoVideo.h"
 #include "afxcmn.h"
+#include "afxwin.h"
 
 // CGxxGmServiceStateDlg ¶Ô»°¿ò
 
@@ -28,4 +29,18 @@ public:
 	CListCtrl m_cRunningServiceList;
 	afx_msg void OnBnClickedBtnRefreshOnlineservice();
 	afx_msg void OnLvnKeydownListServices(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnBnClickedBtnRegisterService();
+	CComboBox m_cServType;
+	CEdit m_cServName;
+	CEdit m_cServVersion;
+	CEdit m_cServDetail;
+	CEdit m_cServIP;
+	CEdit m_cServPort;
+	CEdit m_cUsername;
+	CEdit m_cPassword;
+	CEdit m_cServGBCode;
+	CEdit m_cServLicense;
+	CComboBox m_cIsDNS;
+	afx_msg void OnNMClickListServices(NMHDR *pNMHDR, LRESULT *pResult);
+	CEdit m_cServID;
 };

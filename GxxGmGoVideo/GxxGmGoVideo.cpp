@@ -313,14 +313,54 @@ int GxxGmGoVideo::RegisterDevice(GOVIDEO_DEVICE_INFO &device_info)
 		// 发送请求，查询当前运行服务
 		Poco::Net::HTTPClientSession *session = (Poco::Net::HTTPClientSession *)http_session_;
 
+		char body[4096] = {0};
+		sprintf_s(body, 4096,
+			"{\
+				\"Message\":{\
+					\"DeviceInfoList\":[\
+						{\
+							\"DeviceID\":0,\
+							\"DevIndex\":1,\
+							\"DeviceName\":\"%s\",\
+							\"ModelID\":%d,\
+							\"CategoryID\":%d,\
+							\"DevCode\":\"%s\",\
+							\"DevConnectionInfo\":\"[LinkMode:1][Ip:%s][Port:8000][Mac:][CodeID:]\",\
+							\"DevVersion\":\"%s\",\
+							\"DevUserName\":\"%s\",\
+							\"DevPassword\":\"%s\",\
+							\"DevExInfo\":\"%s\",\
+							\"GB28181Code\":\"%s\",\
+							\"DevNameAbbr\":\"%s\",\
+							\"Version\":0,\
+							\"Remark\":\"%s\",\
+							\"DGWServerID\":%d\
+						}\
+					],\
+					\"DeviceCount\":1\
+				}\
+			}",
+			device_info.device_name_.c_str(), device_info.model_id_, device_info.category_id_,
+			device_info.device_code_.c_str(), device_info.device_ip_.c_str(),
+			device_info.device_version_.c_str(), device_info.device_username_.c_str(),
+			device_info.device_password_.c_str(), device_info.device_extra_info_.c_str(),
+			device_info.gb28181_code_.c_str(), device_info.device_name_abbr_.c_str(),
+			device_info.remark_.c_str(), device_info.dgw_server_id_);
+
 		char query_string[4096] = {0};
 		sprintf_s(query_string, 4096,
-			"/GoVideo/Serviceconfig/GetAllServerRequest?SequenceID=5&Token=%s&StartRow=1&RowNum=200",
-			token_.c_str());
+			"/GoVideo/Serviceconfig/SetDeviceRequest");
 		std::string uri = query_string;
-		Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_GET, uri, Poco::Net::HTTPRequest::HTTP_1_1);
+		Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_POST, uri, Poco::Net::HTTPRequest::HTTP_1_1);
 
-		session->sendRequest(request);
+		request.add("Content-Type", "application/json; charset=utf-8");
+		request.add("SequenceID", "10086");
+		request.add("Token", token_.c_str());
+
+		std::string http_body(body);
+		request.setContentLength((int)http_body.length());
+
+		session->sendRequest(request) << http_body;
 
 		Poco::Net::HTTPResponse response;
 		std::istream &is = session->receiveResponse(response);
@@ -363,6 +403,28 @@ int GxxGmGoVideo::RegisterDevice(GOVIDEO_DEVICE_INFO &device_info)
 		errCode = atoi(result_code.toString().c_str());
 		if (errCode != 0)
 			return errCode;
+
+		// 关于注册成功的判断，应该有特定的处理方式，比如拿到返回的设备内部ID
+		if (jsonObject->isNull("DeviceParam"))
+			return -1;
+
+		Poco::Dynamic::Var result_device_count = jsonObject->get("ParamCount");
+		int device_count = atoi(result_code.toString().c_str());
+		if (device_count == 0)
+			return -2;
+
+		Poco::JSON::Array::Ptr device_array = jsonObject->getArray("DeviceParam");
+		Poco::JSON::Array::ConstIterator iter = device_array->begin();
+		for (; iter != device_array->end(); ++iter)
+		{
+			Poco::JSON::Object::Ptr device_info_json_object = iter->extract<Poco::JSON::Object::Ptr>();
+
+			Poco::Dynamic::Var device_id				= device_info_json_object->get("DevID");
+			Poco::Dynamic::Var device_index				= device_info_json_object->get("DevIndex");
+
+			// 这里应该直接将device_id反馈给传入的参数，可以及时更新设备列表信息
+		}
+
 	}
 	catch (Poco::Exception ex)
 	{
@@ -376,6 +438,7 @@ int GxxGmGoVideo::RegisterDevice(GOVIDEO_DEVICE_INFO &device_info)
 int GxxGmGoVideo::ModifyDevice(GOVIDEO_DEVICE_INFO &device_info)
 {
 	int errCode = 0;
+	std::string errstr;
 
 	return errCode;
 }
@@ -383,6 +446,132 @@ int GxxGmGoVideo::ModifyDevice(GOVIDEO_DEVICE_INFO &device_info)
 int GxxGmGoVideo::UnregisterDevice(const char *device_id)
 {
 	int errCode = 0;
+	std::string errstr;
+
+	return errCode;
+}
+
+int GxxGmGoVideo::RegisterService(GOVIDEO_SERVICE_INFO &service_info)
+{
+	int errCode = 0;
+	std::string errstr;
+
+	service_info.service_id_ = "0";
+
+	try {
+		// 发送请求，查询当前运行服务
+		Poco::Net::HTTPClientSession *session = (Poco::Net::HTTPClientSession *)http_session_;
+
+		char body[4096] = {0};
+		sprintf_s(body, 4096,
+			"{\
+				\"Message\":{\
+					\"ServID\":%s,\
+					\"ServName\":\"%s\",\
+					\"ServTypeID\":%s,\
+					\"ServDesc\":\"\",\
+					\"ServIP\":\"%s\",\
+					\"ServPort\":%s,\
+					\"UserName\":\"%s\",\
+					\"Password\":\"%s\",\
+					\"ISDNS\":%s,\
+					\"GBCode\":\"%s\",\
+					\"Version\":\"%s\",\
+					\"LicenseInfo\":\"%s\"\
+				}\
+			}",
+			service_info.service_id_.c_str(), service_info.service_name_.c_str(),
+			service_info.service_type_id_.c_str(), service_info.service_descript_.c_str(),
+			service_info.service_ip_.c_str(), service_info.service_port_.c_str(),
+			service_info.username_.c_str(), service_info.password_.c_str(),
+			service_info.is_dns_.c_str(), service_info.gbcode_.c_str(),
+			service_info.version_.c_str(), service_info.license_info_.c_str());
+
+		char query_string[4096] = {0};
+		sprintf_s(query_string, 4096,
+			"/GoVideo/Serviceconfig/SetServerRequest");
+		std::string uri = query_string;
+		Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_POST, uri, Poco::Net::HTTPRequest::HTTP_1_1);
+
+		request.add("Content-Type", "application/json; charset=utf-8");
+		request.add("SequenceID", "10086");
+		request.add("Token", token_.c_str());
+
+		std::string http_body(body);
+		request.setContentLength((int)http_body.length());
+
+		session->sendRequest(request) << http_body;
+
+		Poco::Net::HTTPResponse response;
+		std::istream &is = session->receiveResponse(response);
+
+		// 判断服务器返回信息
+		Poco::Net::HTTPResponse::HTTPStatus status = response.getStatus();
+		if (Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK != status)
+		{
+			errCode = status;
+			return errCode;
+		}
+
+		std::ostringstream ostr;
+		Poco::StreamCopier::copyStream(is, ostr);
+
+		std::string json_str = ostr.str();
+		if (json_str.empty())
+		{
+			return -1;
+		}
+
+		// 将字符串转为UTF-8
+
+		Poco::Latin1Encoding latin1;
+		Poco::UTF8Encoding utf8;
+		Poco::TextConverter converter(latin1, utf8);
+		std::string strUtf8;
+		converter.convert(json_str, strUtf8);
+		json_str = strUtf8;
+
+		// 分析结果
+		Poco::JSON::Parser parser;
+		Poco::Dynamic::Var json = parser.parse(json_str);
+		Poco::JSON::Object::Ptr jsonObject = json.extract<Poco::JSON::Object::Ptr>();
+
+		Poco::Dynamic::Var message = jsonObject->get("Message");
+		jsonObject = message.extract<Poco::JSON::Object::Ptr>();
+
+		Poco::Dynamic::Var result_code = jsonObject->get("OperResult");
+		errCode = atoi(result_code.toString().c_str());
+		if (errCode != 0)
+			return errCode;
+
+		// 关于注册成功的判断，应该有特定的处理方式，比如拿到返回的设备内部ID
+		if (jsonObject->isNull("ServID"))
+			return -1;
+
+		Poco::Dynamic::Var result_service_id = jsonObject->get("ServID");
+
+	}
+	catch (Poco::Exception ex)
+	{
+		errCode = ex.code();
+		errstr = ex.displayText();
+	}
+
+	return errCode;
+}
+
+int GxxGmGoVideo::ModifyService(GOVIDEO_SERVICE_INFO &service_info)
+{
+	int errCode = 0;
+	std::string errstr;
+
+	return errCode;
+}
+
+int GxxGmGoVideo::UnregisterService(const char *service_id)
+{
+	int errCode = 0;
+	std::string errstr;
 
 	return errCode;
 }
@@ -492,7 +681,7 @@ int GxxGmGoVideo::GetAllDevices()
 					device_info->model_id_				= atoi(model_id.toString().c_str());
 					device_info->category_id_			= atoi(category_id.toString().c_str());
 					device_info->device_code_			= device_code.toString();
-					device_info->device_connection_info_	= device_connection_info.toString();
+					device_info->device_ip_	= device_connection_info.toString();
 					device_info->device_version_			= device_version.toString();
 					device_info->device_username_		= device_username.toString();
 					device_info->device_password_		= device_password.toString();

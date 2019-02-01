@@ -31,6 +31,8 @@
 #define IDC_EDIT_LICENSE                1017
 #define IDC_COMBO_IS_DNS                1018
 #define IDC_LIST_DGWS                   1019
+#define IDC_EDIT_PASSWORD2              1019
+#define IDC_EDIT_SERV_ID                1019
 #define IDC_LIST_DEVS                   1020
 #define IDC_BTN_REGISTER                1021
 #define IDC_BTN_REMOVE                  1022
