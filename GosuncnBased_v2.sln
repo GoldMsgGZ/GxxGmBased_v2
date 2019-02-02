@@ -198,6 +198,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GxxGmGoVideoMgr", "GxxGmGoV
 		{E2962D7F-E77F-463A-8D59-134AC15187A2} = {E2962D7F-E77F-463A-8D59-134AC15187A2}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "71. 数据处理", "71. 数据处理", "{F7BF8EC1-22B8-4F2E-8522-24CC5453521D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
