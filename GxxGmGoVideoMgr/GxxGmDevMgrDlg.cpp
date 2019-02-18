@@ -51,6 +51,7 @@ BEGIN_MESSAGE_MAP(CGxxGmDevMgrDlg, CDialog)
 	ON_BN_CLICKED(IDC_BTN_MODIFY, &CGxxGmDevMgrDlg::OnBnClickedBtnModify)
 	ON_NOTIFY(LVN_KEYDOWN, IDC_LIST_DEVS, &CGxxGmDevMgrDlg::OnLvnKeydownListDevs)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_DEVS, &CGxxGmDevMgrDlg::OnNMClickListDevs)
+	ON_BN_CLICKED(IDC_BTN_REMOVE, &CGxxGmDevMgrDlg::OnBnClickedBtnRemove)
 END_MESSAGE_MAP()
 
 
@@ -512,12 +513,53 @@ void CGxxGmDevMgrDlg::OnNMClickListDevs(NMHDR *pNMHDR, LRESULT *pResult)
 			val.Format(_T("%d"), device_info->version_);
 			m_cDevVersion.SetWindowText(val);
 
+			// 这里需要处理一下，是不是考虑
 			val.Format(_T("%d"), device_info->dgw_server_id_);
-			m_cDGWs.SetWindowText(val);
+			int pos = m_cDGWs.FindString(0, val);
+			if (pos >= 0)
+				m_cDGWs.SetCurSel(pos);
 
 			break;
 		}
 	}
 
 	*pResult = 0;
+}
+
+void CGxxGmDevMgrDlg::OnBnClickedBtnRemove()
+{
+	INT_PTR ret = MessageBox(_T("确定要移除选中的设备吗？"), _T("警告"), MB_OKCANCEL|MB_ICONMASK);
+	if (ret != IDOK)
+		return ;
+
+	// 找到当前选中的行
+	USES_CONVERSION;
+	POSITION pos = m_cDevList.GetFirstSelectedItemPosition();
+	if (pos == NULL)
+		return ;
+
+	do 
+	{
+		int index = m_cDevList.GetNextSelectedItem(pos);
+		if (index != -1)
+		{
+			// 拿到设备内部id
+			CString dev_id = m_cDevList.GetItemText(index, 1);
+
+			// 先调用GoVideo的删除服务接口，成功后再调用界面移除记录
+			int errCode = govideo_->UnregisterDevice(T2A(dev_id.GetBuffer(0)));
+			if (errCode == 0)
+				m_cDevList.DeleteItem(index);
+			else
+			{
+				MessageBox(_T("移除设备失败！"), _T("错误"), MB_OK|MB_ICONERROR);
+				return ;
+			}
+
+			govideo_->DataUpdate();
+		}
+		else
+			break;
+
+	} while (true);
 }

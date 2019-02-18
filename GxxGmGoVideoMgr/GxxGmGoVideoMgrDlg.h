@@ -11,6 +11,8 @@
 
 #include "..\GxxGmGoVideo\GxxGmGoVideo.h"
 
+#include "Poco/Util/IniFileConfiguration.h"
+
 
 // CGxxGmGoVideoMgrDlg ¶Ô»°¿ò
 class CGxxGmGoVideoMgrDlg : public CDialog
@@ -42,6 +44,9 @@ public:
 
 public:
 	GxxGmGoVideo govideo_;
+
+public:
+	Poco::AutoPtr<Poco::Util::IniFileConfiguration> ini_cfg_;
 
 public:
 	CGxxGmGoVideoLoginDlg login_dlg_;

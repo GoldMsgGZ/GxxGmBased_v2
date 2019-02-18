@@ -481,7 +481,7 @@ int GxxGmGoVideo::RegisterDevice(GOVIDEO_DEVICE_INFO &device_info)
 			return -1;
 
 		Poco::Dynamic::Var result_device_count = jsonObject->get("ParamCount");
-		int device_count = atoi(result_code.toString().c_str());
+		int device_count = atoi(result_device_count.toString().c_str());
 		if (device_count == 0)
 			return -2;
 

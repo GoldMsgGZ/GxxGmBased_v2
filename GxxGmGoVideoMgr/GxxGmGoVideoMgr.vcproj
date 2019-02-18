@@ -294,6 +294,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\GxxGmGoVideoMgrConfig.ini"
+			>
+		</File>
+		<File
 			RelativePath=".\ReadMe.txt"
 			>
 		</File>

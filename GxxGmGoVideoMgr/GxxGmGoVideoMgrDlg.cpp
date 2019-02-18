@@ -100,10 +100,25 @@ BOOL CGxxGmGoVideoMgrDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	SetWindowText(_T("GoVideo5.0 设备管理工具 V1.1"));
+
 	login_dlg_.govideo_ = &govideo_;
 	service_state_dlg_.govideo_ = &govideo_;
 	dev_mgr_dlg_.govideo_ = &govideo_;
 
+	char current_program_path[4096] = {0};
+	GetModuleFileNameA(NULL, current_program_path, 4096);
+	std::string stl_current_program_path = current_program_path;
+	int pos = stl_current_program_path.find_last_of("\\");
+	std::string stl_current_dir = stl_current_program_path.substr(0, pos);
+	std::string stl_ini_cfg_path = stl_current_dir + "\\GxxGmGoVideoMgrConfig.ini";
+
+	// 加载配置管理器
+	//ini_cfg_ = new Poco::Util::IniFileConfiguration();
+	//ini_cfg_->load(stl_ini_cfg_path.c_str());
+
+	login_dlg_.config_path_ = stl_ini_cfg_path;
+	//login_dlg_.ini_cfg_ = ini_cfg_;
 	INT_PTR ret = login_dlg_.DoModal();
 	if (ret == IDCANCEL)
 		exit(4);

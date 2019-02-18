@@ -46,8 +46,17 @@ BOOL CGxxGmGoVideoLoginDlg::OnInitDialog()
 	m_cGoVideoIp.LimitText(16);
 	m_cGoVideoPort.LimitText(6);
 
-	m_cGoVideoIp.SetWindowText(_T("192.168.124.128"));
-	m_cGoVideoPort.SetWindowText(_T("99"));
+	// 读取上次登录的地址
+	USES_CONVERSION;
+	TCHAR ip[4096] = {0};
+	TCHAR port[4096] = {0};
+	GetPrivateProfileString(_T("LOGIN"), _T("IP"), _T("0.0.0.0"), ip, 4096, A2T(config_path_.c_str()));
+	GetPrivateProfileString(_T("LOGIN"), _T("PORT"), _T("99"), port, 4096, A2T(config_path_.c_str()));
+	//std::string ip = ini_cfg_->getString("LOGIN.IP", "127.0.0.1");
+	//std::string port = ini_cfg_->getString("LOGIN.PORT", "127.0.0.1");
+
+	m_cGoVideoIp.SetWindowText(ip);
+	m_cGoVideoPort.SetWindowText(port);
 
 	return TRUE;
 }
@@ -66,7 +75,14 @@ void CGxxGmGoVideoLoginDlg::OnBnClickedBtnLogin()
 	if (errCode != 0)
 		MessageBox(_T("登录错误！"), _T("错误"), MB_OK|MB_ICONERROR);
 	else
+	{
+		// 保存参数
+		//ini_cfg_->setString("LOGIN.IP", T2A(ipaddr.GetBuffer(0)));
+		//ini_cfg_->setString("LOGIN.PORT", T2A(ipport.GetBuffer(0)));
+		WritePrivateProfileString(_T("LOGIN"), _T("IP"), ipaddr.GetBuffer(0), A2T(config_path_.c_str()));
+		WritePrivateProfileString(_T("LOGIN"), _T("PORT"), ipport.GetBuffer(0), A2T(config_path_.c_str()));
 		CDialog::OnOK();
+	}
 }
 
 void CGxxGmGoVideoLoginDlg::OnBnClickedBtnCancel()

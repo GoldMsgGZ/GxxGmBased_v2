@@ -270,28 +270,33 @@ void CGxxGmServiceStateDlg::OnNMClickListServices(NMHDR *pNMHDR, LRESULT *pResul
 			{
 				m_cServID.SetWindowText(serv_id);
 
+				int pos = 0;
 				if (service_info.service_type_id_.compare("102") == 0)
-					m_cServType.SetCurSel(1);
+					pos = m_cServType.FindString(0, _T("设备网关"));
 				else if (service_info.service_type_id_.compare("105") == 0)
-					m_cServType.SetCurSel(2);
+					pos = m_cServType.FindString(0, _T("告警管理服务"));
 				else if (service_info.service_type_id_.compare("106") == 0)
-					m_cServType.SetCurSel(3);
+					pos = m_cServType.FindString(0, _T("录像存储服务"));
 				else if (service_info.service_type_id_.compare("110") == 0)
-					m_cServType.SetCurSel(4);
+					pos = m_cServType.FindString(0, _T("电视墙管理服务"));
 				else if (service_info.service_type_id_.compare("120") == 0)
-					m_cServType.SetCurSel(5);
+					pos = m_cServType.FindString(0, _T("中心管理服务"));
 				else if (service_info.service_type_id_.compare("130") == 0)
-					m_cServType.SetCurSel(6);
+					pos = m_cServType.FindString(0, _T("业务管理服务"));
 				else if (service_info.service_type_id_.compare("150") == 0)
-					m_cServType.SetCurSel(7);
+					pos = m_cServType.FindString(0, _T("流媒体服务"));
 				else if (service_info.service_type_id_.compare("160") == 0)
-					m_cServType.SetCurSel(8);
+					pos = m_cServType.FindString(0, _T("录像点播服务"));
 				else if (service_info.service_type_id_.compare("170") == 0)
-					m_cServType.SetCurSel(9);
+					pos = m_cServType.FindString(0, _T("语音对讲服务"));
 				else if (service_info.service_type_id_.compare("180") == 0)
-					m_cServType.SetCurSel(10);
+					pos = m_cServType.FindString(0, _T("28181联网网关服务"));
 
-				m_cServType.SetCurSel(0);
+				if (pos >= 0)
+					m_cServType.SetCurSel(pos);
+				else
+					m_cServType.SetCurSel(0);
+
 				m_cServName.SetWindowText(A2T(service_info.service_name_.c_str()));
 				m_cServVersion.SetWindowText(A2T(service_info.version_.c_str()));
 				m_cServDetail.SetWindowText(A2T(service_info.service_descript_.c_str()));

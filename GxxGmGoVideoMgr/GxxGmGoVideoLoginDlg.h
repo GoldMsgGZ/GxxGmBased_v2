@@ -3,6 +3,8 @@
 
 #include "..\GxxGmGoVideo\GxxGmGoVideo.h"
 
+#include "Poco/Util/IniFileConfiguration.h"
+
 
 // CGxxGmGoVideoLoginDlg ¶Ô»°¿ò
 
@@ -26,6 +28,10 @@ protected:
 
 public:
 	GxxGmGoVideo *govideo_;
+
+public:
+	std::string config_path_;
+	Poco::AutoPtr<Poco::Util::IniFileConfiguration> ini_cfg_;
 
 public:
 	CEdit m_cGoVideoIp;
