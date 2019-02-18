@@ -288,6 +288,18 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="00.EXCEL¶ÁÐ´Æ÷"
+			>
+			<File
+				RelativePath=".\GxxGmExcelHandler.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\GxxGmExcelHandler.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\GxxGmDevMgrDlg.htm"
 			DeploymentContent="true"
