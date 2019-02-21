@@ -1,6 +1,7 @@
 #include "GxxGmExcelHandler.h"
 
 GxxGmExcelHandler::GxxGmExcelHandler()
+: pXlApp(NULL)
 {
 
 }
@@ -14,29 +15,26 @@ int GxxGmExcelHandler::Initialize()
 {
 	int errCode = 0;
 
+	// 初始化COM环境
 	CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
-
+	// 获得Excel的clsid
 	CLSID clsid;
 	LPCOLESTR progID = L"Excel.Application";
 	HRESULT hr = CLSIDFromProgID(progID, &clsid);
 	if (FAILED(hr))
 		return hr;
 
-	// Start the server and get the IDispatch interface
-
-	IDispatch *pXlApp = NULL;
+	// 创建一个Excel.exe实例
 	hr = CoCreateInstance(clsid  NULL, CLSCTX_LOCAL_SERVER, IID_PPV_ARGS(&pXlApp));
 	if (FAILED(hr))
 		return hr;
 
-	// Make Excel invisible. (i.e. Application.Visible = 0)
-	{
-		VARIANT x;
-		x.vt = VT_I4;
-		x.lVal = 0;
-		hr = AutoWrap(DISPATCH_PROPERTYPUT, NULL, pXlApp, L"Visible", 1, x);
-	}
+	// 使Excel实例可访问
+	VARIANT x;
+	x.vt = VT_I4;
+	x.lVal = 0;
+	hr = AutoWrap(DISPATCH_PROPERTYPUT, NULL, pXlApp, L"Visible", 1, x);
 
 	return errCode;
 }

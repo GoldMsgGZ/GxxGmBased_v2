@@ -25,6 +25,7 @@ public:
 	// –¥»ÎEXCEL
 	//
 	//////////////////////////////////////////////////////////////////////////
+	int InitializeWrite(const char * xls_path);
 
 public:
 	//////////////////////////////////////////////////////////////////////////
@@ -32,9 +33,13 @@ public:
 	// ∂¡»°EXCEL
 	//
 	//////////////////////////////////////////////////////////////////////////
+	int InitializeRead(const char * xls_path);
 
 private:
 	HRESULT AutoWrap(int autoType, VARIANT *pvResult, IDispatch *pDisp,	LPOLESTR ptName, int cArgs...);
+
+private:
+	IDispatch *pXlApp;
 };
 
 #endif//_GxxGmExcelHandler_H_
