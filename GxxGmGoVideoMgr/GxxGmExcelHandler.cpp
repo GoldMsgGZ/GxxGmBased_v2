@@ -1,42 +1,82 @@
+#include "stdafx.h"
 #include "GxxGmExcelHandler.h"
 
-GxxGmExcelHandler::GxxGmExcelHandler()
-: pXlApp(NULL)
-{
 
+
+GxxGmExcelHandler::GxxGmExcelHandler()
+: spXlApp(NULL)
+{
+	// 初始化COM环境
+	CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 }
 
 GxxGmExcelHandler::~GxxGmExcelHandler()
 {
-
+	// Uninitialize COM for this thread.
+	CoUninitialize();
 }
 
-int GxxGmExcelHandler::Initialize()
+int GxxGmExcelHandler::InitializeWrite(const char * xls_path)
+{
+	file_path = xls_path;
+	return 0;
+}
+
+int GxxGmExcelHandler::WriteHeader(const char *sheet_name, std::vector<std::string> headers)
 {
 	int errCode = 0;
 
-	// 初始化COM环境
-	CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+	int element_count = headers.size();;
 
-	// 获得Excel的clsid
-	CLSID clsid;
-	LPCOLESTR progID = L"Excel.Application";
-	HRESULT hr = CLSIDFromProgID(progID, &clsid);
-	if (FAILED(hr))
-		return hr;
+	// Get the active Worksheet and set its name.
+	// 获取活动的工作表，并设置其名称
+	USES_CONVERSION;
+	Excel::_WorksheetPtr spXlSheet = spXlBook->ActiveSheet;
+	spXlSheet->Name = _bstr_t(A2T(sheet_name));
 
-	// 创建一个Excel.exe实例
-	hr = CoCreateInstance(clsid  NULL, CLSCTX_LOCAL_SERVER, IID_PPV_ARGS(&pXlApp));
-	if (FAILED(hr))
-		return hr;
+	// 设置一个1×x的矩阵
+	VARIANT saNames;
+	saNames.vt = VT_ARRAY | VT_VARIANT;
 
-	// 使Excel实例可访问
-	VARIANT x;
-	x.vt = VT_I4;
-	x.lVal = 0;
-	hr = AutoWrap(DISPATCH_PROPERTYPUT, NULL, pXlApp, L"Visible", 1, x);
+	SAFEARRAYBOUND sab[2];
+	sab[0].lLbound = 1; sab[0].cElements = 1;
+	sab[1].lLbound = 1; sab[1].cElements = element_count;
+	saNames.parray = SafeArrayCreate(VT_VARIANT, element_count, sab);
+
+	std::vector<std::string>::iterator iter;
+	for (iter = headers.begin(); iter != headers.end(); ++iter)
+	{
+		std::string element = *iter;
+	}
 
 	return errCode;
+}
+
+int GxxGmExcelHandler::InitializeExcel()
+{
+	int errCode = 0;
+
+	HRESULT hr = spXlApp.CreateInstance(__uuidof(Excel::Application));
+	if (FAILED(hr))
+	{
+		// 创建EXCEL实例失败！
+		return hr;
+	}
+
+	// 设置Excel实例的访问状态
+	spXlApp->Visible[0] = VARIANT_FALSE;
+
+	// 创建一个新的工作簿
+	Excel::WorkbooksPtr spXlBooks = spXlApp->Workbooks;
+	Excel::_WorkbookPtr spXlBook = spXlBooks->Add();
+
+	return errCode;
+}
+
+void GxxGmExcelHandler::CleanupExcel()
+{
+	// 这里释放掉EXCEL
+	spXlApp->Quit();
 }
 
 HRESULT GxxGmExcelHandler::AutoWrap(int autoType, VARIANT *pvResult, IDispatch *pDisp, LPOLESTR ptName, int cArgs...)
@@ -104,4 +144,39 @@ HRESULT GxxGmExcelHandler::AutoWrap(int autoType, VARIANT *pvResult, IDispatch *
 	delete[] pArgs;
 
 	return hr;
+}
+
+int GxxGmExcelHandler::SafeArrayPutName(SAFEARRAY* psa, long index, int args...)
+{
+	// Begin variable-argument list
+	va_list marker;
+	va_start(marker, args);
+
+	int errCode = 0;
+
+	// Allocate memory for arguments
+	VARIANT *pArgs = new VARIANT[args + 1];
+	// Extract arguments...
+	for(int i=0; i < args; i++) 
+	{
+		pArgs[i] = va_arg(marker, VARIANT);
+
+		int element_item_index = i + 1;
+		long indices1[] = { index, element_item_index };
+
+		// Copies the VARIANT into the SafeArray
+		HRESULT hr = SafeArrayPutElement(psa, indices1, (void*)&pArgs[i]);
+		if (FAILED(hr))
+		{
+			errCode = hr;
+			break;
+		}
+	}
+
+	// End variable-argument section
+	va_end(marker);
+
+	delete[] pArgs;
+
+	return errCode;
 }
