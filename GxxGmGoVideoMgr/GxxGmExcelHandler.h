@@ -44,8 +44,6 @@ public:
 	GxxGmExcelHandler();
 	~GxxGmExcelHandler();
 
-
-
 public:
 	//////////////////////////////////////////////////////////////////////////
 	//
@@ -60,7 +58,7 @@ public:
 	//
 	//////////////////////////////////////////////////////////////////////////
 	int InitializeWrite(const char * xls_path);
-	int WriteHeader(const char *sheet_name, std::vector<std::string> headers);
+	int WriteHeader(const char *sheet_name, std::vector<std::string> &headers);
 	int WriteLine(std::vector<std::string> item);
 	void FinishWrite();
 
@@ -78,11 +76,14 @@ private:
 	int InitializeExcel();
 	void CleanupExcel();
 
-	HRESULT AutoWrap(int autoType, VARIANT *pvResult, IDispatch *pDisp,	LPOLESTR ptName, int cArgs...);
-	HRESULT SafeArrayPutName(SAFEARRAY* psa, long index, int args...);
+	//HRESULT AutoWrap(int autoType, VARIANT *pvResult, IDispatch *pDisp,	LPOLESTR ptName, int cArgs, ...);
+	//HRESULT SafeArrayPutName(SAFEARRAY* psa, long index, int args, ...);
+	HRESULT SafeArrayPutName(SAFEARRAY* psa, long index, std::vector<std::string> args);
 
 private:
 	Excel::_ApplicationPtr spXlApp;
+	Excel::WorkbooksPtr spXlBooks;
+	Excel::_WorkbookPtr spXlBook;
 	//IDispatch *pXlApp;
 	std::string file_path;
 };

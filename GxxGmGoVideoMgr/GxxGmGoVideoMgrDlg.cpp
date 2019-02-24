@@ -6,6 +6,8 @@
 #include "GxxGmGoVideoMgr.h"
 #include "GxxGmGoVideoMgrDlg.h"
 
+#include "GxxGmExcelHandler.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -100,6 +102,18 @@ BOOL CGxxGmGoVideoMgrDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	std::vector<std::string> header;
+	header.push_back("序号");
+	header.push_back("设备内部ID");
+	header.push_back("设备名称");
+	header.push_back("设备国标ID");
+	header.push_back("设备厂商");
+
+	GxxGmExcelHandler excel;
+	excel.InitializeWrite("设备信息表.xls");
+	excel.WriteHeader("设备表", header);
+	excel.FinishWrite();
+
 	SetWindowText(_T("GoVideo5.0 设备管理工具 V1.1"));
 
 	login_dlg_.govideo_ = &govideo_;
@@ -147,6 +161,10 @@ BOOL CGxxGmGoVideoMgrDlg::OnInitDialog()
 
 	// 保存当前选择
 	m_cTabMain.SetCurSel(0);
+
+	
+	
+
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
