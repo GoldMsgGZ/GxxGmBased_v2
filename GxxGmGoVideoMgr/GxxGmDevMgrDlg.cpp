@@ -5,6 +5,8 @@
 #include "GxxGmGoVideoMgr.h"
 #include "GxxGmDevMgrDlg.h"
 
+#include "bgMfcExcelModule.h"
+
 
 // CGxxGmDevMgrDlg 对话框
 
@@ -52,6 +54,8 @@ BEGIN_MESSAGE_MAP(CGxxGmDevMgrDlg, CDialog)
 	ON_NOTIFY(LVN_KEYDOWN, IDC_LIST_DEVS, &CGxxGmDevMgrDlg::OnLvnKeydownListDevs)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_DEVS, &CGxxGmDevMgrDlg::OnNMClickListDevs)
 	ON_BN_CLICKED(IDC_BTN_REMOVE, &CGxxGmDevMgrDlg::OnBnClickedBtnRemove)
+	ON_BN_CLICKED(IDC_BTN_EXPORT_DEV_LIST, &CGxxGmDevMgrDlg::OnBnClickedBtnExportDevList)
+	ON_BN_CLICKED(IDC_BTN_IMPORT_DEV_LIST, &CGxxGmDevMgrDlg::OnBnClickedBtnImportDevList)
 END_MESSAGE_MAP()
 
 
@@ -562,4 +566,223 @@ void CGxxGmDevMgrDlg::OnBnClickedBtnRemove()
 			break;
 
 	} while (true);
+}
+
+void CGxxGmDevMgrDlg::OnBnClickedBtnExportDevList()
+{
+	CFileDialog dlg(FALSE, _T("*.xls"), _T("设备信息表.xls"));
+	INT_PTR ret = dlg.DoModal();
+	if (ret != IDOK)
+		return ;
+
+	CString path = dlg.GetPathName();
+
+	// 先查询所有设备列表
+	govideo_->GetAllDevices();
+
+	// 写入EXCEL
+	bgMfcExcelModule excel;
+	int errCode = excel.WriteInitialize(path.GetString(), L"设备表");
+	if (errCode != 0)
+	{
+		MessageBox(_T("导出设备列表：初始化EXCEL失败！"), _T("错误"), MB_OK|MB_ICONERROR);
+		return ;
+	}
+
+	std::vector<std::wstring> header;
+	header.push_back(L"设备ID");
+	header.push_back(L"设备名称");
+	header.push_back(L"设备厂商");
+	header.push_back(L"设备门类");
+	header.push_back(L"连接信息");
+	header.push_back(L"配置版本");
+	header.push_back(L"用户名称");
+	header.push_back(L"用户密码");
+	header.push_back(L"设备编号");
+	header.push_back(L"扩展信息");
+	header.push_back(L"国标编码");
+	header.push_back(L"缩写名称");
+	header.push_back(L"设备版本");
+	header.push_back(L"所属网关");
+
+	errCode = excel.WriteHeader(header);
+	if (errCode != 0)
+	{
+		MessageBox(_T("导出设备列表：向EXCEL写入表头失败！"), _T("错误"), MB_OK|MB_ICONERROR);
+		return ;
+	}
+
+	std::vector<GOVIDEO_DEVICE_INFO *>::iterator iter;
+	for (iter = govideo_->devices_.begin(); iter != govideo_->devices_.end(); ++iter)
+	{
+		std::vector<std::wstring> item;
+		wchar_t value[4096] = {0};
+		GOVIDEO_DEVICE_INFO *device_info = *iter;
+
+		// 设备ID
+		swprintf_s(value, 4096, L"%d", device_info->device_id_);
+		item.push_back(value);
+
+		// 设备名称
+		MultiByteToWideChar(CP_ACP, 0, device_info->device_name_.c_str(), -1, value, 4096);
+		item.push_back(value);
+
+		// 设备厂商
+		swprintf_s(value, 4096, L"%d", device_info->model_id_);
+		item.push_back(value);
+
+		// 设备门类
+		swprintf_s(value, 4096, L"%d", device_info->category_id_);
+		item.push_back(value);
+
+		// 连接信息
+		MultiByteToWideChar(CP_ACP, 0, device_info->device_ip_.c_str(), -1, value, 4096);
+		item.push_back(value);
+
+		// 配置版本
+		MultiByteToWideChar(CP_ACP, 0, device_info->device_version_.c_str(), -1, value, 4096);
+		item.push_back(value);
+
+		// 用户名称
+		MultiByteToWideChar(CP_ACP, 0, device_info->device_username_.c_str(), -1, value, 4096);
+		item.push_back(value);
+
+		// 用户密码
+		MultiByteToWideChar(CP_ACP, 0, device_info->device_password_.c_str(), -1, value, 4096);
+		item.push_back(value);
+
+		// 设备编号
+		MultiByteToWideChar(CP_ACP, 0, device_info->device_code_.c_str(), -1, value, 4096);
+		item.push_back(value);
+
+		// 扩展信息
+		MultiByteToWideChar(CP_ACP, 0, device_info->device_extra_info_.c_str(), -1, value, 4096);
+		item.push_back(value);
+
+		// 国标编码
+		MultiByteToWideChar(CP_ACP, 0, device_info->gb28181_code_.c_str(), -1, value, 4096);
+		item.push_back(value);
+
+		// 缩写名称
+		MultiByteToWideChar(CP_ACP, 0, device_info->device_name_abbr_.c_str(), -1, value, 4096);
+		item.push_back(value);
+
+		// 设备版本
+		swprintf_s(value, 4096, L"%d", device_info->version_);
+		item.push_back(value);
+
+		// 所属网关
+		swprintf_s(value, 4096, L"%d", device_info->dgw_server_id_);
+		item.push_back(value);
+
+		errCode = excel.WriteLine(item);
+	}
+
+	excel.WriteFinish();
+
+	MessageBox(_T("导出所有设备成功！"), _T("信息"), MB_OK|MB_ICONINFORMATION);
+}
+
+void CGxxGmDevMgrDlg::OnBnClickedBtnImportDevList()
+{
+	CFileDialog dlg(TRUE, _T("*.xls"), _T("设备信息表.xls"), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, _T("Excel 2003 (*.xls)|*.xls|Excel 2007 (*.xlsx)|*.xlsx||"), this);
+	INT_PTR ret = dlg.DoModal();
+	if (ret != IDOK)
+		return ;
+
+	CString path = dlg.GetPathName();
+
+	// 读取EXCEL
+	bgMfcExcelModule excel;
+	int errCode = excel.ReadInitialize(path.GetString(), L"设备表");
+	if (errCode != 0)
+	{
+		return ;
+	}
+
+	std::vector<std::wstring> header;
+	errCode = excel.ReadHeader(header);
+
+	// 增加/修改/导入设备信息
+	while (true)
+	{
+		char value[4096] = {0};
+		std::vector<std::wstring> item;
+		errCode = excel.ReadNextLine(item);
+		if (errCode != 0)
+		{
+			break;
+		}
+
+		// 构建参数
+		GOVIDEO_DEVICE_INFO device_info;
+		// 设备ID
+		device_info.device_id_ = _wtoi(item[0].c_str());
+
+		// 设备名称
+		WideCharToMultiByte(CP_UTF8, 0, item[1].c_str(), -1, value, 4096, "", NULL);
+		device_info.device_name_ = value;
+
+		// 设备厂商
+		device_info.model_id_ = _wtoi(item[2].c_str());
+
+		// 设备门类
+		device_info.category_id_ = _wtoi(item[3].c_str());
+
+		// 连接信息
+		WideCharToMultiByte(CP_UTF8, 0, item[4].c_str(), -1, value, 4096, "", NULL);
+		device_info.device_ip_ = value;
+		
+		// 配置版本
+		WideCharToMultiByte(CP_UTF8, 0, item[5].c_str(), -1, value, 4096, "", NULL);
+		device_info.device_version_ = value;
+
+		// 用户名称
+		WideCharToMultiByte(CP_UTF8, 0, item[6].c_str(), -1, value, 4096, "", NULL);
+		device_info.device_username_ = value;
+
+		// 用户密码
+		WideCharToMultiByte(CP_UTF8, 0, item[7].c_str(), -1, value, 4096, "", NULL);
+		device_info.device_password_ = value;
+
+		// 设备编号
+		WideCharToMultiByte(CP_UTF8, 0, item[8].c_str(), -1, value, 4096, "", NULL);
+		device_info.device_code_ = value;
+
+		// 扩展信息
+		WideCharToMultiByte(CP_UTF8, 0, item[9].c_str(), -1, value, 4096, "", NULL);
+		device_info.device_extra_info_ = value;
+
+		// 国标编码
+		WideCharToMultiByte(CP_UTF8, 0, item[10].c_str(), -1, value, 4096, "", NULL);
+		device_info.gb28181_code_ = value;
+
+		// 缩写名称
+		WideCharToMultiByte(CP_UTF8, 0, item[11].c_str(), -1, value, 4096, "", NULL);
+		device_info.device_name_abbr_ = value;
+
+		// 设备版本
+		device_info.version_ = _wtoi(item[12].c_str());
+
+		// 所属网关
+		device_info.dgw_server_id_ = _wtoi(item[13].c_str());
+		
+		// 调用更新接口
+		int errCode = govideo_->ModifyDevice(device_info);
+		if (errCode != 0)
+		{
+			//MessageBox(_T("修改设备失败！"), _T("错误"), MB_OK|MB_ICONERROR);
+		}
+		else
+		{
+			//MessageBox(_T("修改设备成功！"), _T("提示"), MB_OK|MB_ICONINFORMATION);
+
+			govideo_->DataUpdate();
+
+			
+		}
+	}
+
+	OnBnClickedBtnRefreshDevices();
+	MessageBox(_T("导入设备成功！"), _T("提示"), MB_OK|MB_ICONINFORMATION);
 }

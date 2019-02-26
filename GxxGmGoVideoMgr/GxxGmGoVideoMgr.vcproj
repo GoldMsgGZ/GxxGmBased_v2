@@ -292,13 +292,41 @@
 			Name="00.EXCEL¶ÁÐ´Æ÷"
 			>
 			<File
-				RelativePath=".\GxxGmExcelHandler.cpp"
+				RelativePath=".\bgMfcExcelModule.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\GxxGmExcelHandler.h"
+				RelativePath=".\bgMfcExcelModule.h"
 				>
 			</File>
+			<Filter
+				Name="00. EXCEL¶ÁÈ¡"
+				>
+				<File
+					RelativePath=".\CApplication.h"
+					>
+				</File>
+				<File
+					RelativePath=".\CRange.h"
+					>
+				</File>
+				<File
+					RelativePath=".\CWorkbook.h"
+					>
+				</File>
+				<File
+					RelativePath=".\CWorkbooks.h"
+					>
+				</File>
+				<File
+					RelativePath=".\CWorksheet.h"
+					>
+				</File>
+				<File
+					RelativePath=".\CWorksheets.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath=".\GxxGmDevMgrDlg.htm"

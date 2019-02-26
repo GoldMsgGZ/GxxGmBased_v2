@@ -55,4 +55,6 @@ public:
 	afx_msg void OnLvnKeydownListDevs(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMClickListDevs(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedBtnRemove();
+	afx_msg void OnBnClickedBtnExportDevList();
+	afx_msg void OnBnClickedBtnImportDevList();
 };
