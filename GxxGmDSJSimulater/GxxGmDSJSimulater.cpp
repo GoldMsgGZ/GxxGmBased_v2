@@ -332,7 +332,8 @@ int GxxGmDSJSimulater::SendBaseInfo()
 	connention_param.iPort = atoi(server_port_.c_str());
 
 	// 这里是否要考虑一下编码问题
-	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg, strlen(msg));
+	GS28181_ERR err = GS28181_ERR_SUCCESS;
+	err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg, strlen(msg));
 	if (err != GS28181_ERR_SUCCESS)
 	{
 		// 
@@ -1105,7 +1106,10 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 		{
 			// 发送保活心跳
 			StruErrorList *error_list = NULL;
-			GS28181_ERR err = GB28181Agent_HeartBeat(simulater->agent_, &connention_param, 1, NULL);
+
+			// 疑似第一处内存泄露点
+			GS28181_ERR err = GS28181_ERR_SUCCESS;
+			err = GB28181Agent_HeartBeat(simulater->agent_, &connention_param, 1, NULL);
 			if (err != GS28181_ERR_SUCCESS)
 			{
 				printf("[%s]发送28181保活心跳失败！\n", simulater->local_gbcode_.c_str());
