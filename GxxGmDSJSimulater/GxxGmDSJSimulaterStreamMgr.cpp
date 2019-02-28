@@ -323,6 +323,12 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 						len += 4096;
 						continue;
 					}
+
+					delete [] ps_frame->pBuffer;
+					ps_frame->pBuffer = NULL;
+
+					delete ps_frame;
+					ps_frame = NULL;
 				}
 
 				if (gxx_codec_id == EnumGSPSCodecType::GS_MPEGPS_CODEC_V_H264)
