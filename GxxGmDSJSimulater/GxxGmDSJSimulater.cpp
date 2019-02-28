@@ -592,8 +592,8 @@ void GxxGmDSJSimulater::_AgentLogCallBack(EnumLogLevel eLevel, const char * szTe
 	char *dbgmsg = new char[len];
 	sprintf_s(dbgmsg, len, "[%s]\n%s\n", current_time, szTemp);
 
-	// 屏幕输出
-	printf("%s", dbgmsg);
+	//// 屏幕输出
+	//printf("%s", dbgmsg);
 
 	// dbgview输出
 	OutputDebugStringA(dbgmsg);
@@ -601,6 +601,9 @@ void GxxGmDSJSimulater::_AgentLogCallBack(EnumLogLevel eLevel, const char * szTe
 	// 日志文件输出
 	DWORD written = 0;
 	WriteFile(simulater->log_file_handle_, dbgmsg, strlen(dbgmsg), &written, NULL);
+
+	delete [] dbgmsg;
+	dbgmsg = NULL;
 }
 
 SIP_REPSOND_CODE GxxGmDSJSimulater::_DevInfoQueryCB(SESSION_HANDLE hSession, const char * czSrvGBCode, StruQueryReqDescri * stuQuery, void * pUserData)
