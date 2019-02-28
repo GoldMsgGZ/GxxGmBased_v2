@@ -227,12 +227,12 @@ BEGIN
     BEGIN
         BLOCK "080403a8"
         BEGIN
-            VALUE "FileVersion", "1.1"
+            VALUE "FileVersion", "1.2"
             VALUE "InternalName", "GxxGmGoVideoMgr.exe"
             VALUE "LegalCopyright", "保留所有权利。"
             VALUE "OriginalFilename", "GxxGmGoVideoMgr.exe"
             VALUE "ProductName", "GoVideo 管理工具"
-            VALUE "ProductVersion", "1.1"
+            VALUE "ProductVersion", "1.2"
         END
     END
     BLOCK "VarFileInfo"

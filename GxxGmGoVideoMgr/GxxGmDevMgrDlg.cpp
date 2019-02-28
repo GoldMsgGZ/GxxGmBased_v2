@@ -776,10 +776,7 @@ void CGxxGmDevMgrDlg::OnBnClickedBtnImportDevList()
 		else
 		{
 			//MessageBox(_T("修改设备成功！"), _T("提示"), MB_OK|MB_ICONINFORMATION);
-
 			govideo_->DataUpdate();
-
-			
 		}
 	}
 

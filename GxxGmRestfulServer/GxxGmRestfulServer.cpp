@@ -18,8 +18,7 @@
 #include "Poco/Util/ServerApplication.h"
 #include "Poco/StreamCopier.h"
 
-// 默认端口
-#define DEFAULT_SERVICE_PORT	9902
+#include "GxxGmRestfulPlugin.h"
 
 class GxxGmRequestHandler : public Poco::Net::HTTPRequestHandler
 {
@@ -65,6 +64,15 @@ public:
 			std::cout<<"接收请求时遇到异常，错误码："<<errCode<<"。错误信息："<<errStr.c_str()<<std::endl;
 		}
 	}
+
+public:
+	void SetPlugin(GxxGmRestfulPlugin *plugin)
+	{
+		plugins_.push_back(plugin);
+	}
+
+private:
+	std::vector<GxxGmRestfulPlugin *> plugins_;
 };
 
 class GxxGmRequestHandlerFactory : public Poco::Net::HTTPRequestHandlerFactory
@@ -81,19 +89,36 @@ class GxxGmServerApp : public Poco::Util::ServerApplication
 protected:
 	int main(const std::vector<std::string>& args)
 	{
-		// 首先获得当前工作目录
-		std::string current_working_dir = Poco::Path::current();
-		Poco::Path config_path(current_working_dir);
-		config_path.append("config.ini");
-		this->loadConfiguration()
-		int port = DEFAULT_SERVICE_PORT;
-		if (args.size() > 0)
-			port = atoi(args[0].c_str());
+		int errCode = Poco::Util::Application::EXIT_OK;
+		std::string errstr;
 
-		Poco::Net::HTTPServer server(new GxxGmRequestHandlerFactory, Poco::Net::ServerSocket(port), new Poco::Net::HTTPServerParams);
-		server.start();
-		waitForTerminationRequest();
-		server.stop();
+		try
+		{
+			// 首先获得当前工作目录
+			std::string current_working_dir = Poco::Path::current();
+			Poco::Path config_path(current_working_dir);
+			config_path.append("config.ini");
+			this->loadConfiguration(config_path.toString(Poco::Path::PATH_NATIVE));
+
+			// 拿IP、端口进行绑定
+			std::string ipaddress = config().getString("SERVICE_CFG.IP");
+			unsigned int port = config().getUInt("SERVICE_CFG.PORT");
+			Poco::Net::SocketAddress socket_address(ipaddress, port);
+			Poco::Net::ServerSocket server_socket(socket_address);
+
+			// 创建工厂类，加载插件对象给工厂类
+			Poco::SharedPtr<GxxGmRequestHandlerFactory> factory = new GxxGmRequestHandlerFactory;
+
+			Poco::Net::HTTPServer server(factory, server_socket, new Poco::Net::HTTPServerParams);
+			server.start();
+			waitForTerminationRequest();
+			server.stop();
+		}
+		catch (Poco::Exception e)
+		{
+			errCode = e.code();
+			errstr = e.displayText();
+		}
 
 		return Poco::Util::Application::EXIT_OK;
 	}

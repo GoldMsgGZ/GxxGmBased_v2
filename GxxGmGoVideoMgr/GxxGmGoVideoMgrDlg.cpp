@@ -102,7 +102,7 @@ BOOL CGxxGmGoVideoMgrDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
-	SetWindowText(_T("GoVideo5.0 设备管理工具 V1.1"));
+	SetWindowText(_T("GoVideo5.0 设备管理工具 V1.2"));
 
 	login_dlg_.govideo_ = &govideo_;
 	service_state_dlg_.govideo_ = &govideo_;
