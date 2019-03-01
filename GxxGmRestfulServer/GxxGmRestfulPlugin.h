@@ -1,15 +1,48 @@
 #ifndef _GxxGmRestfulPlugin_H_
 #define _GxxGmRestfulPlugin_H_
 
-#include "Poco/Net/HTTPServerRequest.h"
-#include "Poco/Net/HTTPServerResponse.h"
+//#include "Poco/Net/HTTPServerRequest.h"
+//#include "Poco/Net/HTTPServerResponse.h"
 
-class GxxGmRestfulPlugin
+#ifndef LOG_LEVEL
+#define LOG_LEVEL
+
+#define LOG_LEVEL_INFO	0
+#define LOG_LEVEL_ERROR	1
+#define LOG_LEVEL_FATAL	2
+#define LOG_LEVEL_DEBUG	3
+
+#endif
+
+#ifndef REQUEST_HANDLE_CODE
+#define REQUEST_HANDLE_CODE
+
+#define REQUEST_HANDLE_CODE_NOT_SUPPORTED	-6002
+
+#endif
+
+//////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////
+class GxxGmLoggerObject
 {
 public:
-	virtual int Initialize() = 0;
-	virtual int Uninitialize() = 0;
-
-	virtual int RequestHandler(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) = 0;
+	virtual void WriteLog(std::string log, int log_level = LOG_LEVEL_INFO) = 0;
 };
+
+//////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////
+
 #endif

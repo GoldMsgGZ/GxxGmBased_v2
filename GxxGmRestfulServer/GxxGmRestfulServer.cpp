@@ -18,61 +18,47 @@
 #include "Poco/Util/ServerApplication.h"
 #include "Poco/StreamCopier.h"
 
-#include "GxxGmRestfulPlugin.h"
+#include "Poco\ClassLoader.h"
+#include "Poco\Manifest.h"
+#include "GxxGmAbstractPlugin.h"
+
+typedef Poco::ClassLoader<GxxGmAbstractPlugin> PluginLoader;
+typedef Poco::Manifest<GxxGmAbstractPlugin> PluginManifest;
 
 class GxxGmRequestHandler : public Poco::Net::HTTPRequestHandler
 {
 public:
 	virtual void handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response)
 	{
-		int errCode = 0;
-		std::string errStr = "";
-		try
+		// 有新的请求进来了，我们根据插件集合来分发
+		PluginLoader::Iterator iter(plugin_loader_->begin());
+		PluginLoader::Iterator iter_end(plugin_loader_->end());
+
+		for (; iter != iter_end; ++iter)
 		{
-			// 这里会接收到外部发来的请求
-			std::string uri = request.getURI();
-			//std::string host = request.getHost();
-			std::string method = request.getMethod();
+			PluginManifest::Iterator manifest_iter(iter->second->begin());
+			PluginManifest::Iterator manifest_iter_end(iter->second->end());
 
-			// 读取发过来的数据
-			// 读取数据
-			std::istream &is = request.stream();
-
-			std::ostringstream ostr;
-			std::istream *ptr_rs = &is;
-			Poco::StreamCopier::copyStream(*ptr_rs, ostr);
-
-			std::string request_body = ostr.str();
-
-			std::cout<<"收到请求："<<std::endl;
-			std::cout<<method.c_str()<<" "/*<<host.c_str()*/<<uri.c_str()<<std::endl;
-
-			if (request_body.size() > 0)
-				std::cout<<request_body.c_str()<<std::endl;
-
-			std::cout<<std::endl;
-
-			// 响应信息
-			response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
-			std::ostream &out = response.send();
-		}
-		catch(Poco::Exception &ex)
-		{
-			errCode = ex.code();
-			errStr = ex.displayText();
-
-			std::cout<<"接收请求时遇到异常，错误码："<<errCode<<"。错误信息："<<errStr.c_str()<<std::endl;
+			for (; manifest_iter != manifest_iter_end; ++manifest_iter)
+			{
+				int errCode = manifest_iter->
+				if (errCode != REQUEST_HANDLE_CODE_NOT_SUPPORTED)
+				{
+					// 说明该请求已经被某一个业务插件处理掉了，这里的结果是最终结果
+					break;
+				}
+			}
 		}
 	}
 
 public:
-	void SetPlugin(GxxGmRestfulPlugin *plugin)
+	void SetLoader(PluginLoader *loader)
 	{
-		plugins_.push_back(plugin);
+		plugin_loader_ = loader;
 	}
 
 private:
-	std::vector<GxxGmRestfulPlugin *> plugins_;
+	PluginLoader *plugin_loader_;
 };
 
 class GxxGmRequestHandlerFactory : public Poco::Net::HTTPRequestHandlerFactory
@@ -80,8 +66,18 @@ class GxxGmRequestHandlerFactory : public Poco::Net::HTTPRequestHandlerFactory
 public:
 	virtual Poco::Net::HTTPRequestHandler* createRequestHandler(const Poco::Net::HTTPServerRequest& request)
 	{
-		return new GxxGmRequestHandler;
+		GxxGmRequestHandler *handler = new GxxGmRequestHandler;
+		handler->SetLoader(&plugin_loader_);
 	}
+
+public:
+	void LoadPlugin(std::string plugin_path)
+	{
+		plugin_loader_.loadLibrary(plugin_path);
+	}
+
+private:
+	PluginLoader plugin_loader_;
 };
 
 class GxxGmServerApp : public Poco::Util::ServerApplication
@@ -109,6 +105,20 @@ protected:
 			// 创建工厂类，加载插件对象给工厂类
 			Poco::SharedPtr<GxxGmRequestHandlerFactory> factory = new GxxGmRequestHandlerFactory;
 
+			// 读取插件配置
+			int plugin_count = config().getInt("PLUGINS.PLUGIN_COUNT");
+
+			for (int index = 0; index < plugin_count; ++index)
+			{
+				char value[4096] = {0};
+				sprintf_s(value, 4096, "PLUGINS.PLUGIN_PATH_%d", index + 1);
+				std::string plugin_path = config().getString(value);
+				plugin_path += Poco::SharedLibrary::suffix();
+
+				factory->LoadPlugin(plugin_path);
+			}
+
+			// 启动服务
 			Poco::Net::HTTPServer server(factory, server_socket, new Poco::Net::HTTPServerParams);
 			server.start();
 			waitForTerminationRequest();
