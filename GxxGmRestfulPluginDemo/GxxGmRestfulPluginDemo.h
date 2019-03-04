@@ -11,11 +11,11 @@ public:
 	virtual ~GxxGmRestfulPluginDemo();
 
 public:
-	virtual int Initialize(GxxGmLoggerObject *logger);
-	virtual int Uninitialize();
+	int Initialize(GxxGmLoggerObject *logger);
+	int Uninitialize();
 
 public:
-	virtual int RequestHandler(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response);
+	int RequestHandler(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response);
 
 private:
 	void WriteLog(std::string log, int log_level = LOG_LEVEL_INFO);
