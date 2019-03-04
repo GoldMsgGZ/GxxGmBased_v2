@@ -87,6 +87,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="XCOPY /Y /D $(ProjectDir)config.ini $(OutDir)"
 			/>
 		</Configuration>
 		<Configuration

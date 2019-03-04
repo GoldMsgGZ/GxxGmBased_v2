@@ -61,6 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				OutputFile="$(OutDir)\$(ProjectName)d.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\ext\Poco\lib"
 				GenerateDebugInformation="true"

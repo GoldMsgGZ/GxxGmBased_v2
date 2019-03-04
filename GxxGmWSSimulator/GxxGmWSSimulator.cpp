@@ -256,13 +256,23 @@ int GxxGmWSSimulator::SendLocationInfo()
 
 int GxxGmWSSimulator::GetDiskTotalSpace()
 {
+	return 512 * 1024;
 }
 
 int GxxGmWSSimulator::GetDiskUsedSpace()
 {
+	return 1 * 1024;
 }
-int GxxGmWSSimulator::GetCpuUsage();
-int GxxGmWSSimulator::GetMemoryUsage();
+
+int GxxGmWSSimulator::GetCpuUsage()
+{
+	return 10;
+}
+
+int GxxGmWSSimulator::GetMemoryUsage()
+{
+	return 40;
+}
 
 void GxxGmWSSimulator::WorkingThreadFunc(void* param)
 {

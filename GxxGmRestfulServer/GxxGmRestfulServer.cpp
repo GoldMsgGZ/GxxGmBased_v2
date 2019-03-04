@@ -41,12 +41,12 @@ public:
 
 			for (; manifest_iter != manifest_iter_end; ++manifest_iter)
 			{
-				int errCode = manifest_iter->
-				if (errCode != REQUEST_HANDLE_CODE_NOT_SUPPORTED)
-				{
-					// 说明该请求已经被某一个业务插件处理掉了，这里的结果是最终结果
-					break;
-				}
+				//int errCode = manifest_iter->
+				//if (errCode != REQUEST_HANDLE_CODE_NOT_SUPPORTED)
+				//{
+				//	// 说明该请求已经被某一个业务插件处理掉了，这里的结果是最终结果
+				//	break;
+				//}
 			}
 		}
 	}
@@ -68,6 +68,8 @@ public:
 	{
 		GxxGmRequestHandler *handler = new GxxGmRequestHandler;
 		handler->SetLoader(&plugin_loader_);
+
+		return handler;
 	}
 
 public:
@@ -126,7 +128,7 @@ protected:
 		}
 		catch (Poco::Exception e)
 		{
-			errCode = e.code();
+			errCode = e.code(); 
 			errstr = e.displayText();
 		}
 
