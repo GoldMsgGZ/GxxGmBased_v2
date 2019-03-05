@@ -18,6 +18,7 @@
 #include "Poco/JSON/PrintHandler.h"
 #include "Poco/Latin1Encoding.h"
 #include "Poco/TextConverter.h"
+#include "Poco/DateTime.h"
 
 GxxGmWSSimulator::GxxGmWSSimulator()
 : working_thread_(new Poco::Thread)
@@ -210,9 +211,43 @@ int GxxGmWSSimulator::SendFileInfo()
 	int errCode = 0;
 	std::string errStr;
 
+	// 文件编号，有生成规则：[所属域：8位][执法仪ID：20位][文件拍摄时间：14位][文件类型编码：2位][文件标注状态：2位][文件导入时间：14位][顺序号：4位]
+	Poco::DateTime current_datetime;
+
+	// 文件ID
+	char file_id[4096] = {0};
+	sprintf_s(file_id, 4096, "%s%s%d%02d%02d%02d%02d%02d0000%d%02d%02d%02d%02d%04d",
+		file_domain_.c_str(), current_datetime.year(), current_datetime.month(), current_datetime.day(),
+		current_datetime.hour(), current_datetime.minute(), current_datetime.second(), current_datetime.year(),
+		current_datetime.month(), current_datetime.day(), current_datetime.hour(), current_datetime.minute(),
+		current_datetime.second(), current_datetime.microsecond());
+
+	// 文件别名
+	char file_name[4096] = {0};
+	sprintf_s(file_name, 4096, "%d%02d%02d%02d%02d%02d%03d.mp4", current_datetime.year(),
+		current_datetime.month(), current_datetime.day(), current_datetime.hour(), current_datetime.minute(),
+		current_datetime.second(), current_datetime.microsecond());
+
+	// 拍摄时间
+	char camera_time[4096] = {0};
+	sprintf_s(camera_time, 4096, "%d-%02d-%02d %02d:%02d:%02d", current_datetime.year(),
+		current_datetime.month(), current_datetime.day(), current_datetime.hour(), current_datetime.minute(),
+		current_datetime.second());
+
+	// 文件大小，固定500M
+	int file_size = 500 * 1024 * 1024;
+
+	// 文件类型
+	const char *file_type = "0";
+
+	// 文件时长
+	int file_duration = 15 * 60;
+
+	// 备注信息
+	int tag_info = 0;
+
 	try
 	{
-		//// 文件编号，有生成规则：[所属域：8位][执法仪ID：20位][文件拍摄时间：14位][文件类型编码：2位][文件标注状态：2位][文件导入时间：14位][顺序号：4位]
 		//char body[409600] = {0};
 		//sprintf_s(body, 409600,
 		//	"["
@@ -220,10 +255,10 @@ int GxxGmWSSimulator::SendFileInfo()
 		//			"\"wjbh\": \"%s\","		// 文件编号
 		//			"\"wjbm\": \"%s\","		// 文件别名
 		//			"\"pssj\": \"%s\","		// 拍摄时间
-		//			"\"wjdx\": \"%s\","		// 文件大小
+		//			"\"wjdx\": \"%d\","		// 文件大小
 		//			"\"wjlx\": \"%s\","		// 文件类型
-		//			"\"wjsc\": \"%s\","		// 文件时长（秒）
-		//			"\"bzlx\": \"%s\","		// 备注信息，0：普通文件，1：重点标记文件
+		//			"\"wjsc\": \"%d\","		// 文件时长（秒）
+		//			"\"bzlx\": \"%d\","		// 备注信息，0：普通文件，1：重点标记文件
 		//			"\"jgdm\": \"%s\","		// 单位编号或部门编号
 		//			"\"dwmc\": \"%s\","		// 单位名称
 		//			"\"jybh\": \"%s\","		// 警员编号
@@ -237,7 +272,7 @@ int GxxGmWSSimulator::SendFileInfo()
 		//			"\"ccfwq\": \"%s\","	// 存储服务器
 		//			"\"sltxdwz\": \"%s\","	// 采集站缩略图
 		//		"}"
-		//	"]",)
+		//	"]", file_id, file_name, camera_time, file_size, file_type, file_duration, tag_info)
 	}
 	catch (Poco::Exception e)
 	{

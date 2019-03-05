@@ -6,7 +6,7 @@
 
 int main(int argc, const char *argv[])
 {
-	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.4\n");
+	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.5\n");
 	printf("\n");
 	printf("功能说明：\n");
 	printf("1. 支持GB28181-2011 和 GB28181-2016两个版本的协议通信；\n");
@@ -17,6 +17,7 @@ int main(int argc, const char *argv[])
 	printf("6. 修正无帧率视频的播放，默认按30pfs进行播放；\n");
 	printf("7. 当视频源为G711时，可推送音频数据；\n");
 	printf("8. 模拟器可配置定位坐标；\n");
+	printf("9. 模拟器28181保活心跳、设备基础信息、设备定位信息发送间隔支持到毫秒级；\n");
 	printf("\n");
 	system("pause");
 

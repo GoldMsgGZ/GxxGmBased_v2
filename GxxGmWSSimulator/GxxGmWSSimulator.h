@@ -73,6 +73,8 @@ public:
 	std::string authkey_;
 	std::string domain_;
 
+	std::string file_domain_;
+
 public:
 	Poco::Logger *logger_;
 	Poco::Net::HTTPClientSession *session_;

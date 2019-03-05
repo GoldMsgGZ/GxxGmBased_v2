@@ -1100,7 +1100,8 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 	int location_count = 0;
 	while (!simulater->is_gb28181_heartbeat_thread_need_exit_)
 	{
-		Sleep(1000);
+		// ÒÔ1ºÁÃë¼ÆÊı
+		Sleep(1);
 		++heartbeat_count;
 		++baseinfo_count;
 		++location_count;
