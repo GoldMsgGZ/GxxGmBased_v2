@@ -47,7 +47,7 @@ public:
 	// 上报文件信息
 	int SendFileInfo();
 
-	// 上报定位信息
+	// 上报执法仪定位信息
 	int SendLocationInfo();
 
 private:
@@ -57,23 +57,30 @@ private:
 	int GetMemoryUsage();
 
 public:
-	std::string workstaion_id_;
-	std::string workstaion_ip_;
+	// 心跳相关
+	std::string workstaion_id_;		// 采集站ID
+	std::string workstaion_ip_;		// 采集站IP
 	
-	int hearbeat_rate_;
-	int fileupload_rate_;
-	int locationupload_rate_;
+	int hearbeat_rate_;				// 心跳发送频率
+	int fileupload_rate_;			// 文件上报信息频率
+	int locationupload_rate_;		// 定位信息上报频率
 
-	std::string video_path_;
-	std::string audio_path_;
-	std::string image_path_;
+	std::string video_path_;		// 视频文件路径
+	std::string audio_path_;		// 音频文件路径
+	std::string image_path_;		// 图片路径
 
-	std::string gateway_ip_;
-	int gateway_port_;
-	std::string authkey_;
-	std::string domain_;
+	std::string gateway_ip_;		// 采集站接入网关IP
+	int gateway_port_;				// 采集站接入网关端口号
+	std::string authkey_;			// 授权KEY，随意填
+	std::string domain_;			// 域，随意填
 
-	std::string file_domain_;
+	// 上报文件信息相关
+	std::string file_domain_;		// 文件所属域
+	std::string dsj_id_;			// 执法仪国标ID
+
+	// 执法仪定位信息
+	std::string latitude_;
+	std::string longtitude_;
 
 public:
 	Poco::Logger *logger_;

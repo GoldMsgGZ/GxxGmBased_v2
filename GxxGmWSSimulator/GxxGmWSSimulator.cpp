@@ -217,7 +217,7 @@ int GxxGmWSSimulator::SendFileInfo()
 	// 文件ID
 	char file_id[4096] = {0};
 	sprintf_s(file_id, 4096, "%s%s%d%02d%02d%02d%02d%02d0000%d%02d%02d%02d%02d%04d",
-		file_domain_.c_str(), current_datetime.year(), current_datetime.month(), current_datetime.day(),
+		file_domain_.c_str(), dsj_id_.c_str(), current_datetime.year(), current_datetime.month(), current_datetime.day(),
 		current_datetime.hour(), current_datetime.minute(), current_datetime.second(), current_datetime.year(),
 		current_datetime.month(), current_datetime.day(), current_datetime.hour(), current_datetime.minute(),
 		current_datetime.second(), current_datetime.microsecond());
@@ -246,39 +246,138 @@ int GxxGmWSSimulator::SendFileInfo()
 	// 备注信息
 	int tag_info = 0;
 
+	// 单位编号或部门编号
+	std::string org_code = "222222";
+
+	// 单位名称
+	std::string org_name = "XXX派出所";
+
+	// 警员编号
+	std::string police_id = "222222";
+
+	// 警员姓名
+	std::string police_name = "魏永高";
+
+	// 执法仪产品型号
+	std::string dsj_type = dsj_id_;
+
+	// 工作站序号
+	std::string ws_id = workstaion_id_;
+
+	// 上传时间，格式为：yyyy-MM-dd HH:mm:ss
+	char upload_time[4096] = {0};
+	strcpy_s(upload_time, 4096, camera_time);
+
+	// 存储位置
+	std::string storage_path = "\\Workstation\\";
+	storage_path += file_name;
+
+	// 物理位置，采集站上原文件本机存储路径
+	std::string local_path = "D:";
+	local_path += file_name;
+
+	// 播放位置：HTTP访问路径
+	std::string http_url = "http://www.baidu.com/123.mp4";
+
+	// 存储服务器
+	std::string storage_server = "";
+
+	// 采集站缩略图
+	std::string thumb_path = "\\Workstation\\123.jpg";
+
 	try
 	{
-		//char body[409600] = {0};
-		//sprintf_s(body, 409600,
-		//	"["
-		//		"{"
-		//			"\"wjbh\": \"%s\","		// 文件编号
-		//			"\"wjbm\": \"%s\","		// 文件别名
-		//			"\"pssj\": \"%s\","		// 拍摄时间
-		//			"\"wjdx\": \"%d\","		// 文件大小
-		//			"\"wjlx\": \"%s\","		// 文件类型
-		//			"\"wjsc\": \"%d\","		// 文件时长（秒）
-		//			"\"bzlx\": \"%d\","		// 备注信息，0：普通文件，1：重点标记文件
-		//			"\"jgdm\": \"%s\","		// 单位编号或部门编号
-		//			"\"dwmc\": \"%s\","		// 单位名称
-		//			"\"jybh\": \"%s\","		// 警员编号
-		//			"\"jy_xm\": \"%s\","	// 警员姓名
-		//			"\"cpxh\": \"%s\","		// 执法仪产品型号
-		//			"\"gzz_xh\": \"%s\","	// 工作站序号
-		//			"\"scsj\": \"%s\","		// 上传时间，格式为：yyyy-MM-dd HH:mm:ss
-		//			"\"ccwz\": \"%s\","		// 存储位置
-		//			"\"wlwz\": \"%s\""		// 物理位置，采集站上原文件本机存储路径
-		//			"\"bfwz\": \"%s\","		// 播放位置：HTTP访问路径
-		//			"\"ccfwq\": \"%s\","	// 存储服务器
-		//			"\"sltxdwz\": \"%s\","	// 采集站缩略图
-		//		"}"
-		//	"]", file_id, file_name, camera_time, file_size, file_type, file_duration, tag_info)
+		char body[409600] = {0};
+		sprintf_s(body, 409600,
+			"["
+				"{"
+					"\"wjbh\": \"%s\","		// 文件编号
+					"\"wjbm\": \"%s\","		// 文件别名
+					"\"pssj\": \"%s\","		// 拍摄时间
+					"\"wjdx\": \"%d\","		// 文件大小
+					"\"wjlx\": \"%s\","		// 文件类型
+					"\"wjsc\": \"%d\","		// 文件时长（秒）
+					"\"bzlx\": \"%d\","		// 备注信息，0：普通文件，1：重点标记文件
+					"\"jgdm\": \"%s\","		// 单位编号或部门编号
+					"\"dwmc\": \"%s\","		// 单位名称
+					"\"jybh\": \"%s\","		// 警员编号
+					"\"jy_xm\": \"%s\","	// 警员姓名
+					"\"cpxh\": \"%s\","		// 执法仪产品型号
+					"\"gzz_xh\": \"%s\","	// 工作站序号
+					"\"scsj\": \"%s\","		// 上传时间，格式为：yyyy-MM-dd HH:mm:ss
+					"\"ccwz\": \"%s\","		// 存储位置
+					"\"wlwz\": \"%s\""		// 物理位置，采集站上原文件本机存储路径
+					"\"bfwz\": \"%s\","		// 播放位置：HTTP访问路径
+					"\"ccfwq\": \"%s\","	// 存储服务器
+					"\"sltxdwz\": \"%s\","	// 采集站缩略图
+				"}"
+			"]", file_id, file_name, camera_time, file_size, file_type, file_duration, tag_info, org_code.c_str(),
+			org_code.c_str(), org_name.c_str(), police_id.c_str(), police_name.c_str(), dsj_type.c_str(), ws_id.c_str(),
+			upload_time, storage_path.c_str(), local_path.c_str(), http_url.c_str(), storage_server.c_str(), thumb_path.c_str());
+
+		char uri_string[4096] = {0};
+		sprintf_s(uri_string, 4096, 
+			"/openapi/workstation/v3/wsinfo/heartbeat?gzz_xh=%s&authkey=%s&domain=%s",
+			workstaion_id_.c_str(), authkey_.c_str(), domain_.c_str());
+
+		// 构建请求
+		Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_POST, uri_string, Poco::Net::HTTPRequest::HTTP_1_1);
+		request.add("Content-Type", "application/json; charset=utf-8");
+
+		std::string http_body(body);
+		request.setContentLength((int)http_body.length());
+
+		// 发送请求
+		session_->sendRequest(request) << http_body;
+
+		// 接收应答
+		Poco::Net::HTTPResponse response;
+		std::istream &is = session_->receiveResponse(response);
+
+		// 判断服务器返回信息
+		Poco::Net::HTTPResponse::HTTPStatus status = response.getStatus();
+		if (Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK != status)
+		{
+			errCode = status;
+			return errCode;
+		}
+
+		std::ostringstream ostr;
+		Poco::StreamCopier::copyStream(is, ostr);
+
+		std::string json_str = ostr.str();
+		if (json_str.empty())
+		{
+			return -1;
+		}
+
+		// 将字符串转为UTF-8
+		Poco::Latin1Encoding latin1;
+		Poco::UTF8Encoding utf8;
+		Poco::TextConverter converter(latin1, utf8);
+		std::string strUtf8;
+		converter.convert(json_str, strUtf8);
+		json_str = strUtf8;
+
+		// 分析结果
+		Poco::JSON::Parser parser;
+		Poco::Dynamic::Var json = parser.parse(json_str);
+		Poco::JSON::Object::Ptr jsonObject = json.extract<Poco::JSON::Object::Ptr>();
+
+		//Poco::Dynamic::Var message = jsonObject->get("message");
+		//jsonObject = message.extract<Poco::JSON::Object::Ptr>();
+
+		Poco::Dynamic::Var result_code = jsonObject->get("code");
+		errCode = atoi(result_code.toString().c_str());
+		if (errCode != 0)
+			return errCode;
 	}
 	catch (Poco::Exception e)
 	{
 		errCode = e.code();
 		errStr = e.displayText();
 	}
+
 	//logger_->debug("Send FileInfo....");
 	return 0;
 }
