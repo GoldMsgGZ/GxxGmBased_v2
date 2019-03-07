@@ -247,16 +247,16 @@ int GxxGmWSSimulator::SendFileInfo()
 	int tag_info = 0;
 
 	// 单位编号或部门编号
-	std::string org_code = "222222";
+	std::string org_code = "44010403";
 
 	// 单位名称
-	std::string org_name = "XXX派出所";
+	std::string org_name = "org2";
 
 	// 警员编号
 	std::string police_id = "222222";
 
 	// 警员姓名
-	std::string police_name = "魏永高";
+	std::string police_name = "weiyonggao";
 
 	// 执法仪产品型号
 	std::string dsj_type = dsj_id_;
@@ -269,7 +269,7 @@ int GxxGmWSSimulator::SendFileInfo()
 	strcpy_s(upload_time, 4096, camera_time);
 
 	// 存储位置
-	std::string storage_path = "\\Workstation\\";
+	std::string storage_path = "\\\\Workstation\\\\";
 	storage_path += file_name;
 
 	// 物理位置，采集站上原文件本机存储路径
@@ -283,7 +283,7 @@ int GxxGmWSSimulator::SendFileInfo()
 	std::string storage_server = "";
 
 	// 采集站缩略图
-	std::string thumb_path = "\\Workstation\\123.jpg";
+	std::string thumb_path = "\\\\Workstation\\\\123.jpg";
 
 	try
 	{
@@ -306,10 +306,10 @@ int GxxGmWSSimulator::SendFileInfo()
 					"\"gzz_xh\": \"%s\","	// 工作站序号
 					"\"scsj\": \"%s\","		// 上传时间，格式为：yyyy-MM-dd HH:mm:ss
 					"\"ccwz\": \"%s\","		// 存储位置
-					"\"wlwz\": \"%s\""		// 物理位置，采集站上原文件本机存储路径
+					"\"wlwz\": \"%s\","		// 物理位置，采集站上原文件本机存储路径
 					"\"bfwz\": \"%s\","		// 播放位置：HTTP访问路径
 					"\"ccfwq\": \"%s\","	// 存储服务器
-					"\"sltxdwz\": \"%s\","	// 采集站缩略图
+					"\"sltxdwz\": \"%s\""	// 采集站缩略图
 				"}"
 			"]", file_id, file_name, camera_time, file_size, file_type, file_duration, tag_info, org_code.c_str(),
 			org_code.c_str(), org_name.c_str(), police_id.c_str(), police_name.c_str(), dsj_type.c_str(), ws_id.c_str(),
