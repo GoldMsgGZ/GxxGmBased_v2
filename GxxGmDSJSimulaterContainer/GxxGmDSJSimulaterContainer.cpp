@@ -32,7 +32,7 @@ public:
 		//loadConfiguration();
 
 		// 初始化日志
-		std::string name = "log_";
+		std::string name = "DSJSimulator_log_";
 		name.append(Poco::DateTimeFormatter::format(Poco::Timestamp(), "%Y%m%d%H%M%S"));
 		name.append(".log");
 
@@ -76,27 +76,132 @@ public:
 			std::string server_username = config().getString("DeviceGateway.SERVER_USERNAME");
 			std::string server_password = config().getString("DeviceGateway.SERVER_PASSWORD");
 
-			int simulater_count;
-			std::string local_ip;
-			int local_port_start;
-			std::string local_gbcode_pre;
-			int local_gbcode_id_start;
+			int simulater_count = config().getUInt("GxxGmDSJSimulater.INSTANCE_COUNT");
+			std::string local_ip = config().getString("GxxGmDSJSimulater.DEVICE_IP");;
+			int local_port_start = config().getUInt("GxxGmDSJSimulater.DEVICE_PORT_START");
+			std::string local_gbcode_pre = config().getString("GxxGmDSJSimulater.GBCODE_PRE");
+			int local_gbcode_id_start = config().getUInt("GxxGmDSJSimulater.GBCODE_ID_START");
+
+			int manual_port = config().getUInt("GxxGmDSJSimulater.MANUAL_PORT");
+			int rtp_port_begin = config().getUInt("GxxGmDSJSimulater.RTP_PORT_START");
+			int rtp_port_count = config().getUInt("GxxGmDSJSimulater.RTP_PORT_COUNT");
+
+			std::string sip_net = config().getString("GxxGmDSJSimulater.SIP_NET");
+			std::string rtp_net = config().getString("GxxGmDSJSimulater.RTP_NET");
+			std::string stream_file = config().getString("GxxGmDSJSimulater.SIM_STREAM_FILE");
+			std::string platform_id = config().getString("GxxGmDSJSimulater.PLATFORM_ID");
+
+			int gb28181_hb_time = config().getUInt("GxxGmDSJSimulater.GB28181_HB_TIME");
+			int dev_baseinfo_time = config().getUInt("GxxGmDSJSimulater.DEV_BASE_INFO_TIME");
+			int dev_location_time = config().getUInt("GxxGmDSJSimulater.DEV_LOCATION_TIME");
+			int dev_imei_index_start = config().getUInt("GxxGmDSJSimulater.DEVICE_IMEI_START");
+
+			std::string location_latitude = config().getString("GxxGmDSJSimulater.DEV_LOCATION_LATITUDE");
+			std::string location_longtitude = config().getString("GxxGmDSJSimulater.DEV_LOCATION_LONGTITUDE");
 
 
-			// 等待终端退出请求
-			std::cout<<"Press \"Enter\" key to exit ...";
+			//// 等待终端退出请求
+			//std::cout<<"Press \"Enter\" key to exit ...";
+			//getchar();
+
+			std::vector<GxxGmDSJSimulater *> simulaters;
+
+			// 根据设备数量启动所有设备
+			for (int index = 0; index < simulater_count; ++index)
+			{
+				// 构建模拟器端口号
+				int current_client_port = local_port_start + index;
+				char current_client_port_string[64] = {0};
+				sprintf_s(current_client_port_string, 64, "%d", current_client_port);
+
+				// 构建模拟器国标编码
+				char current_client_device_index[8] = {0};
+				sprintf_s(current_client_device_index, "%07d", local_gbcode_id_start + index);
+
+				char current_client_gbcode[21] = {0};
+				sprintf_s(current_client_gbcode, 21, "%s%s", local_gbcode_pre.c_str(), current_client_device_index);
+
+				// 构建模拟器IMEI
+				int current_client_imei_index = dev_imei_index_start + index;
+				char current_client_imei[64] = {0};
+				sprintf_s(current_client_imei, 64, "GxxGmSim%04d", current_client_imei_index);
+
+				// 计算RTP相关的端口信息
+				int current_client_rtp_port_begin = rtp_port_begin * (1 + index) + rtp_port_count * index + 1;
+				int current_client_rtp_port_end = current_client_rtp_port_begin + rtp_port_count - 1;
+
+				GxxGmDSJSimulater *simulater = new GxxGmDSJSimulater();
+
+				// 设置设备基本信息
+				DEVICE_BASE_INFO base_info;
+				base_info.carrieroperator_ = BASE_INFO_Carrieroperator_CMCC;
+				base_info.net_type_ = BASE_INFO_Nettype_4G;
+				base_info.signal_ = "100";
+				base_info.battery_ = "100";
+				base_info.storage_ = "64";
+				base_info.cpu_ = "30";
+				base_info.version_ = "GxxGm_simulater_1.0.0.1";
+				base_info.local_record_ = BASE_INFO_LocalRecord_NO;
+				simulater->SetBaseInfo(base_info);
+
+				// 设置设备定位信息
+				DEVICE_LOCATION_INFO location_info;
+				location_info.division_ns_ = LOCATION_INFO_DivisionN;
+				location_info.division_ew_ = LOCATION_INFO_DivisionE;
+				location_info.radius_ = "3";
+				location_info.longitude_ = location_longtitude;
+				location_info.latitude_ = location_latitude;
+				location_info.direction_ = "0";
+				location_info.speed_ = "0";
+				location_info.height_ = "0";
+				location_info.satellites_ = "20";
+				location_info.location_available_ = "1";
+				simulater->SetLocationInfo(location_info);
+
+				struct SimulaterInitInfo init_info;
+				init_info.local_ip_ = local_ip;
+				init_info.local_port_ = current_client_port_string;
+				init_info.local_gbcode_ = current_client_gbcode;
+				init_info.server_ip_ = server_ip;
+				init_info.server_port_ = server_port;
+				init_info.server_gbcode_ = server_gbcode;
+				init_info.username_ = server_username;
+				init_info.password_ = server_password;
+				init_info.manual_port_ = manual_port;
+				init_info.begin_port_ = current_client_rtp_port_begin;
+				init_info.end_port_ = current_client_rtp_port_end;
+				init_info.sip_net_ = sip_net;
+				init_info.rtp_net_ = rtp_net;
+				init_info.stream_file_ = stream_file;
+				init_info.gb28181_hb_time_ = gb28181_hb_time;
+				init_info.dev_baseinfo_time_ = dev_baseinfo_time;
+				init_info.dev_location_time_ = dev_location_time;
+				init_info.imei_ = current_client_imei;
+				init_info.platform_id_ = platform_id;
+
+				int errCode = simulater->Initialize(init_info);
+				if (errCode != 0)
+				{
+					printf("初始化%d模拟器%s失败，错误码：%d\n", index, current_client_gbcode, errCode);
+					delete simulater;
+					continue;
+				}
+
+				simulaters.push_back(simulater);
+			}
+
+			printf("模拟器已经运行，按任意键关闭模拟器....");
 			getchar();
 
-			// 
-			std::vector<GxxGmWSSimulator *>::iterator iter;
-			for (iter = simulators.begin(); iter != simulators.end();)
+			// 这里批量注销
+			std::vector<GxxGmDSJSimulater *>::iterator iter;
+			for (iter = simulaters.begin(); iter != simulaters.end(); ++iter)
 			{
-				GxxGmWSSimulator *simulater = *iter;
-				simulater->Close();
-
-				delete simulater;
-				iter = simulators.erase(iter);
+				(*iter)->Destroy();
+				delete *iter;
 			}
+
+			simulaters.clear();
 		}
 		catch (Poco::Exception e)
 		{
@@ -152,138 +257,138 @@ int main(int argc, const char *argv[])
 	//bRet = GetPrivateProfileStringA("DeviceGateway", "SERVER_USERNAME", "1", server_username, 4096, config_path.c_str());
 	//bRet = GetPrivateProfileStringA("DeviceGateway", "SERVER_PASSWORD", "1", server_password, 4096, config_path.c_str());
 
-	int simulater_count = 1;
-	char local_ip[4096] = {0};
-	int local_port_start = 0;
-	char local_gbcode_pre[4096] = {0};
-	int local_gbcode_id_start = 0;
+	//int simulater_count = 1;
+	//char local_ip[4096] = {0};
+	//int local_port_start = 0;
+	//char local_gbcode_pre[4096] = {0};
+	//int local_gbcode_id_start = 0;
 
-	simulater_count = GetPrivateProfileIntA("GxxGmDSJSimulater", "INSTANCE_COUNT", 1, config_path.c_str());
-	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "DEVICE_IP", "127.0.0.1", local_ip, 4096, config_path.c_str());
-	local_port_start = GetPrivateProfileIntA("GxxGmDSJSimulater", "DEVICE_PORT_START", 9000, config_path.c_str());
-	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "GBCODE_PRE", "00000000000000", local_gbcode_pre, 4096, config_path.c_str());
-	local_gbcode_id_start = GetPrivateProfileIntA("GxxGmDSJSimulater", "GBCODE_ID_START", 0, config_path.c_str());
+	//simulater_count = GetPrivateProfileIntA("GxxGmDSJSimulater", "INSTANCE_COUNT", 1, config_path.c_str());
+	//bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "DEVICE_IP", "127.0.0.1", local_ip, 4096, config_path.c_str());
+	//local_port_start = GetPrivateProfileIntA("GxxGmDSJSimulater", "DEVICE_PORT_START", 9000, config_path.c_str());
+	//bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "GBCODE_PRE", "00000000000000", local_gbcode_pre, 4096, config_path.c_str());
+	//local_gbcode_id_start = GetPrivateProfileIntA("GxxGmDSJSimulater", "GBCODE_ID_START", 0, config_path.c_str());
 
-	int manual_port = GetPrivateProfileIntA("GxxGmDSJSimulater", "MANUAL_PORT", 0, config_path.c_str());
-	int rtp_port_begin = GetPrivateProfileIntA("GxxGmDSJSimulater", "RTP_PORT_START", 10000, config_path.c_str());
-	int rtp_port_count = GetPrivateProfileIntA("GxxGmDSJSimulater", "RTP_PORT_COUNT", 10, config_path.c_str());
+	//int manual_port = GetPrivateProfileIntA("GxxGmDSJSimulater", "MANUAL_PORT", 0, config_path.c_str());
+	//int rtp_port_begin = GetPrivateProfileIntA("GxxGmDSJSimulater", "RTP_PORT_START", 10000, config_path.c_str());
+	//int rtp_port_count = GetPrivateProfileIntA("GxxGmDSJSimulater", "RTP_PORT_COUNT", 10, config_path.c_str());
 
-	char sip_net[4096] = {0};
-	char rtp_net[4096] = {0};
-	char stream_file[4096] = {0};
-	char platform_id[4096] = {0};
+	//char sip_net[4096] = {0};
+	//char rtp_net[4096] = {0};
+	//char stream_file[4096] = {0};
+	//char platform_id[4096] = {0};
 
-	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "SIP_NET", "UDP", sip_net, 4096, config_path.c_str());
-	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "RTP_NET", "UDP", rtp_net, 4096, config_path.c_str());
-	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "SIM_STREAM_FILE", "video.gmf", stream_file, 4096, config_path.c_str());
-	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "PLATFORM_ID", "GM_SHENZHEN", platform_id, 4096, config_path.c_str());
-	int gb28181_hb_time = GetPrivateProfileIntA("GxxGmDSJSimulater", "GB28181_HB_TIME", 30, config_path.c_str());
-	int dev_baseinfo_time = GetPrivateProfileIntA("GxxGmDSJSimulater", "DEV_BASE_INFO_TIME", 5, config_path.c_str());
-	int dev_location_time = GetPrivateProfileIntA("GxxGmDSJSimulater", "DEV_LOCATION_TIME", 5, config_path.c_str());
-	int dev_imei_index_start = GetPrivateProfileIntA("GxxGmDSJSimulater", "DEVICE_IMEI_START ", 0, config_path.c_str());
+	//bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "SIP_NET", "UDP", sip_net, 4096, config_path.c_str());
+	//bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "RTP_NET", "UDP", rtp_net, 4096, config_path.c_str());
+	//bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "SIM_STREAM_FILE", "video.gmf", stream_file, 4096, config_path.c_str());
+	//bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "PLATFORM_ID", "GM_SHENZHEN", platform_id, 4096, config_path.c_str());
+	//int gb28181_hb_time = GetPrivateProfileIntA("GxxGmDSJSimulater", "GB28181_HB_TIME", 30, config_path.c_str());
+	//int dev_baseinfo_time = GetPrivateProfileIntA("GxxGmDSJSimulater", "DEV_BASE_INFO_TIME", 5, config_path.c_str());
+	//int dev_location_time = GetPrivateProfileIntA("GxxGmDSJSimulater", "DEV_LOCATION_TIME", 5, config_path.c_str());
+	//int dev_imei_index_start = GetPrivateProfileIntA("GxxGmDSJSimulater", "DEVICE_IMEI_START ", 0, config_path.c_str());
 
-	char location_latitude[4096] = {0};
-	char location_longtitude[4096] = {0};
-	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "DEV_LOCATION_LATITUDE", "23.174992", location_latitude, 4096, config_path.c_str());
-	bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "DEV_LOCATION_LONGTITUDE", "113.456393", location_longtitude, 4096, config_path.c_str());
+	//char location_latitude[4096] = {0};
+	//char location_longtitude[4096] = {0};
+	//bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "DEV_LOCATION_LATITUDE", "23.174992", location_latitude, 4096, config_path.c_str());
+	//bRet = GetPrivateProfileStringA("GxxGmDSJSimulater", "DEV_LOCATION_LONGTITUDE", "113.456393", location_longtitude, 4096, config_path.c_str());
 
-	std::vector<GxxGmDSJSimulater *> simulaters;
+	//std::vector<GxxGmDSJSimulater *> simulaters;
 
-	// 根据设备数量启动所有设备
-	for (int index = 0; index < simulater_count; ++index)
-	{
-		// 构建模拟器端口号
-		int current_client_port = local_port_start + index;
-		char current_client_port_string[64] = {0};
-		sprintf_s(current_client_port_string, 64, "%d", current_client_port);
+	//// 根据设备数量启动所有设备
+	//for (int index = 0; index < simulater_count; ++index)
+	//{
+	//	// 构建模拟器端口号
+	//	int current_client_port = local_port_start + index;
+	//	char current_client_port_string[64] = {0};
+	//	sprintf_s(current_client_port_string, 64, "%d", current_client_port);
 
-		// 构建模拟器国标编码
-		char current_client_device_index[8] = {0};
-		sprintf_s(current_client_device_index, "%07d", local_gbcode_id_start + index);
+	//	// 构建模拟器国标编码
+	//	char current_client_device_index[8] = {0};
+	//	sprintf_s(current_client_device_index, "%07d", local_gbcode_id_start + index);
 
-		char current_client_gbcode[21] = {0};
-		sprintf_s(current_client_gbcode, 21, "%s%s", local_gbcode_pre, current_client_device_index);
+	//	char current_client_gbcode[21] = {0};
+	//	sprintf_s(current_client_gbcode, 21, "%s%s", local_gbcode_pre, current_client_device_index);
 
-		// 构建模拟器IMEI
-		int current_client_imei_index = dev_imei_index_start + index;
-		char current_client_imei[64] = {0};
-		sprintf_s(current_client_imei, 64, "GxxGmSim%04d", current_client_imei_index);
+	//	// 构建模拟器IMEI
+	//	int current_client_imei_index = dev_imei_index_start + index;
+	//	char current_client_imei[64] = {0};
+	//	sprintf_s(current_client_imei, 64, "GxxGmSim%04d", current_client_imei_index);
 
-		// 计算RTP相关的端口信息
-		int current_client_rtp_port_begin = rtp_port_begin * (1 + index) + rtp_port_count * index + 1;
-		int current_client_rtp_port_end = current_client_rtp_port_begin + rtp_port_count - 1;
+	//	// 计算RTP相关的端口信息
+	//	int current_client_rtp_port_begin = rtp_port_begin * (1 + index) + rtp_port_count * index + 1;
+	//	int current_client_rtp_port_end = current_client_rtp_port_begin + rtp_port_count - 1;
 
-		GxxGmDSJSimulater *simulater = new GxxGmDSJSimulater();
+	//	GxxGmDSJSimulater *simulater = new GxxGmDSJSimulater();
 
-		// 设置设备基本信息
-		DEVICE_BASE_INFO base_info;
-		base_info.carrieroperator_ = BASE_INFO_Carrieroperator_CMCC;
-		base_info.net_type_ = BASE_INFO_Nettype_4G;
-		base_info.signal_ = "100";
-		base_info.battery_ = "100";
-		base_info.storage_ = "64";
-		base_info.cpu_ = "30";
-		base_info.version_ = "GxxGm_simulater_1.0.0.1";
-		base_info.local_record_ = BASE_INFO_LocalRecord_NO;
-		simulater->SetBaseInfo(base_info);
+	//	// 设置设备基本信息
+	//	DEVICE_BASE_INFO base_info;
+	//	base_info.carrieroperator_ = BASE_INFO_Carrieroperator_CMCC;
+	//	base_info.net_type_ = BASE_INFO_Nettype_4G;
+	//	base_info.signal_ = "100";
+	//	base_info.battery_ = "100";
+	//	base_info.storage_ = "64";
+	//	base_info.cpu_ = "30";
+	//	base_info.version_ = "GxxGm_simulater_1.0.0.1";
+	//	base_info.local_record_ = BASE_INFO_LocalRecord_NO;
+	//	simulater->SetBaseInfo(base_info);
 
-		// 设置设备定位信息
-		DEVICE_LOCATION_INFO location_info;
-		location_info.division_ns_ = LOCATION_INFO_DivisionN;
-		location_info.division_ew_ = LOCATION_INFO_DivisionE;
-		location_info.radius_ = "3";
-		location_info.longitude_ = location_longtitude;
-		location_info.latitude_ = location_latitude;
-		location_info.direction_ = "0";
-		location_info.speed_ = "0";
-		location_info.height_ = "0";
-		location_info.satellites_ = "20";
-		location_info.location_available_ = "1";
-		simulater->SetLocationInfo(location_info);
+	//	// 设置设备定位信息
+	//	DEVICE_LOCATION_INFO location_info;
+	//	location_info.division_ns_ = LOCATION_INFO_DivisionN;
+	//	location_info.division_ew_ = LOCATION_INFO_DivisionE;
+	//	location_info.radius_ = "3";
+	//	location_info.longitude_ = location_longtitude;
+	//	location_info.latitude_ = location_latitude;
+	//	location_info.direction_ = "0";
+	//	location_info.speed_ = "0";
+	//	location_info.height_ = "0";
+	//	location_info.satellites_ = "20";
+	//	location_info.location_available_ = "1";
+	//	simulater->SetLocationInfo(location_info);
 
-		struct SimulaterInitInfo init_info;
-		init_info.local_ip_ = local_ip;
-		init_info.local_port_ = current_client_port_string;
-		init_info.local_gbcode_ = current_client_gbcode;
-		init_info.server_ip_ = server_ip;
-		init_info.server_port_ = server_port;
-		init_info.server_gbcode_ = server_gbcode;
-		init_info.username_ = server_username;
-		init_info.password_ = server_password;
-		init_info.manual_port_ = manual_port;
-		init_info.begin_port_ = current_client_rtp_port_begin;
-		init_info.end_port_ = current_client_rtp_port_end;
-		init_info.sip_net_ = sip_net;
-		init_info.rtp_net_ = rtp_net;
-		init_info.stream_file_ = stream_file;
-		init_info.gb28181_hb_time_ = gb28181_hb_time;
-		init_info.dev_baseinfo_time_ = dev_baseinfo_time;
-		init_info.dev_location_time_ = dev_location_time;
-		init_info.imei_ = current_client_imei;
-		init_info.platform_id_ = platform_id;
+	//	struct SimulaterInitInfo init_info;
+	//	init_info.local_ip_ = local_ip;
+	//	init_info.local_port_ = current_client_port_string;
+	//	init_info.local_gbcode_ = current_client_gbcode;
+	//	init_info.server_ip_ = server_ip;
+	//	init_info.server_port_ = server_port;
+	//	init_info.server_gbcode_ = server_gbcode;
+	//	init_info.username_ = server_username;
+	//	init_info.password_ = server_password;
+	//	init_info.manual_port_ = manual_port;
+	//	init_info.begin_port_ = current_client_rtp_port_begin;
+	//	init_info.end_port_ = current_client_rtp_port_end;
+	//	init_info.sip_net_ = sip_net;
+	//	init_info.rtp_net_ = rtp_net;
+	//	init_info.stream_file_ = stream_file;
+	//	init_info.gb28181_hb_time_ = gb28181_hb_time;
+	//	init_info.dev_baseinfo_time_ = dev_baseinfo_time;
+	//	init_info.dev_location_time_ = dev_location_time;
+	//	init_info.imei_ = current_client_imei;
+	//	init_info.platform_id_ = platform_id;
 
-		int errCode = simulater->Initialize(init_info);
-		if (errCode != 0)
-		{
-			printf("初始化%d模拟器%s失败，错误码：%d\n", index, current_client_gbcode, errCode);
-			delete simulater;
-			continue;
-		}
+	//	int errCode = simulater->Initialize(init_info);
+	//	if (errCode != 0)
+	//	{
+	//		printf("初始化%d模拟器%s失败，错误码：%d\n", index, current_client_gbcode, errCode);
+	//		delete simulater;
+	//		continue;
+	//	}
 
-		simulaters.push_back(simulater);
-	}
+	//	simulaters.push_back(simulater);
+	//}
 
-	printf("模拟器已经运行，按任意键关闭模拟器....");
-	getchar();
+	//printf("模拟器已经运行，按任意键关闭模拟器....");
+	//getchar();
 
-	// 这里批量注销
-	std::vector<GxxGmDSJSimulater *>::iterator iter;
-	for (iter = simulaters.begin(); iter != simulaters.end(); ++iter)
-	{
-		(*iter)->Destroy();
-		delete *iter;
-	}
+	//// 这里批量注销
+	//std::vector<GxxGmDSJSimulater *>::iterator iter;
+	//for (iter = simulaters.begin(); iter != simulaters.end(); ++iter)
+	//{
+	//	(*iter)->Destroy();
+	//	delete *iter;
+	//}
 
-	simulaters.clear();
+	//simulaters.clear();
 	return 0;
 }
