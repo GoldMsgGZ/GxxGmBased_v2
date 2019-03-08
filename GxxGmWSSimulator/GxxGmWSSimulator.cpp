@@ -294,9 +294,9 @@ int GxxGmWSSimulator::SendFileInfo()
 					"\"wjbh\": \"%s\","		// 文件编号
 					"\"wjbm\": \"%s\","		// 文件别名
 					"\"pssj\": \"%s\","		// 拍摄时间
-					"\"wjdx\": \"%d\","		// 文件大小
+					"\"wjdx\": %d,"		// 文件大小
 					"\"wjlx\": \"%s\","		// 文件类型
-					"\"wjsc\": \"%d\","		// 文件时长（秒）
+					"\"wjsc\": %d,"		// 文件时长（秒）
 					"\"bzlx\": \"%d\","		// 备注信息，0：普通文件，1：重点标记文件
 					"\"jgdm\": \"%s\","		// 单位编号或部门编号
 					"\"dwmc\": \"%s\","		// 单位名称
@@ -311,9 +311,26 @@ int GxxGmWSSimulator::SendFileInfo()
 					"\"ccfwq\": \"%s\","	// 存储服务器
 					"\"sltxdwz\": \"%s\""	// 采集站缩略图
 				"}"
-			"]", file_id, file_name, camera_time, file_size, file_type, file_duration, tag_info, org_code.c_str(),
-			org_code.c_str(), org_name.c_str(), police_id.c_str(), police_name.c_str(), dsj_type.c_str(), ws_id.c_str(),
-			upload_time, storage_path.c_str(), local_path.c_str(), http_url.c_str(), storage_server.c_str(), thumb_path.c_str());
+			"]", 
+			file_id, 
+			file_name, 
+			camera_time, 
+			file_size, 
+			file_type, 
+			file_duration, 
+			tag_info, 
+			org_code.c_str(),
+			org_name.c_str(), 
+			police_id.c_str(), 
+			police_name.c_str(), 
+			dsj_type.c_str(), 
+			ws_id.c_str(),
+			upload_time, 
+			storage_path.c_str(), 
+			local_path.c_str(), 
+			http_url.c_str(), 
+			storage_server.c_str(), 
+			thumb_path.c_str());
 
 		char uri_string[4096] = {0};
 		sprintf_s(uri_string, 4096, 

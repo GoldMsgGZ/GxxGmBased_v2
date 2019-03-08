@@ -1,8 +1,112 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <Windows.h>
+#include <iostream>
+#include "Poco/DateTimeFormatter.h"
+#include "Poco/FileChannel.h"
+#include "Poco/FormattingChannel.h"
+#include "Poco/Timestamp.h"
+#include "Poco/PatternFormatter.h"
+#include "Poco/Util/Application.h"
+#include "Poco/Util/Option.h"
+#include "Poco/Util/OptionSet.h"
+
 #include "..\GxxGmDSJSimulater\GxxGmDSJSimulater.h"
+
+
+/**
+ * 定义自己的应用类
+ */
+class GxxGmApplication : public Poco::Util::Application
+{
+public:
+	GxxGmApplication() {}
+	~GxxGmApplication() {}
+
+public:
+	void initialize(Poco::Util::Application& self)
+	{
+		Poco::Util::Application::initialize(self);
+
+		// 这里执行相关初始化，例如在这里加载指定的配置文件？
+		//loadConfiguration();
+
+		// 初始化日志
+		std::string name = "log_";
+		name.append(Poco::DateTimeFormatter::format(Poco::Timestamp(), "%Y%m%d%H%M%S"));
+		name.append(".log");
+
+		Poco::AutoPtr<Poco::FileChannel> fileChannel(new Poco::FileChannel);
+		fileChannel->setProperty("path", name);
+		fileChannel->setProperty("rotation", "1 M");
+		fileChannel->setProperty("archive", "timestamp");
+
+		// 每条日志的时间格式
+		Poco::AutoPtr<Poco::PatternFormatter> patternFormatter(new Poco::PatternFormatter());
+		patternFormatter->setProperty("pattern","%Y %m %d %H:%M:%S %s(%l): %t");
+
+		//初始化　Channel
+		Poco::AutoPtr<Poco::Channel> channel = new Poco::FormattingChannel(patternFormatter,fileChannel);
+		logger().setChannel(channel);
+	}
+
+	void uninitialize()
+	{
+		// 这里执行相关反初始化
+		Poco::Util::Application::uninitialize();
+	}
+
+	int main(const std::vector<std::string>& args)
+	{
+		int errCode = 0;
+		std::string errStr;
+
+		try
+		{
+			// 读取采集站配置文件
+			// 首先获得当前工作目录
+			std::string current_working_dir = Poco::Path::current();
+			Poco::Path config_path(current_working_dir);
+			config_path.append("GxxGmDSJSimulater.ini");
+			this->loadConfiguration(config_path.toString(Poco::Path::PATH_NATIVE));
+
+			std::string server_ip = config().getString("DeviceGateway.SERVER_IP");
+			std::string server_port = config().getString("DeviceGateway.SERVER_PORT");
+			std::string server_gbcode = config().getString("DeviceGateway.SERVER_GBCODE");
+			std::string server_username = config().getString("DeviceGateway.SERVER_USERNAME");
+			std::string server_password = config().getString("DeviceGateway.SERVER_PASSWORD");
+
+			int simulater_count;
+			std::string local_ip;
+			int local_port_start;
+			std::string local_gbcode_pre;
+			int local_gbcode_id_start;
+
+
+			// 等待终端退出请求
+			std::cout<<"Press \"Enter\" key to exit ...";
+			getchar();
+
+			// 
+			std::vector<GxxGmWSSimulator *>::iterator iter;
+			for (iter = simulators.begin(); iter != simulators.end();)
+			{
+				GxxGmWSSimulator *simulater = *iter;
+				simulater->Close();
+
+				delete simulater;
+				iter = simulators.erase(iter);
+			}
+		}
+		catch (Poco::Exception e)
+		{
+			errCode = e.code();
+			errStr = e.displayText();
+		}
+
+		return Poco::Util::Application::EXIT_OK;
+	}
+};
 
 int main(int argc, const char *argv[])
 {
@@ -21,29 +125,32 @@ int main(int argc, const char *argv[])
 	printf("\n");
 	system("pause");
 
-	// 首先根据配置文件加载数据
-	char current_program_path[4096] = {0};
-	GetModuleFileNameA(NULL, current_program_path, 4096);
-	std::string tmp = current_program_path;
-	int pos = tmp.find_last_of('\\');
+	GxxGmApplication app;
+	app.run();
 
-	std::string config_path = tmp.substr(0, pos + 1);
-	config_path.append("GxxGmDSJSimulater.ini");
+	//// 首先根据配置文件加载数据
+	//char current_program_path[4096] = {0};
+	//GetModuleFileNameA(NULL, current_program_path, 4096);
+	//std::string tmp = current_program_path;
+	//int pos = tmp.find_last_of('\\');
 
-	// 读取配置参数
-	char server_ip[4096] = {0};
-	char server_port[4096] = {0};
-	char server_gbcode[4096] = {0};
-	char server_username[4096] = {0};
-	char server_password[4096] = {0};
+	//std::string config_path = tmp.substr(0, pos + 1);
+	//config_path.append("GxxGmDSJSimulater.ini");
 
-	DWORD bRet = 0;
-	int errCode = GetLastError();
-	bRet = GetPrivateProfileStringA("DeviceGateway", "SERVER_IP", "127.0.0.1", server_ip, 4096, config_path.c_str());
-	bRet = GetPrivateProfileStringA("DeviceGateway", "SERVER_PORT", "5060", server_port, 4096, config_path.c_str());
-	bRet = GetPrivateProfileStringA("DeviceGateway", "SERVER_GBCODE", "00000000000000000000", server_gbcode, 4096, config_path.c_str());
-	bRet = GetPrivateProfileStringA("DeviceGateway", "SERVER_USERNAME", "1", server_username, 4096, config_path.c_str());
-	bRet = GetPrivateProfileStringA("DeviceGateway", "SERVER_PASSWORD", "1", server_password, 4096, config_path.c_str());
+	//// 读取配置参数
+	//char server_ip[4096] = {0};
+	//char server_port[4096] = {0};
+	//char server_gbcode[4096] = {0};
+	//char server_username[4096] = {0};
+	//char server_password[4096] = {0};
+
+	//DWORD bRet = 0;
+	//int errCode = GetLastError();
+	//bRet = GetPrivateProfileStringA("DeviceGateway", "SERVER_IP", "127.0.0.1", server_ip, 4096, config_path.c_str());
+	//bRet = GetPrivateProfileStringA("DeviceGateway", "SERVER_PORT", "5060", server_port, 4096, config_path.c_str());
+	//bRet = GetPrivateProfileStringA("DeviceGateway", "SERVER_GBCODE", "00000000000000000000", server_gbcode, 4096, config_path.c_str());
+	//bRet = GetPrivateProfileStringA("DeviceGateway", "SERVER_USERNAME", "1", server_username, 4096, config_path.c_str());
+	//bRet = GetPrivateProfileStringA("DeviceGateway", "SERVER_PASSWORD", "1", server_password, 4096, config_path.c_str());
 
 	int simulater_count = 1;
 	char local_ip[4096] = {0};
