@@ -20,6 +20,14 @@
 #include "Poco/TextConverter.h"
 #include "Poco/DateTime.h"
 
+//#include "json/json.h"
+
+//#ifdef _DEBUG
+//#pragma comment(lib, "jsoncppd.lib")
+//#else
+//#pragma comment(lib, "jsoncpp.lib")
+//#endif
+
 GxxGmWSSimulator::GxxGmWSSimulator()
 : working_thread_(new Poco::Thread)
 , is_need_stop_(false)
@@ -82,6 +90,29 @@ void GxxGmWSSimulator::SetLogger(Poco::Logger *logger)
 	logger_ = logger;
 }
 
+void GxxGmWSSimulator::SetFileUploadInfo(std::string file_domain, std::string dsj_id, int file_size,
+			std::string file_type, int file_duration, std::string tag_info, std::string org_code, 
+			std::string org_name, std::string police_code, std::string police_name, std::string storage_path, 
+			std::string local_path, std::string play_path, std::string storage_server, std::string thumb)
+{
+	file_domain_ = file_domain;			// 文件所属域
+	dsj_id_ = dsj_id;					// 执法仪国标ID
+	police_name_ = police_name;			// 民警姓名
+	file_size_ = file_size;				// 文件大小
+	file_type_ = file_type;				// 文件类型
+	file_duration_ = file_duration;		// 文件时长
+	tag_info_ = tag_info;				// 备注信息
+	org_code_ = org_code;				// 单位编号或部门编号
+	org_name_ = org_name;				// 单位名称
+	police_code_ = police_code;			// 警员编号
+	police_name_ = police_name;			// 警员姓名
+	storage_path_ = storage_path;		// 存储位置
+	local_path_ = local_path;			// 物理位置，采集站上原文件本机存储路径
+	play_path_ = play_path;				// 播放位置：HTTP访问路径
+	storage_server_ = storage_server;	// 存储服务器
+	thumb_ = thumb;						// 采集站缩略图
+}
+
 int GxxGmWSSimulator::SendHeartBeat()
 {
 	int errCode = 0;
@@ -101,23 +132,58 @@ int GxxGmWSSimulator::SendHeartBeat()
 		// 获取当前内存使用率
 		int memory_usage = 40;
 
-		char body[4096] = {0};
-		sprintf_s(body, 4096,
-			"{"
-				"\"gzz_xh\":\"%s\","		// 工作站ID
-				"\"gzz_ipdz\":\"%s\","		// 工作站IP
-				"\"zxzt\":\"1\","			// 在线状态
-				"\"qizt\":\"1\","			// 启用状态
-				"\"cczrl\":%d,"				// 存储总容量
-				"\"syzrl\":%d,"				// 已使用总容量
-				"\"cpu\":%d,"				// CPU占用率
-				"\"ram\":%d,"				// 内存使用率
-				"\"raid_zt\":101,"			// RAID卡状态
-				"\"bjlx\":0,"				// 报警类型
-				"\"version\":\"3.4.5\""		// 当前版本
-			"}",
-			workstaion_id_.c_str(), workstaion_ip_.c_str(), disk_total, used_total, cpu_usage, memory_usage
-		);
+		Poco::JSON::Object json_object;
+		json_object.set("gzz_xh", workstaion_id_);
+		json_object.set("gzz_ipdz", workstaion_ip_);
+		json_object.set("zxzt", "1");
+		json_object.set("qizt", "1");
+		json_object.set("cczrl", disk_total);
+		json_object.set("syzrl", used_total);
+		json_object.set("cpu", cpu_usage);
+		json_object.set("ram", memory_usage);
+		json_object.set("raid_zt", 101);
+		json_object.set("bjlx", 0);
+		json_object.set("version", "3.4.5");
+
+		std::stringstream  jsnString;
+		json_object.stringify(jsnString, 3);
+		std::cout << jsnString.str() << std::endl;
+		std::string body = jsnString.str();
+
+		//Json::Value root;
+		//Json::Value heart_beat_json_object;
+		//heart_beat_json_object["gzz_xh"] = workstaion_id_.c_str();
+		//heart_beat_json_object["gzz_ipdz"] = workstaion_ip_.c_str();
+		//heart_beat_json_object["zxzt"] = "1";
+		//heart_beat_json_object["qizt"] = "1";
+		//heart_beat_json_object["cczrl"] = disk_total;
+		//heart_beat_json_object["syzrl"] = used_total;
+		//heart_beat_json_object["cpu"] = cpu_usage;
+		//heart_beat_json_object["ram"] = memory_usage;
+		//heart_beat_json_object["raid_zt"] = 101;
+		//heart_beat_json_object["bjlx"] = 0;
+		//heart_beat_json_object["version"] = "3.4.5";
+		//root.append(heart_beat_json_object);
+
+		//std::string json_value = root.toStyledString();
+
+		//char body[4096] = {0};
+		//sprintf_s(body, 4096,
+		//	"{"
+		//		"\"gzz_xh\":\"%s\","		// 工作站ID
+		//		"\"gzz_ipdz\":\"%s\","		// 工作站IP
+		//		"\"zxzt\":\"1\","			// 在线状态
+		//		"\"qizt\":\"1\","			// 启用状态
+		//		"\"cczrl\":%d,"				// 存储总容量
+		//		"\"syzrl\":%d,"				// 已使用总容量
+		//		"\"cpu\":%d,"				// CPU占用率
+		//		"\"ram\":%d,"				// 内存使用率
+		//		"\"raid_zt\":101,"			// RAID卡状态
+		//		"\"bjlx\":0,"				// 报警类型
+		//		"\"version\":\"3.4.5\""		// 当前版本
+		//	"}",
+		//	workstaion_id_.c_str(), workstaion_ip_.c_str(), disk_total, used_total, cpu_usage, memory_usage
+		//);
 
 		char uri_string[4096] = {0};
 		sprintf_s(uri_string, 4096, 
@@ -216,7 +282,7 @@ int GxxGmWSSimulator::SendFileInfo()
 
 	// 文件ID
 	char file_id[4096] = {0};
-	sprintf_s(file_id, 4096, "%s%s%d%02d%02d%02d%02d%02d0000%d%02d%02d%02d%02d%04d",
+	sprintf_s(file_id, 4096, "%s_%s%d%02d%02d%02d%02d%02d0000%d%02d%02d%02d%02d%04d",
 		file_domain_.c_str(), dsj_id_.c_str(), current_datetime.year(), current_datetime.month(), current_datetime.day(),
 		current_datetime.hour(), current_datetime.minute(), current_datetime.second(), current_datetime.year(),
 		current_datetime.month(), current_datetime.day(), current_datetime.hour(), current_datetime.minute(),
@@ -234,103 +300,41 @@ int GxxGmWSSimulator::SendFileInfo()
 		current_datetime.month(), current_datetime.day(), current_datetime.hour(), current_datetime.minute(),
 		current_datetime.second());
 
-	// 文件大小，固定500M
-	int file_size = 500 * 1024 * 1024;
-
-	// 文件类型
-	const char *file_type = "0";
-
-	// 文件时长
-	int file_duration = 15 * 60;
-
-	// 备注信息
-	int tag_info = 0;
-
-	// 单位编号或部门编号
-	std::string org_code = "44010403";
-
-	// 单位名称
-	std::string org_name = "org2";
-
-	// 警员编号
-	std::string police_id = "222222";
-
-	// 警员姓名
-	std::string police_name = "weiyonggao";
-
-	// 执法仪产品型号
-	std::string dsj_type = dsj_id_;
-
-	// 工作站序号
-	std::string ws_id = workstaion_id_;
-
 	// 上传时间，格式为：yyyy-MM-dd HH:mm:ss
 	char upload_time[4096] = {0};
 	strcpy_s(upload_time, 4096, camera_time);
 
-	// 存储位置
-	std::string storage_path = "\\\\Workstation\\\\";
-	storage_path += file_name;
-
-	// 物理位置，采集站上原文件本机存储路径
-	std::string local_path = "D:";
-	local_path += file_name;
-
-	// 播放位置：HTTP访问路径
-	std::string http_url = "http://www.baidu.com/123.mp4";
-
-	// 存储服务器
-	std::string storage_server = "";
-
-	// 采集站缩略图
-	std::string thumb_path = "\\\\Workstation\\\\123.jpg";
-
 	try
 	{
-		char body[409600] = {0};
-		sprintf_s(body, 409600,
-			"["
-				"{"
-					"\"wjbh\": \"%s\","		// 文件编号
-					"\"wjbm\": \"%s\","		// 文件别名
-					"\"pssj\": \"%s\","		// 拍摄时间
-					"\"wjdx\": %d,"		// 文件大小
-					"\"wjlx\": \"%s\","		// 文件类型
-					"\"wjsc\": %d,"		// 文件时长（秒）
-					"\"bzlx\": \"%d\","		// 备注信息，0：普通文件，1：重点标记文件
-					"\"jgdm\": \"%s\","		// 单位编号或部门编号
-					"\"dwmc\": \"%s\","		// 单位名称
-					"\"jybh\": \"%s\","		// 警员编号
-					"\"jy_xm\": \"%s\","	// 警员姓名
-					"\"cpxh\": \"%s\","		// 执法仪产品型号
-					"\"gzz_xh\": \"%s\","	// 工作站序号
-					"\"scsj\": \"%s\","		// 上传时间，格式为：yyyy-MM-dd HH:mm:ss
-					"\"ccwz\": \"%s\","		// 存储位置
-					"\"wlwz\": \"%s\","		// 物理位置，采集站上原文件本机存储路径
-					"\"bfwz\": \"%s\","		// 播放位置：HTTP访问路径
-					"\"ccfwq\": \"%s\","	// 存储服务器
-					"\"sltxdwz\": \"%s\""	// 采集站缩略图
-				"}"
-			"]", 
-			file_id, 
-			file_name, 
-			camera_time, 
-			file_size, 
-			file_type, 
-			file_duration, 
-			tag_info, 
-			org_code.c_str(),
-			org_name.c_str(), 
-			police_id.c_str(), 
-			police_name.c_str(), 
-			dsj_type.c_str(), 
-			ws_id.c_str(),
-			upload_time, 
-			storage_path.c_str(), 
-			local_path.c_str(), 
-			http_url.c_str(), 
-			storage_server.c_str(), 
-			thumb_path.c_str());
+		Poco::JSON::Array json_array;
+		Poco::JSON::Object json_object;
+		Poco::JSON::Object json_object_array;
+		json_object.set("wjbh", file_id);
+		json_object.set("wjbm", file_name);
+		json_object.set("pssj", camera_time);
+		json_object.set("wjdx", file_size_);
+		json_object.set("wjlx", file_type_);
+		json_object.set("wjsc", file_duration_);
+		json_object.set("bzlx", tag_info_);
+		json_object.set("jgdm", org_code_);
+		json_object.set("dwmc", org_name_);
+		json_object.set("jybh", police_code_);
+		json_object.set("jy_xm", police_name_);
+		json_object.set("cpxh", dsj_id_);
+		json_object.set("gzz_xh", workstaion_id_);
+		json_object.set("scsj", upload_time);
+		json_object.set("ccwz", storage_path_);
+		json_object.set("wlwz", local_path_);
+		json_object.set("bfwz", play_path_);
+		json_object.set("ccfwq", storage_server_);
+		json_object.set("sltxdwz", thumb_);
+
+		json_array.add(json_object);
+
+		std::stringstream  jsnString;
+		json_array.stringify(jsnString, 3);
+		std::cout << jsnString.str() << std::endl;
+		std::string body = jsnString.str();
 
 		char uri_string[4096] = {0};
 		sprintf_s(uri_string, 4096, 

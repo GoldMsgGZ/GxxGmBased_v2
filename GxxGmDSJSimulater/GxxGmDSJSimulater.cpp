@@ -583,27 +583,27 @@ void GxxGmDSJSimulater::_AgentLogCallBack(EnumLogLevel eLevel, const char * szTe
 	// 这是所有的SIP通信日志，可以考虑写入日志文件
 	GxxGmDSJSimulater *simulater = (GxxGmDSJSimulater *)pUserData;
 
-	SYSTEMTIME st;
-	GetLocalTime(&st);
-	char current_time[128] = {0};
-	sprintf_s(current_time, 128, "%d-%02d-%02d %02d-%02d-%02d.%03d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+	//SYSTEMTIME st;
+	//GetLocalTime(&st);
+	//char current_time[128] = {0};
+	//sprintf_s(current_time, 128, "%d-%02d-%02d %02d-%02d-%02d.%03d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
 
-	int len = iLen + 4096;
-	char *dbgmsg = new char[len];
-	sprintf_s(dbgmsg, len, "[%s]\n%s\n", current_time, szTemp);
+	//int len = iLen + 4096;
+	//char *dbgmsg = new char[len];
+	//sprintf_s(dbgmsg, len, "[%s]\n%s\n", current_time, szTemp);
 
-	//// 屏幕输出
-	//printf("%s", dbgmsg);
+	////// 屏幕输出
+	////printf("%s", dbgmsg);
 
-	// dbgview输出
-	OutputDebugStringA(dbgmsg);
+	//// dbgview输出
+	//OutputDebugStringA(dbgmsg);
 
-	// 日志文件输出
-	DWORD written = 0;
-	WriteFile(simulater->log_file_handle_, dbgmsg, strlen(dbgmsg), &written, NULL);
+	//// 日志文件输出
+	//DWORD written = 0;
+	//WriteFile(simulater->log_file_handle_, dbgmsg, strlen(dbgmsg), &written, NULL);
 
-	delete [] dbgmsg;
-	dbgmsg = NULL;
+	//delete [] dbgmsg;
+	//dbgmsg = NULL;
 }
 
 SIP_REPSOND_CODE GxxGmDSJSimulater::_DevInfoQueryCB(SESSION_HANDLE hSession, const char * czSrvGBCode, StruQueryReqDescri * stuQuery, void * pUserData)
@@ -891,193 +891,193 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_ExtendRqeustCallBack(SESSION_HANDLE hSessio
 	int errCode = 0;
 	std::string errStr;
 
-	// 这里是上面透传下来的数据，已经解析过Base64了
-	// 是XML的一部分
-	char *message = (char *)pMsg;
+	//// 这里是上面透传下来的数据，已经解析过Base64了
+	//// 是XML的一部分
+	//char *message = (char *)pMsg;
 
-	// 加上XML头尾，便于解析
-	std::string xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Info>\n";
-	xml += message;
-	xml += "\n</Info>";
+	//// 加上XML头尾，便于解析
+	//std::string xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Info>\n";
+	//xml += message;
+	//xml += "\n</Info>";
 
-	// 这里要处理一下转UTF8
-	Poco::Latin1Encoding latin1;
-	Poco::UTF8Encoding utf8;
-	Poco::TextConverter converter(latin1, utf8);
-	std::string strUtf8;
-	converter.convert(xml, strUtf8);
-	xml = strUtf8;
+	//// 这里要处理一下转UTF8
+	//Poco::Latin1Encoding latin1;
+	//Poco::UTF8Encoding utf8;
+	//Poco::TextConverter converter(latin1, utf8);
+	//std::string strUtf8;
+	//converter.convert(xml, strUtf8);
+	//xml = strUtf8;
 
-	tinyxml2::XMLDocument doc;
-	tinyxml2::XMLError xml_err = doc.Parse(xml.c_str());
-	if (xml_err != tinyxml2::XMLError::XML_SUCCESS)
-	{
-		return SIP_RESPONSE_CODE_BAD_REQUEST;
-	}
+	//tinyxml2::XMLDocument doc;
+	//tinyxml2::XMLError xml_err = doc.Parse(xml.c_str());
+	//if (xml_err != tinyxml2::XMLError::XML_SUCCESS)
+	//{
+	//	return SIP_RESPONSE_CODE_BAD_REQUEST;
+	//}
 
-	tinyxml2::XMLElement *root = doc.RootElement();
-	tinyxml2::XMLElement *person_SubCmdType = root->FirstChildElement();
-	const char *sub_cmd_type = person_SubCmdType->GetText();
+	//tinyxml2::XMLElement *root = doc.RootElement();
+	//tinyxml2::XMLElement *person_SubCmdType = root->FirstChildElement();
+	//const char *sub_cmd_type = person_SubCmdType->GetText();
 
-	// 根据协议处理
-	if (_stricmp(sub_cmd_type, "BindUser") == 0)
-	{
-		// 放法1：先回复已收到，后面再重新发
-		// 方法2：在后面直接带参回复
+	//// 根据协议处理
+	//if (_stricmp(sub_cmd_type, "BindUser") == 0)
+	//{
+	//	// 放法1：先回复已收到，后面再重新发
+	//	// 方法2：在后面直接带参回复
 
-		// 先判断密码是否正确
-		tinyxml2::XMLElement *element_sub_cmd_result = root->FirstChildElement("SubCmdResult");
-		const char *sub_cmd_result = element_sub_cmd_result->GetText();
-		if (_stricmp(sub_cmd_result, "FAILED") == 0)
-		{
-			// 绑定失败了，调用语音接口通报，界面也提示一把
-			tinyxml2::XMLElement *element_sub_cmd_result_detail = root->FirstChildElement("SubCmdResultDetail");
-			const char *sub_cmd_result_detail = element_sub_cmd_result_detail->GetText();
+	//	// 先判断密码是否正确
+	//	tinyxml2::XMLElement *element_sub_cmd_result = root->FirstChildElement("SubCmdResult");
+	//	const char *sub_cmd_result = element_sub_cmd_result->GetText();
+	//	if (_stricmp(sub_cmd_result, "FAILED") == 0)
+	//	{
+	//		// 绑定失败了，调用语音接口通报，界面也提示一把
+	//		tinyxml2::XMLElement *element_sub_cmd_result_detail = root->FirstChildElement("SubCmdResultDetail");
+	//		const char *sub_cmd_result_detail = element_sub_cmd_result_detail->GetText();
 
-			simulater->notifer_->RecvBindUser(sub_cmd_result_detail);
-			//simulater->speaker_->Speak("账号或密码错误！");
-			return SIP_RESPONSE_CODE_SUCCESS;
-		}
+	//		simulater->notifer_->RecvBindUser(sub_cmd_result_detail);
+	//		//simulater->speaker_->Speak("账号或密码错误！");
+	//		return SIP_RESPONSE_CODE_SUCCESS;
+	//	}
 
-		// 发起绑定用户请求，得到平台返回的参数，进行设置，并返回设置成功
-		tinyxml2::XMLElement *element_update_setting = root->FirstChildElement("UpdateSetting");
+	//	// 发起绑定用户请求，得到平台返回的参数，进行设置，并返回设置成功
+	//	tinyxml2::XMLElement *element_update_setting = root->FirstChildElement("UpdateSetting");
 
-		{
-			tinyxml2::XMLElement *element_platform_setting = element_update_setting->FirstChildElement("PlatformSetting");
+	//	{
+	//		tinyxml2::XMLElement *element_platform_setting = element_update_setting->FirstChildElement("PlatformSetting");
 
-			tinyxml2::XMLElement *element_device_name = element_platform_setting->FirstChildElement("DeviceName");
-			tinyxml2::XMLElement *element_frame_rate = element_platform_setting->FirstChildElement("FrameRate");
-			tinyxml2::XMLElement *element_bit_rate = element_platform_setting->FirstChildElement("BitRate");
-			tinyxml2::XMLElement *element_trans_resolution = element_platform_setting->FirstChildElement("TransResolution");
+	//		tinyxml2::XMLElement *element_device_name = element_platform_setting->FirstChildElement("DeviceName");
+	//		tinyxml2::XMLElement *element_frame_rate = element_platform_setting->FirstChildElement("FrameRate");
+	//		tinyxml2::XMLElement *element_bit_rate = element_platform_setting->FirstChildElement("BitRate");
+	//		tinyxml2::XMLElement *element_trans_resolution = element_platform_setting->FirstChildElement("TransResolution");
 
-			simulater->dev_name_ = element_device_name->GetText();
-			simulater->frame_rate_ = element_frame_rate->GetText();
-			simulater->bit_rate_ = element_bit_rate->GetText();
-			simulater->trans_resolution_ = element_trans_resolution->GetText();
-		}
-		
-		{
-			tinyxml2::XMLElement *element_osd_setting = element_update_setting->FirstChildElement("OSDSetting");
+	//		simulater->dev_name_ = element_device_name->GetText();
+	//		simulater->frame_rate_ = element_frame_rate->GetText();
+	//		simulater->bit_rate_ = element_bit_rate->GetText();
+	//		simulater->trans_resolution_ = element_trans_resolution->GetText();
+	//	}
+	//	
+	//	{
+	//		tinyxml2::XMLElement *element_osd_setting = element_update_setting->FirstChildElement("OSDSetting");
 
-			tinyxml2::XMLElement *element_machine_id = element_osd_setting->FirstChildElement("MachineID");
-			tinyxml2::XMLElement *element_user_name = element_osd_setting->FirstChildElement("Username");
-			tinyxml2::XMLElement *element_user_id = element_osd_setting->FirstChildElement("UserID");
-			tinyxml2::XMLElement *element_dep_name = element_osd_setting->FirstChildElement("DepName");
-			tinyxml2::XMLElement *element_dep_id = element_osd_setting->FirstChildElement("DepID");
-			tinyxml2::XMLElement *element_location = element_osd_setting->FirstChildElement("Location");
-			tinyxml2::XMLElement *element_time = element_osd_setting->FirstChildElement("Time");
+	//		tinyxml2::XMLElement *element_machine_id = element_osd_setting->FirstChildElement("MachineID");
+	//		tinyxml2::XMLElement *element_user_name = element_osd_setting->FirstChildElement("Username");
+	//		tinyxml2::XMLElement *element_user_id = element_osd_setting->FirstChildElement("UserID");
+	//		tinyxml2::XMLElement *element_dep_name = element_osd_setting->FirstChildElement("DepName");
+	//		tinyxml2::XMLElement *element_dep_id = element_osd_setting->FirstChildElement("DepID");
+	//		tinyxml2::XMLElement *element_location = element_osd_setting->FirstChildElement("Location");
+	//		tinyxml2::XMLElement *element_time = element_osd_setting->FirstChildElement("Time");
 
-			simulater->machine_id_ = element_machine_id->GetText();
-			simulater->bind_user_name_ = element_user_name->GetText();
-			simulater->bind_user_id_ = element_user_id->GetText();
-			simulater->dep_name_ = element_dep_name->GetText();
-			simulater->dep_id_ = element_dep_id->GetText();
-			simulater->show_location_ = element_location->GetText();
-			simulater->show_datetime_ = element_time->GetText();
-		}
+	//		simulater->machine_id_ = element_machine_id->GetText();
+	//		simulater->bind_user_name_ = element_user_name->GetText();
+	//		simulater->bind_user_id_ = element_user_id->GetText();
+	//		simulater->dep_name_ = element_dep_name->GetText();
+	//		simulater->dep_id_ = element_dep_id->GetText();
+	//		simulater->show_location_ = element_location->GetText();
+	//		simulater->show_datetime_ = element_time->GetText();
+	//	}
 
-		{
-			tinyxml2::XMLElement *element_rate = element_update_setting->FirstChildElement("Rate");
+	//	{
+	//		tinyxml2::XMLElement *element_rate = element_update_setting->FirstChildElement("Rate");
 
-			tinyxml2::XMLElement *element_location_rate = element_rate->FirstChildElement("LocationRate");
-			tinyxml2::XMLElement *element_device_states_rate = element_rate->FirstChildElement("DeviceStatesRate");
+	//		tinyxml2::XMLElement *element_location_rate = element_rate->FirstChildElement("LocationRate");
+	//		tinyxml2::XMLElement *element_device_states_rate = element_rate->FirstChildElement("DeviceStatesRate");
 
-			simulater->dev_location_time_ = atoi(element_location_rate->GetText());
-			simulater->dev_baseinfo_time_ = atoi(element_device_states_rate->GetText());
-		}
+	//		simulater->dev_location_time_ = atoi(element_location_rate->GetText());
+	//		simulater->dev_baseinfo_time_ = atoi(element_device_states_rate->GetText());
+	//	}
 
-		// 发送成功消息
-		const char *result = "<SubCmdType>ConfigUpdateReceipt</SubCmdType>\
-			<ConfigUpdateReport>\
-			<UpdateResult>SUCCESS</UpdateResult>\
-			<UpdateResultDetail>OK</UpdateResultDetail>\
-			<Callbacks>\
-			<CallbackURL></CallbackURL>\
-			</Callbacks>\
-			</ConfigUpdateReport>";
+	//	// 发送成功消息
+	//	const char *result = "<SubCmdType>ConfigUpdateReceipt</SubCmdType>\
+	//		<ConfigUpdateReport>\
+	//		<UpdateResult>SUCCESS</UpdateResult>\
+	//		<UpdateResultDetail>OK</UpdateResultDetail>\
+	//		<Callbacks>\
+	//		<CallbackURL></CallbackURL>\
+	//		</Callbacks>\
+	//		</ConfigUpdateReport>";
 
-		GS28181_ERR err = GB28181Agent_RespondTransData(simulater->agent_, czTargetDevID, true, result, strlen(result));
-		if (err != GS28181_ERR_SUCCESS)
-		{
-		}
+	//	GS28181_ERR err = GB28181Agent_RespondTransData(simulater->agent_, czTargetDevID, true, result, strlen(result));
+	//	if (err != GS28181_ERR_SUCCESS)
+	//	{
+	//	}
 
-		// 通知UI层更新信息
-		//simulater->notifer_->RecvRemoteBindUser();
+	//	// 通知UI层更新信息
+	//	//simulater->notifer_->RecvRemoteBindUser();
 
-		//err = GB28181Agent_NotifyTransData(simulater->agent_, &simulater->reg_msg.stuCnnParam, czTargetDevID, NULL, 0);
-		//if (err != GS28181_ERR_SUCCESS)
-		//{
-		//}
-	}
-	else if (_stricmp(sub_cmd_type, "ConfigUpdateReceipt") == 0)
-	{
-		// 人机绑定回调结果，这里可以不用管
-	}
-	else if (_stricmp(sub_cmd_type, "DeviceInfo") == 0)
-	{
-		// 设备基本信息上报结果，这里可以不用管
-	}
-	else if (_stricmp(sub_cmd_type, "LocationInfo") == 0)
-	{
-		// 设备定位信息上报结果，这里可以不用管
-	}
-	else if (_stricmp(sub_cmd_type, "DeviceException") == 0)
-	{
-		// 设备异常信息上报结果，这里可以不用管
-	}
-	else if (_stricmp(sub_cmd_type, "RemoteBindUser") == 0)
-	{
-		// 平台下发绑定用户，这里暂不实现
-	}
-	else if (_stricmp(sub_cmd_type, "RemoteRecord") == 0)
-	{
-		// 平台下发远程录像，这里暂不实现
-	}
-	else if (_stricmp(sub_cmd_type, "RemoteTakePhoto") == 0)
-	{
-		// 平台下发远程拍照，这里暂不实现
-	}
-	else if (_stricmp(sub_cmd_type, "RemoteDeviceLock") == 0)
-	{
-		// 平台下发远程锁定，这里暂不实现
-	}
-	else if (_stricmp(sub_cmd_type, "RemoteUpdateSetting") == 0)
-	{
-		// 平台下发更新配置，这里暂不实现
-	}
-	else if (_stricmp(sub_cmd_type, "EmergencyInfo") == 0)
-	{
-		GS28181_ERR err = GB28181Agent_RespondTransData(simulater->agent_, czTargetDevID, true, NULL, 0);
-		if (err != GS28181_ERR_SUCCESS)
-		{
-		}
+	//	//err = GB28181Agent_NotifyTransData(simulater->agent_, &simulater->reg_msg.stuCnnParam, czTargetDevID, NULL, 0);
+	//	//if (err != GS28181_ERR_SUCCESS)
+	//	//{
+	//	//}
+	//}
+	//else if (_stricmp(sub_cmd_type, "ConfigUpdateReceipt") == 0)
+	//{
+	//	// 人机绑定回调结果，这里可以不用管
+	//}
+	//else if (_stricmp(sub_cmd_type, "DeviceInfo") == 0)
+	//{
+	//	// 设备基本信息上报结果，这里可以不用管
+	//}
+	//else if (_stricmp(sub_cmd_type, "LocationInfo") == 0)
+	//{
+	//	// 设备定位信息上报结果，这里可以不用管
+	//}
+	//else if (_stricmp(sub_cmd_type, "DeviceException") == 0)
+	//{
+	//	// 设备异常信息上报结果，这里可以不用管
+	//}
+	//else if (_stricmp(sub_cmd_type, "RemoteBindUser") == 0)
+	//{
+	//	// 平台下发绑定用户，这里暂不实现
+	//}
+	//else if (_stricmp(sub_cmd_type, "RemoteRecord") == 0)
+	//{
+	//	// 平台下发远程录像，这里暂不实现
+	//}
+	//else if (_stricmp(sub_cmd_type, "RemoteTakePhoto") == 0)
+	//{
+	//	// 平台下发远程拍照，这里暂不实现
+	//}
+	//else if (_stricmp(sub_cmd_type, "RemoteDeviceLock") == 0)
+	//{
+	//	// 平台下发远程锁定，这里暂不实现
+	//}
+	//else if (_stricmp(sub_cmd_type, "RemoteUpdateSetting") == 0)
+	//{
+	//	// 平台下发更新配置，这里暂不实现
+	//}
+	//else if (_stricmp(sub_cmd_type, "EmergencyInfo") == 0)
+	//{
+	//	GS28181_ERR err = GB28181Agent_RespondTransData(simulater->agent_, czTargetDevID, true, NULL, 0);
+	//	if (err != GS28181_ERR_SUCCESS)
+	//	{
+	//	}
 
-		// 平台下发警情信息
-		tinyxml2::XMLElement *element_emergency_id = root->FirstChildElement("EmergencyId");
-		tinyxml2::XMLElement *element_dispatch_time = root->FirstChildElement("DispatchTime");
-		tinyxml2::XMLElement *element_dispatch_end_time = root->FirstChildElement("DispatchEndTime");
-		
-		const char *emergency_id = element_emergency_id->GetText();
-		const char *dispatch_time = element_dispatch_time->GetText();
-		const char *dispatch_end_time = element_dispatch_end_time->GetText();
+	//	// 平台下发警情信息
+	//	tinyxml2::XMLElement *element_emergency_id = root->FirstChildElement("EmergencyId");
+	//	tinyxml2::XMLElement *element_dispatch_time = root->FirstChildElement("DispatchTime");
+	//	tinyxml2::XMLElement *element_dispatch_end_time = root->FirstChildElement("DispatchEndTime");
+	//	
+	//	const char *emergency_id = element_emergency_id->GetText();
+	//	const char *dispatch_time = element_dispatch_time->GetText();
+	//	const char *dispatch_end_time = element_dispatch_end_time->GetText();
 
-		simulater->notifer_->RecvEmergency(emergency_id, dispatch_time, dispatch_end_time);
+	//	simulater->notifer_->RecvEmergency(emergency_id, dispatch_time, dispatch_end_time);
 
-		// 添加语音播报
-	}
+	//	// 添加语音播报
+	//}
 
 	return SIP_RESPONSE_CODE_SUCCESS;
 }
 
 void GxxGmDSJSimulater::RecvBindUser(const char *result)
 {
-	printf("收到用户绑定结果：%s\n", result);
+	//printf("收到用户绑定结果：%s\n", result);
 }
 
 void GxxGmDSJSimulater::RecvEmergency(const char *emergency_id, const char *start_time, const char *end_time)
 {
 	// 没有设置观察者的时候，指向自己，什么都不干
-	printf("收到新警单，警单ID：%s，处警时间：%s，处警结束时间：%s\n", emergency_id, start_time, end_time);
+	//printf("收到新警单，警单ID：%s，处警时间：%s，处警结束时间：%s\n", emergency_id, start_time, end_time);
 }
 
 void GxxGmDSJSimulater::RecvRemoteBindUser()
@@ -1090,61 +1090,73 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 	// 
 	GxxGmDSJSimulater *simulater = (GxxGmDSJSimulater *)param;
 
-	StruConnectParam connention_param;
-	strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, simulater->server_ip_.c_str());
-	strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, simulater->server_gbcode_.c_str());
-	connention_param.iPort = atoi(simulater->server_port_.c_str());
+	int errCode = 0;
+	std::string errStr;
 
-	int heartbeat_count = 0;
-	int baseinfo_count = 0;
-	int location_count = 0;
-	while (!simulater->is_gb28181_heartbeat_thread_need_exit_)
+	try
 	{
-		// 以1毫秒计数
-		Sleep(1);
-		++heartbeat_count;
-		++baseinfo_count;
-		++location_count;
+		StruConnectParam connention_param;
+		strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, simulater->server_ip_.c_str());
+		strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, simulater->server_gbcode_.c_str());
+		connention_param.iPort = atoi(simulater->server_port_.c_str());
 
-		if (heartbeat_count == simulater->gb28181_hb_time_)
+		int heartbeat_count = 0;
+		int baseinfo_count = 0;
+		int location_count = 0;
+		while (!simulater->is_gb28181_heartbeat_thread_need_exit_)
 		{
-			// 发送保活心跳
-			StruErrorList *error_list = NULL;
+			// 以1毫秒计数
+			Poco::Thread::sleep(1);
+			//Sleep(1);
+			++heartbeat_count;
+			++baseinfo_count;
+			++location_count;
 
-			// 疑似第一处内存泄露点
-			GS28181_ERR err = GS28181_ERR_SUCCESS;
-			err = GB28181Agent_HeartBeat(simulater->agent_, &connention_param, 1, NULL);
-			if (err != GS28181_ERR_SUCCESS)
+			if (heartbeat_count == simulater->gb28181_hb_time_)
 			{
-				printf("[%s]发送28181保活心跳失败！\n", simulater->local_gbcode_.c_str());
+				// 发送保活心跳
+				StruErrorList *error_list = NULL;
+
+				// 疑似第一处内存泄露点
+				GS28181_ERR err = GS28181_ERR_SUCCESS;
+				err = GB28181Agent_HeartBeat(simulater->agent_, &connention_param, 1, NULL);
+				if (err != GS28181_ERR_SUCCESS)
+				{
+					printf("[%s]发送28181保活心跳失败！\n", simulater->local_gbcode_.c_str());
+				}
+
+				heartbeat_count = 0;
 			}
 
-			heartbeat_count = 0;
-		}
-
-		if (baseinfo_count == simulater->dev_baseinfo_time_)
-		{
-			// 发送设备基本信息
-			simulater->SendBaseInfo();
-			baseinfo_count = 0;
-		}
-
-		if (location_count == simulater->dev_location_time_)
-		{
-			// 发送定位信息
-			if (simulater->is_standard_gb28181_mobile_position_)
+			if (baseinfo_count == simulater->dev_baseinfo_time_)
 			{
-				// 发送标准GB28181-2016定位信息
-				simulater->SendLocationInfoEx();
+				// 发送设备基本信息
+				simulater->SendBaseInfo();
+				baseinfo_count = 0;
 			}
-			else
-			{
-				// 发送扩展定位信息
-				simulater->SendLocationInfo();
-			}
-			location_count = 0;
-		}
 
-		
+			if (location_count == simulater->dev_location_time_)
+			{
+				// 发送定位信息
+				if (simulater->is_standard_gb28181_mobile_position_)
+				{
+					// 发送标准GB28181-2016定位信息
+					simulater->SendLocationInfoEx();
+				}
+				else
+				{
+					// 发送扩展定位信息
+					simulater->SendLocationInfo();
+				}
+				location_count = 0;
+			}
+
+
+		}
+	}
+	catch (Poco::Exception e)
+	{
+		errCode = e.code();
+		errStr = e.displayText();
 	}
 }

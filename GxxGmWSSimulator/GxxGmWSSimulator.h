@@ -41,6 +41,12 @@ public:
 	void SetLogger(Poco::Logger *logger);
 
 public:
+	void SetFileUploadInfo(std::string file_domain, std::string dsj_id, int file_size,
+		std::string file_type, int file_duration, std::string tag_info, std::string org_code, std::string org_name,
+		std::string police_code, std::string police_name, std::string storage_path, std::string local_path, std::string play_path,
+		std::string storage_server, std::string thumb);
+
+public:
 	// 发送心跳
 	int SendHeartBeat();
 
@@ -77,6 +83,19 @@ public:
 	// 上报文件信息相关
 	std::string file_domain_;		// 文件所属域
 	std::string dsj_id_;			// 执法仪国标ID
+	int file_size_;					// 文件大小
+	std::string file_type_;			// 文件类型
+	int file_duration_;				// 文件时长
+	std::string tag_info_;			// 备注信息
+	std::string org_code_;			// 单位编号或部门编号
+	std::string org_name_;			// 单位名称
+	std::string police_code_;		// 警员编号
+	std::string police_name_;		// 警员姓名
+	std::string storage_path_;		// 存储位置
+	std::string local_path_;		// 物理位置，采集站上原文件本机存储路径
+	std::string play_path_;			// 播放位置：HTTP访问路径
+	std::string storage_server_;	// 存储服务器
+	std::string thumb_;				// 采集站缩略图
 
 	// 执法仪定位信息
 	std::string latitude_;
