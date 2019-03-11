@@ -15,6 +15,12 @@
 
 class GxxGmWordSpeaker;
 
+#ifdef GXXGMDSJSIMULATER_EXPORTS
+#define DLL_API __declspec(dllexport)
+#else
+#define DLL_API __declspec(dllimport)
+#endif
+
 struct SimulaterInitInfo
 {
 	std::string local_ip_;
@@ -42,7 +48,7 @@ struct SimulaterInitInfo
 	std::string platform_id_;
 };
 
-class GxxGmDSJSimulaterNotifer
+class DLL_API GxxGmDSJSimulaterNotifer
 {
 public:
 	// 收到设备主动绑定回复
@@ -55,7 +61,7 @@ public:
 	virtual void RecvEmergency(const char *emergency_id, const char *start_time, const char *end_time) = 0;
 };
 
-class GxxGmDSJSimulater : public GxxGmDSJSimulaterNotifer
+class DLL_API GxxGmDSJSimulater : public GxxGmDSJSimulaterNotifer
 {
 public:
 	GxxGmDSJSimulater();
@@ -63,7 +69,7 @@ public:
 
 public:
 	// 开机
-	int Initialize(struct SimulaterInitInfo &init_info);
+	int Initialize(struct SimulaterInitInfo &init_info, FFMpegStub *ffmpeg_stub);
 
 	// 关机
 	void Destroy();

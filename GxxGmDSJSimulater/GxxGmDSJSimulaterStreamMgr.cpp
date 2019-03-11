@@ -17,14 +17,14 @@ GxxGmDSJSimulaterStreamMgr::~GxxGmDSJSimulaterStreamMgr()
 
 int GxxGmDSJSimulaterStreamMgr::Initialize(int is_manual_port, unsigned short begin_port, unsigned short end_port, const char *local_ip, const char *rtp_net, const char *stream_file)
 {
-	char current_program_path[4096] = {0};
-	GetModuleFileNameA(NULL, current_program_path, 4096);
-	std::string tmp = current_program_path;
-	int pos = tmp.find_last_of('\\');
+	//char current_program_path[4096] = {0};
+	//GetModuleFileNameA(NULL, current_program_path, 4096);
+	//std::string tmp = current_program_path;
+	//int pos = tmp.find_last_of('\\');
 
-	// 这里初始化FFMpeg
-	std::string ffmpeg_base_dir = tmp.substr(0, pos + 1);
-	ffmpeg_.Initialize(ffmpeg_base_dir.c_str());
+	//// 这里初始化FFMpeg
+	//std::string ffmpeg_base_dir = tmp.substr(0, pos + 1);
+	//ffmpeg_.Initialize(ffmpeg_base_dir.c_str());
 
 	rtp_net_ = rtp_net;
 	stream_file_ = stream_file;
@@ -51,6 +51,11 @@ int GxxGmDSJSimulaterStreamMgr::Initialize(int is_manual_port, unsigned short be
 void GxxGmDSJSimulaterStreamMgr::UnInitialize()
 {
 	GSRTPServer_Cleanup();
+}
+
+void GxxGmDSJSimulaterStreamMgr::SetFFmpegStub(FFMpegStub *ffmpeg)
+{
+	ffmpeg_ = ffmpeg;
 }
 
 int GxxGmDSJSimulaterStreamMgr::AddRealStream(STREAM_HANDLE streamHandle, int iSSRC, unsigned short & iLocalPort)
@@ -152,17 +157,17 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 	video_path.append(stream_file_.c_str());
 
 	AVFormatContext *input_format_context = NULL;
-	int errCode = ffmpeg_.ptr_avformat_open_input(&input_format_context, video_path.c_str(), NULL, NULL);
+	int errCode = ffmpeg_->ptr_avformat_open_input(&input_format_context, video_path.c_str(), NULL, NULL);
 	if (errCode < 0)
 	{
-		ffmpeg_.ptr_av_strerror(errCode, ffmppeg_errpr, 4096);
+		ffmpeg_->ptr_av_strerror(errCode, ffmppeg_errpr, 4096);
 		return errCode;
 	}
 
-	errCode = ffmpeg_.ptr_avformat_find_stream_info(input_format_context, NULL);
+	errCode = ffmpeg_->ptr_avformat_find_stream_info(input_format_context, NULL);
 	if (errCode < 0)
 	{
-		ffmpeg_.ptr_av_strerror(errCode, ffmppeg_errpr, 4096);
+		ffmpeg_->ptr_av_strerror(errCode, ffmppeg_errpr, 4096);
 		return errCode;
 	}
 
@@ -232,27 +237,27 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 	// 计算帧率间隔
 	int wait_time = 1000 / video_frame_rate;
 
-	AVBitStreamFilterContext* h264bsfc = ffmpeg_.ptr_av_bitstream_filter_init("h264_mp4toannexb");
+	AVBitStreamFilterContext* h264bsfc = ffmpeg_->ptr_av_bitstream_filter_init("h264_mp4toannexb");
 
 	while (!is_stream_send_thread_stop_)
 	{
 		// 回到视频开始处，对于有些视频似乎不太起作用
-		ffmpeg_.ptr_av_seek_frame(input_format_context, video_stream_index, 0, AVSEEK_FLAG_BACKWARD);
+		ffmpeg_->ptr_av_seek_frame(input_format_context, video_stream_index, 0, AVSEEK_FLAG_BACKWARD);
 
 		while (!is_stream_send_thread_stop_)
 		{
 			AVPacket pkt;
-			errCode = ffmpeg_.ptr_av_read_frame(input_format_context, &pkt);
+			errCode = ffmpeg_->ptr_av_read_frame(input_format_context, &pkt);
 			if (errCode < 0)
 			{
 				// 这里要识别错误
-				ffmpeg_.ptr_av_strerror(errCode, ffmppeg_errpr, 4096);
+				ffmpeg_->ptr_av_strerror(errCode, ffmppeg_errpr, 4096);
 				break;
 			}
 
 			if (pkt.size == 0)
 			{
-				ffmpeg_.ptr_av_free_packet(&pkt);
+				ffmpeg_->ptr_av_free_packet(&pkt);
 				continue;
 			}
 
@@ -263,9 +268,9 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 				// 这么操作会导致内存泄露，需要解决以下。参考页面：https://blog.csdn.net/LG1259156776/article/details/73283920
 				AVPacket out_pkt;
 				if (gxx_codec_id == EnumGSPSCodecType::GS_MPEGPS_CODEC_V_H264)
-					ffmpeg_.ptr_av_bitstream_filter_filter(h264bsfc, video_stream->codec, NULL, &out_pkt.data, &out_pkt.size, pkt.data, pkt.size, 0);
+					ffmpeg_->ptr_av_bitstream_filter_filter(h264bsfc, video_stream->codec, NULL, &out_pkt.data, &out_pkt.size, pkt.data, pkt.size, 0);
 				else
-					ffmpeg_.ptr_av_copy_packet(&out_pkt, &pkt);
+					ffmpeg_->ptr_av_copy_packet(&out_pkt, &pkt);
 
 				StruESStreamDesc es_stream_desc;
 				es_stream_desc.eVideoCodecs = gxx_codec_id;
@@ -332,9 +337,9 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 				}
 
 				if (gxx_codec_id == EnumGSPSCodecType::GS_MPEGPS_CODEC_V_H264)
-					ffmpeg_.ptr_av_free(out_pkt.data);
+					ffmpeg_->ptr_av_free(out_pkt.data);
 				else
-					ffmpeg_.ptr_av_free_packet(&out_pkt);
+					ffmpeg_->ptr_av_free_packet(&out_pkt);
 
 				// 控制帧率
 				Sleep(wait_time);
@@ -362,12 +367,12 @@ int GxxGmDSJSimulaterStreamMgr::SendRealStream()
 				}
 			}
 
-			ffmpeg_.ptr_av_free_packet(&pkt);
+			ffmpeg_->ptr_av_free_packet(&pkt);
 		}
 	}
 
-	ffmpeg_.ptr_av_bitstream_filter_close(h264bsfc);
-	ffmpeg_.ptr_avformat_close_input(&input_format_context);
+	ffmpeg_->ptr_av_bitstream_filter_close(h264bsfc);
+	ffmpeg_->ptr_avformat_close_input(&input_format_context);
 
 	return 0;
 }

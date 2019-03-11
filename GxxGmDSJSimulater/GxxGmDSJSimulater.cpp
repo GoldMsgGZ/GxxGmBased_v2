@@ -53,7 +53,7 @@ GxxGmDSJSimulater::~GxxGmDSJSimulater()
 #endif
 }
 
-int GxxGmDSJSimulater::Initialize(struct SimulaterInitInfo &init_info)
+int GxxGmDSJSimulater::Initialize(struct SimulaterInitInfo &init_info, FFMpegStub *ffmpeg_stub)
 {
 	int errCode = 0;
 
@@ -62,7 +62,8 @@ int GxxGmDSJSimulater::Initialize(struct SimulaterInitInfo &init_info)
 #endif
 
 	// 初始化协议栈
-	agent_ = GB28181Agent_Init(2, 16, Enum28181Version::eVERSION_2016, 3000);
+	//agent_ = GB28181Agent_Init(2, 16, Enum28181Version::eVERSION_2016, 3000);
+	agent_ = GB28181Agent_Init(1, 1, Enum28181Version::eVERSION_2016, 3000);
 	if (agent_ == NULL)
 	{
 		// 
@@ -175,6 +176,7 @@ int GxxGmDSJSimulater::Initialize(struct SimulaterInitInfo &init_info)
 	show_datetime_ = "YES";
 
 	// 初始化流管理模块
+	stream_mgr_.SetFFmpegStub(ffmpeg_stub);
 	errCode = stream_mgr_.Initialize(init_info.manual_port_, init_info.begin_port_, init_info.end_port_, init_info.local_ip_.c_str(), init_info.rtp_net_.c_str(), init_info.stream_file_.c_str());
 	if (errCode != 0)
 	{

@@ -37,6 +37,7 @@ public:
 public:
 	int Initialize(int is_manual_port, unsigned short begin_port, unsigned short end_port, const char *local_ip, const char *rtp_net, const char *stream_file);
 	void UnInitialize();
+	void SetFFmpegStub(FFMpegStub *ffmpeg);
 
 public:
 	int AddRealStream(STREAM_HANDLE streamHandle, int iSSRC, unsigned short & iLocalPort);
@@ -71,7 +72,8 @@ public:
 #endif
 
 public:
-	FFMpegStub ffmpeg_;
+	// FFMpeg模块初始化占用内存较多，这里采用外部创建，这里使用指针的模式
+	FFMpegStub *ffmpeg_;
 
 public:
 	char current_token_[32];

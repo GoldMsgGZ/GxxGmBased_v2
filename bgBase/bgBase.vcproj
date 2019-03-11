@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="GxxGmDSJSimulater"
-	ProjectGUID="{D70B8082-885A-4796-AC4B-FD3BA60A227D}"
-	RootNamespace="GxxGmDSJSimulater"
+	Name="bgBase"
+	ProjectGUID="{E00A3784-4AAD-4E8D-8296-51CF07555D84}"
+	RootNamespace="bgBase"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -20,7 +20,7 @@
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
+			ConfigurationType="4"
 			CharacterSet="1"
 			>
 			<Tool
@@ -41,8 +41,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\GosuncnLib\GSRtpStack\inc;..\GosuncnLib\28181\inc;..\GosuncnLib\GMFLib;..\GosuncnLib\PSFormat\inc;..\ext\Poco\include;..\ext\FFmpeg\3.4\include;..\ext\GxxGm\WordSpeaker;..\ext\TinyXML2\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;GXXGMDSJSIMULATER_EXPORTS;__STDC_CONSTANT_MACROS;FFMpegStub_EXPORTS"
+				AdditionalIncludeDirectories="..\ext\Poco\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -60,21 +60,10 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="lib28181AgentSDK.lib GSRtpServer.lib GMFLib.lib PSFormat.lib avcodec.lib avdevice.lib avfilter.lib avformat.lib avutil.lib postproc.lib swresample.lib swscale.lib tinyxml2d.lib"
-				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\ext\Poco\lib;..\GosuncnLib\28181\lib\x86;..\GosuncnLib\GSRtpStack\lib\x86;..\GosuncnLib\GMFLib;..\GosuncnLib\PSFormat\lib\x86;..\ext\FFmpeg\3.4\lib\x86;..\ext\GxxGm\WordSpeaker\x86;..\ext\TinyXML2\lib\Debug"
-				ModuleDefinitionFile=""
-				GenerateDebugInformation="true"
-				GenerateMapFile="true"
-				SubSystem="2"
-				TargetMachine="1"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -86,9 +75,6 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -96,7 +82,7 @@
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
+			ConfigurationType="4"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -119,8 +105,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\GosuncnLib\GSRtpStack\inc;..\GosuncnLib\28181\inc;..\GosuncnLib\GMFLib;..\GosuncnLib\PSFormat\inc;..\ext\Poco\include;..\ext\FFmpeg\3.4\include;..\ext\GxxGm\WordSpeaker;..\ext\TinyXML2\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;GXXGMDSJSIMULATER_EXPORTS;__STDC_CONSTANT_MACROS;FFMpegStub_EXPORTS"
+				AdditionalIncludeDirectories="..\ext\Poco\include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
@@ -137,22 +123,10 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="lib28181AgentSDK.lib GSRtpServer.lib GMFLib.lib PSFormat.lib avcodec.lib avdevice.lib avfilter.lib avformat.lib avutil.lib postproc.lib swresample.lib swscale.lib tinyxml2.lib"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\ext\Poco\lib;..\GosuncnLib\28181\lib\x86;..\GosuncnLib\GSRtpStack\lib\x86;..\GosuncnLib\GMFLib;..\GosuncnLib\PSFormat\lib\x86;..\ext\FFmpeg\3.4\lib\x86;..\ext\GxxGm\WordSpeaker\x86;..\ext\TinyXML2\lib\Release"
-				ModuleDefinitionFile=""
-				GenerateDebugInformation="true"
-				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -162,9 +136,6 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -180,15 +151,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\GxxGmDSJSimulater.cpp"
+				RelativePath=".\base64.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\GxxGmDSJSimulater.def"
-				>
-			</File>
-			<File
-				RelativePath=".\GxxGmDSJSimulaterStreamMgr.cpp"
+				RelativePath=".\bgBase.cpp"
 				>
 			</File>
 		</Filter>
@@ -198,15 +165,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\GxxGmDeviceInfo.h"
+				RelativePath=".\base64.h"
 				>
 			</File>
 			<File
-				RelativePath=".\GxxGmDSJSimulater.h"
-				>
-			</File>
-			<File
-				RelativePath=".\GxxGmDSJSimulaterStreamMgr.h"
+				RelativePath=".\bgBase.h"
 				>
 			</File>
 		</Filter>
@@ -217,33 +180,29 @@
 			>
 		</Filter>
 		<Filter
-			Name="FFMpeg动态加载模块"
+			Name="00.授权管理"
 			>
 			<File
-				RelativePath=".\FFMpegInterface.h"
+				RelativePath=".\bgAuthentication.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\FFMpegStub.cpp"
+				RelativePath=".\bgAuthentication.h"
 				>
 			</File>
 			<File
-				RelativePath=".\FFMpegStub.h"
+				RelativePath=".\bgDiskInfo.h"
 				>
 			</File>
 		</Filter>
 		<Filter
-			Name="01. 扩展业务处理模块"
+			Name="01.进程间通信组件"
 			>
-			<File
-				RelativePath=".\GxxGmExtendBusiness.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\GxxGmExtendBusiness.h"
-				>
-			</File>
 		</Filter>
+		<File
+			RelativePath=".\ReadMe.txt"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

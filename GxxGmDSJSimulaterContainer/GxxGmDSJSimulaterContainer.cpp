@@ -12,10 +12,10 @@
 #include "Poco/Util/OptionSet.h"
 
 #include "..\GxxGmDSJSimulater\GxxGmDSJSimulater.h"
+#include "..\GxxGmDSJSimulater\FFMpegStub.h"
+#include "..\bgBase\bgBase.h"
 
-//#include "CrashRpt.h"
-//#pragma comment(lib, "CrashRpt1403.lib")
-//#pragma comment(lib, "CrashRptProbe1403.lib")
+#pragma comment(lib, "bgBase.lib")
 
 /**
  * 定义自己的应用类
@@ -99,6 +99,18 @@ public:
 			std::string location_latitude = config().getString("GxxGmDSJSimulater.DEV_LOCATION_LATITUDE");
 			std::string location_longtitude = config().getString("GxxGmDSJSimulater.DEV_LOCATION_LONGTITUDE");
 
+			// 准备FFMpegStub
+			char current_program_path[4096] = {0};
+			GetModuleFileNameA(NULL, current_program_path, 4096);
+			std::string tmp = current_program_path;
+			int pos = tmp.find_last_of('\\');
+
+			// 这里初始化FFMpeg
+			std::string ffmpeg_base_dir = tmp.substr(0, pos + 1);
+			
+			FFMpegStub *ffmpeg_stub = new FFMpegStub;
+			errCode = ffmpeg_stub->Initialize(ffmpeg_base_dir.c_str());
+
 			std::vector<GxxGmDSJSimulater *> simulaters;
 
 			// 根据设备数量启动所有设备
@@ -174,7 +186,7 @@ public:
 				init_info.imei_ = current_client_imei;
 				init_info.platform_id_ = platform_id;
 
-				int errCode = simulater->Initialize(init_info);
+				int errCode = simulater->Initialize(init_info, ffmpeg_stub);
 				if (errCode != 0)
 				{
 					printf("初始化%d模拟器%s失败，错误码：%d\n", index, current_client_gbcode, errCode);
@@ -208,15 +220,6 @@ public:
 	}
 };
 
-BOOL WINAPI CrashCallback(LPVOID lpvState)
-{
-	UNREFERENCED_PARAMETER(lpvState);
-
-	// Crash happened!
-	MessageBoxA(NULL, "发生了崩溃！", "", 0);
-
-	return TRUE;
-}
 
 int main(int argc, const char *argv[])
 {
@@ -233,40 +236,28 @@ int main(int argc, const char *argv[])
 	printf("8. 模拟器可配置定位坐标；\n");
 	printf("9. 模拟器28181保活心跳、设备基础信息、设备定位信息发送间隔支持到毫秒级；\n");
 	printf("10. 采用Poco::Application框架实现模拟器；\n");
+	printf("11. 优化了服务组件，降低资源占用；\n");
 	printf("\n");
 	system("pause");
 
-	//// 使用CrashRpt获取崩溃记录
-	//CR_INSTALL_INFO info;
-	//memset(&info, 0, sizeof(CR_INSTALL_INFO));
-	//info.cb = sizeof(CR_INSTALL_INFO);             // Size of the structure
-	//info.pszAppName = "GxxGmDSJSimulaterContainer"; // App name
-	//info.pszAppVersion = "2.6";              // App version
-	//info.pszEmailSubject = "GxxGmDSJSimulaterContainer (GB28181-2016) V2.6 Crash Report"; // Email subject
-	//info.pszEmailTo = "wangyu@gosuncn.com";      // Email recipient address
-	//info.pfnCrashCallback = CrashCallback;
-	//info.pszErrorReportSaveDir = "D:\\";
+	char current_program_path[4096] = {0};
+	GetModuleFileNameA(NULL, current_program_path, 4096);
+	std::string tmp = current_program_path;
+	int pos = tmp.find_last_of('\\');
 
-	//info.dwFlags = 0;                    
-	//info.dwFlags |= CR_INST_ALL_POSSIBLE_HANDLERS;
+	// 这里初始化FFMpeg
+	std::string base_dir = tmp.substr(0, pos + 1);
 
-	//// Install crash handlers
-	//int nInstResult = crInstall(&info);            
-	////assert(nInstResult==0);
+	Poco::DateTime current_datetime;
+	char dump_path[4096] = {0};
+	sprintf_s(dump_path, 4096, "%s%d%02d%02d_%02d%02d%02d.dmp", base_dir.c_str(),
+		current_datetime.year(), current_datetime.month(), current_datetime.day(),
+		current_datetime.hour(), current_datetime.minute(), current_datetime.second());
 
-	//// Check result
-	//if(nInstResult!=0)
-	//{
-	//	char buff[256];
-	//	crGetLastErrorMsg(buff, 256); // Get last error
-	//	printf("%s\n", buff); // and output it to the screen
-	//	return FALSE;
-	//}
+	bgBase::SetupMiniDumpMonitor(dump_path);
 
 	GxxGmApplication app;
 	app.run();
-
-	//crUninstall();
 
 	return 0;
 }
