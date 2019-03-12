@@ -223,7 +223,7 @@ public:
 
 int main(int argc, const char *argv[])
 {
-	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.6\n");
+	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.7\n");
 	printf("\n");
 	printf("功能说明：\n");
 	printf("1. 支持GB28181-2011 和 GB28181-2016两个版本的协议通信；\n");
@@ -237,6 +237,7 @@ int main(int argc, const char *argv[])
 	printf("9. 模拟器28181保活心跳、设备基础信息、设备定位信息发送间隔支持到毫秒级；\n");
 	printf("10. 采用Poco::Application框架实现模拟器；\n");
 	printf("11. 优化了服务组件，降低资源占用；\n");
+	printf("12. 调整了视频解码器调用过程，进一步降低资源占用；\n");
 	printf("\n");
 	system("pause");
 
