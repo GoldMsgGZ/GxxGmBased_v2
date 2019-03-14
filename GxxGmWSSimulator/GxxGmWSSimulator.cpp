@@ -231,6 +231,7 @@ int GxxGmWSSimulator::SendHeartBeat()
 		}
 		*/
 
+		// 解析返回的结果，如果返回SUCCESS，则取出部门编号（bmbh）和部门名称（bmmc），自动填入模拟器对应字段
 		std::ostringstream ostr;
 		Poco::StreamCopier::copyStream(is, ostr);
 

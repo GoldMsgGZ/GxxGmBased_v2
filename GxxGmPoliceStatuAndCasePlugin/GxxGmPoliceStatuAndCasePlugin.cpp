@@ -34,9 +34,13 @@ void GxxGmPoliceStatuAndCasePlugin::WorkingThread(void* param)
 	int gateway_port = plugin->app_->config().getInt("GATEWAY_INFO.PORT");
 
 	// 首先连接到对接服务器
+	Poco::Net::SocketAddress address(gateway_ip, gateway_port);
+	Poco::Net::StreamSocket socket(address);
+	Poco::Net::HTTPSession session(socket);
 
-	while ()
+	while (try)
 	{
+		// 组织
 	}
 
 	plugin->app_->logger().debug("GxxGmPoliceStatuAndCasePlugin::WorkingThread() stopped...");

@@ -64,16 +64,18 @@ private:
 
 public:
 	// 心跳相关
-	std::string workstaion_id_;		// 采集站ID
-	std::string workstaion_ip_;		// 采集站IP
+	std::string workstaion_id_;			// 采集站ID（配置文件读取）
+	std::string workstaion_ip_;			// 采集站IP（配置文件读取）
+	std::string workstaion_org_code_;	// 采集站所属部门编号（心跳返回后自动填充）
+	std::string workstaion_org_name_;	// 采集站所属部门名称（心跳返回后自动填充）
 	
-	int hearbeat_rate_;				// 心跳发送频率
-	int fileupload_rate_;			// 文件上报信息频率
-	int locationupload_rate_;		// 定位信息上报频率
+	int hearbeat_rate_;					// 心跳发送频率（配置文件读取）
+	int fileupload_rate_;				// 文件上报信息频率（配置文件读取）
+	int locationupload_rate_;			// 定位信息上报频率
 
-	std::string video_path_;		// 视频文件路径
-	std::string audio_path_;		// 音频文件路径
-	std::string image_path_;		// 图片路径
+	std::string video_path_;			// 视频文件路径（配置文件读取）
+	std::string audio_path_;			// 音频文件路径（配置文件读取）
+	std::string image_path_;			// 图片路径（配置文件读取）
 
 	std::string gateway_ip_;		// 采集站接入网关IP
 	int gateway_port_;				// 采集站接入网关端口号

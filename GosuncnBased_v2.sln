@@ -224,7 +224,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "00. bgFramework", "00. bgFr
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bgBase", "bgBase\bgBase.vcproj", "{E00A3784-4AAD-4E8D-8296-51CF07555D84}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "19. 警情案件模拟推送", "19. 警情案件模拟推送", "{5196080B-A849-4E76-8DF5-B975D8E1CCFF}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "19. 警情案件模拟器", "19. 警情案件模拟器", "{5196080B-A849-4E76-8DF5-B975D8E1CCFF}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GxxGmPoliceStatuAndCaseSimulator", "GxxGmPoliceStatuAndCaseSimulator\GxxGmPoliceStatuAndCaseSimulator.vcproj", "{A86D1818-4B6D-4CB2-9BF2-7D277E38B282}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -232,6 +232,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GxxGmPoliceStatuAndCaseSimu
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GxxGmPoliceStatuAndCasePlugin", "GxxGmPoliceStatuAndCasePlugin\GxxGmPoliceStatuAndCasePlugin.vcproj", "{073539DD-3515-4305-A3AF-CCE8A8CBE6EB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "61. SSH", "61. SSH", "{E17FA41D-A76D-40A2-9872-54B451FED233}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GxxGmSSH", "GxxGmSSH\GxxGmSSH.vcproj", "{77B47DCA-9491-49EC-9C97-9799910E7E60}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -499,6 +503,10 @@ Global
 		{073539DD-3515-4305-A3AF-CCE8A8CBE6EB}.Debug|Win32.Build.0 = Debug|Win32
 		{073539DD-3515-4305-A3AF-CCE8A8CBE6EB}.Release|Win32.ActiveCfg = Release|Win32
 		{073539DD-3515-4305-A3AF-CCE8A8CBE6EB}.Release|Win32.Build.0 = Release|Win32
+		{77B47DCA-9491-49EC-9C97-9799910E7E60}.Debug|Win32.ActiveCfg = Debug|Win32
+		{77B47DCA-9491-49EC-9C97-9799910E7E60}.Debug|Win32.Build.0 = Debug|Win32
+		{77B47DCA-9491-49EC-9C97-9799910E7E60}.Release|Win32.ActiveCfg = Release|Win32
+		{77B47DCA-9491-49EC-9C97-9799910E7E60}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -576,5 +584,6 @@ Global
 		{E00A3784-4AAD-4E8D-8296-51CF07555D84} = {5CE32939-C2B5-4794-B6A9-0F45E19A6757}
 		{A86D1818-4B6D-4CB2-9BF2-7D277E38B282} = {5196080B-A849-4E76-8DF5-B975D8E1CCFF}
 		{073539DD-3515-4305-A3AF-CCE8A8CBE6EB} = {5196080B-A849-4E76-8DF5-B975D8E1CCFF}
+		{77B47DCA-9491-49EC-9C97-9799910E7E60} = {E17FA41D-A76D-40A2-9872-54B451FED233}
 	EndGlobalSection
 EndGlobal
