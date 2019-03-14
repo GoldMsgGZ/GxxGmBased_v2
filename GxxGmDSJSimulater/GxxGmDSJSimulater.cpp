@@ -53,9 +53,12 @@ GxxGmDSJSimulater::~GxxGmDSJSimulater()
 #endif
 }
 
-int GxxGmDSJSimulater::Initialize(struct SimulaterInitInfo &init_info, FFMpegStub *ffmpeg_stub)
+int GxxGmDSJSimulater::Initialize(struct SimulaterInitInfo &init_info, FFMpegStub *ffmpeg_stub, Poco::Util::Application *app)
 {
 	int errCode = 0;
+	char msg[4096] = {0};
+
+	app_ = app;
 
 #ifdef _USE_SPEAKER_
 	errCode = speaker_->Initialize();
@@ -66,8 +69,9 @@ int GxxGmDSJSimulater::Initialize(struct SimulaterInitInfo &init_info, FFMpegStu
 	agent_ = GB28181Agent_Init(1, 1, Enum28181Version::eVERSION_2016, 3000);
 	if (agent_ == NULL)
 	{
-		// 
-		printf("[%s]初始化28181协议栈失败！\n", init_info.local_gbcode_.c_str());
+		sprintf_s(msg, 4096, "[%s]初始化28181协议栈失败！", init_info.local_gbcode_.c_str());
+		std::cout<<msg<<std::endl;
+		app_->logger().error(msg);
 		return -1;
 	}
 

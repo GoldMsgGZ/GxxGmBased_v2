@@ -31,6 +31,13 @@ public:
 	{
 		Poco::Util::Application::initialize(self);
 
+		std::string current_working_dir = Poco::Path::current();
+		Poco::Path config_path(current_working_dir);
+		config_path.append("GxxGmDSJSimulater.ini");
+		this->loadConfiguration(config_path.toString(Poco::Path::PATH_NATIVE));
+
+		int log_level = config().getInt("LOG_INFO.LEVEL");
+
 		// 初始化日志
 		std::string name = "DSJSimulator_log_";
 		name.append(Poco::DateTimeFormatter::format(Poco::Timestamp(), "%Y%m%d%H%M%S"));
@@ -43,11 +50,12 @@ public:
 
 		// 每条日志的时间格式
 		Poco::AutoPtr<Poco::PatternFormatter> patternFormatter(new Poco::PatternFormatter());
-		patternFormatter->setProperty("pattern","%Y %m %d %H:%M:%S %s(%l): %t");
+		patternFormatter->setProperty("pattern","[%Y-%m-%d %H:%M:%S] %p %s(%l): %t");
 
 		//初始化　Channel
 		Poco::AutoPtr<Poco::Channel> channel = new Poco::FormattingChannel(patternFormatter,fileChannel);
 		logger().setChannel(channel);
+		logger().setLevel(log_level);
 	}
 
 	void uninitialize()
@@ -60,15 +68,13 @@ public:
 	{
 		int errCode = 0;
 		std::string errStr;
+		char msg[4096] = {0};
 
 		try
 		{
 			// 读取采集站配置文件
 			// 首先获得当前工作目录
-			std::string current_working_dir = Poco::Path::current();
-			Poco::Path config_path(current_working_dir);
-			config_path.append("GxxGmDSJSimulater.ini");
-			this->loadConfiguration(config_path.toString(Poco::Path::PATH_NATIVE));
+			
 
 			std::string server_ip = config().getString("DeviceGateway.SERVER_IP");
 			std::string server_port = config().getString("DeviceGateway.SERVER_PORT");
@@ -186,10 +192,13 @@ public:
 				init_info.imei_ = current_client_imei;
 				init_info.platform_id_ = platform_id;
 
-				int errCode = simulater->Initialize(init_info, ffmpeg_stub);
+				int errCode = simulater->Initialize(init_info, ffmpeg_stub, this);
 				if (errCode != 0)
 				{
-					printf("初始化%d模拟器%s失败，错误码：%d\n", index, current_client_gbcode, errCode);
+					sprintf_s(msg, 4096, "初始化%d模拟器%s失败，错误码：%d", index, current_client_gbcode, errCode);
+					std::cout<<msg<<std::endl;
+					logger().error(msg);
+					
 					delete simulater;
 					continue;
 				}
@@ -198,6 +207,7 @@ public:
 			}
 
 			printf("模拟器已经运行，按任意键关闭模拟器....");
+			logger().error("模拟器已经运行，按任意键关闭模拟器....");
 			getchar();
 
 			// 这里批量注销

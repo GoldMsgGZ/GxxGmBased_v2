@@ -56,6 +56,10 @@ public:
 	// 上报执法仪定位信息
 	int SendLocationInfo();
 
+public:
+	int GetOrgInfo();
+	int GetUserInfo();
+
 private:
 	int GetDiskTotalSpace();
 	int GetDiskUsedSpace();

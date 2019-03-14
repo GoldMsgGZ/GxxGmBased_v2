@@ -12,6 +12,7 @@
 #include "Poco/FormattingChannel.h"
 #include "Poco/FileChannel.h"
 #include "Poco/AutoPtr.h"
+#include "Poco/Util/Application.h"
 
 class GxxGmWordSpeaker;
 
@@ -69,7 +70,7 @@ public:
 
 public:
 	// 开机
-	int Initialize(struct SimulaterInitInfo &init_info, FFMpegStub *ffmpeg_stub);
+	int Initialize(struct SimulaterInitInfo &init_info, FFMpegStub *ffmpeg_stub, Poco::Util::Application *app);
 
 	// 关机
 	void Destroy();
@@ -177,6 +178,9 @@ public:
 
 public:
 	GxxGmWordSpeaker *speaker_;
+
+public:
+	Poco::Util::Application *app_;
 };
 
 #endif//_GxxGmDSJSimulater_H_

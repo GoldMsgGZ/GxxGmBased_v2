@@ -17,6 +17,7 @@
 #include "Poco/JSON/Query.h"
 #include "Poco/JSON/PrintHandler.h"
 #include "Poco/Latin1Encoding.h"
+#include "Poco/ASCIIEncoding.h"
 #include "Poco/TextConverter.h"
 #include "Poco/DateTime.h"
 
@@ -217,17 +218,17 @@ int GxxGmWSSimulator::SendHeartBeat()
 		"code": 0,
 		"message": "SUCCESS",
 		"body": {
-		"gzz_xh": "44010401901281918586",
-		"name": "王煜的测试工作站001",
-		"bmbh": "44010401",
-		"bmmc": "一级部门",
-		"admin": "",
-		"phone": "",
-		"address": "国迈办公区",
-		"wsconf": "{\"device_rule\":{\"bLUETOOTH\":\"0\",\"cDROM\":\"0\",\"mODEM\":\"0\",\"uDISK\":\"0\",\"uSB_KEYBOARD\":\"0\"},\"dsj_register_rule\":1,\"export_rule\":{\"export_to_common\":\"0\",\"export_to_ga\":\"0\"},\"net_rule\":{\"netsmon\":\"0\"},\"sys_rule\":{\"process\":[]}}",
-		"regtime": "2019-02-28 18:22:18",
-		"svrtime": "2019-03-02 19:03:19"
-		}
+			"gzz_xh": "44010401901281918586",
+			"name": "王煜的测试工作站001",
+			"bmbh": "44010401",
+			"bmmc": "一级部门",
+			"admin": "",
+			"phone": "",
+			"address": "国迈办公区",
+			"wsconf": "{\"device_rule\":{\"bLUETOOTH\":\"0\",\"cDROM\":\"0\",\"mODEM\":\"0\",\"uDISK\":\"0\",\"uSB_KEYBOARD\":\"0\"},\"dsj_register_rule\":1,\"export_rule\":{\"export_to_common\":\"0\",\"export_to_ga\":\"0\"},\"net_rule\":{\"netsmon\":\"0\"},\"sys_rule\":{\"process\":[]}}",
+			"regtime": "2019-02-28 18:22:18",
+			"svrtime": "2019-03-02 19:03:19"
+			}
 		}
 		*/
 
@@ -261,7 +262,23 @@ int GxxGmWSSimulator::SendHeartBeat()
 		errCode = atoi(result_code.toString().c_str());
 		if (errCode != 0)
 			return errCode;
-		
+
+		Poco::Dynamic::Var body_json = jsonObject->get("body");
+		Poco::JSON::Object::Ptr body_jsonObject = body_json.extract<Poco::JSON::Object::Ptr>();
+
+		Poco::Dynamic::Var org_code = body_jsonObject->get("bmbh");
+		workstaion_org_code_ = org_code.toString();
+
+		Poco::Dynamic::Var org_name = body_jsonObject->get("bmmc");
+		workstaion_org_name_ = org_name.toString();
+
+		// 采集站所属部门名称转码为GBK
+		Poco::UTF8Encoding utf8Encoding;
+		Poco::ASCIIEncoding asciiEncoding;
+		Poco::TextConverter converter2(utf8Encoding,asciiEncoding);
+		std::string workstaion_org_name_ascii;
+		int errors = converter2.convert(workstaion_org_name_, workstaion_org_name_ascii); // 这里转出来的中文 都是?号
+		std::cout<<workstaion_org_name_ascii.c_str()<<std::endl;
 	}
 	catch (Poco::Exception &ex)
 	{
@@ -410,6 +427,100 @@ int GxxGmWSSimulator::SendLocationInfo()
 	return 0;
 }
 
+int GxxGmWSSimulator::GetOrgInfo()
+{
+	int errCode = 0;
+	std::string errStr;
+
+	try
+	{
+		char uri_string[4096] = {0};
+		sprintf_s(uri_string, 4096, 
+			"/openapi/workstation/v3/suborg?domain=2431&gzz_xh=%s&authkey=1234&sjbmbh=%s",
+			workstaion_id_.c_str(), workstaion_org_code_.c_str());
+
+		// 构建请求
+		Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_GET, uri_string, Poco::Net::HTTPRequest::HTTP_1_1);
+		request.add("Content-Type", "application/json; charset=utf-8");
+
+
+		// 发送请求
+		session_->sendRequest(request);
+
+		// 接收应答
+		Poco::Net::HTTPResponse response;
+		std::istream &is = session_->receiveResponse(response);
+
+		// 判断服务器返回信息
+		Poco::Net::HTTPResponse::HTTPStatus status = response.getStatus();
+		if (Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK != status)
+		{
+			errCode = status;
+			return errCode;
+		}
+
+		/*
+		{
+			"code": 0,
+			"message": "SUCCESS",
+			"body": [
+				{ "bmbh": "44010401", "bmmc": "一级部门", "sjbmbh": null },
+				{ "bmbh": "22222222", "bmmc": "org2", "sjbmbh": "44010401" },
+				{ "bmbh": "44010402", "bmmc": "org3", "sjbmbh": "44010401" },
+				{ "bmbh": "12345678910", "bmmc": "org4", "sjbmbh": "44010401" },
+				{ "bmbh": "1234567891011", "bmmc": "org5", "sjbmbh": "44010401" }
+			]
+		}
+		*/
+
+		// 解析返回的结果，如果返回SUCCESS，则取出部门编号（bmbh）和部门名称（bmmc），自动填入模拟器对应字段
+		std::ostringstream ostr;
+		Poco::StreamCopier::copyStream(is, ostr);
+
+		std::string json_str = ostr.str();
+		if (json_str.empty())
+		{
+			return -1;
+		}
+
+		// 将字符串转为UTF-8
+		Poco::Latin1Encoding latin1;
+		Poco::UTF8Encoding utf8;
+		Poco::TextConverter converter(latin1, utf8);
+		std::string strUtf8;
+		converter.convert(json_str, strUtf8);
+		json_str = strUtf8;
+
+		// 分析结果
+		Poco::JSON::Parser parser;
+		Poco::Dynamic::Var json = parser.parse(json_str);
+		Poco::JSON::Object::Ptr jsonObject = json.extract<Poco::JSON::Object::Ptr>();
+
+		//Poco::Dynamic::Var message = jsonObject->get("message");
+		//jsonObject = message.extract<Poco::JSON::Object::Ptr>();
+
+		Poco::Dynamic::Var result_code = jsonObject->get("code");
+		errCode = atoi(result_code.toString().c_str());
+		if (errCode != 0)
+			return errCode;
+	}
+	catch(Poco::Exception e)
+	{
+		errCode = e.code();
+		errStr = e.displayText();
+	}
+
+	return errCode;
+}
+
+int GxxGmWSSimulator::GetUserInfo()
+{
+	int errCode = 0;
+	std::string errStr;
+
+	return errCode;
+}
+
 int GxxGmWSSimulator::GetDiskTotalSpace()
 {
 	return 512 * 1024;
@@ -436,9 +547,10 @@ void GxxGmWSSimulator::WorkingThreadFunc(void* param)
 	
 	simulater->is_need_stop_ = false;
 
-	int heartbeat_count = 0;
-	int fileupload_count = 0;
-	int locationupload_count = 0;
+	int heartbeat_count = simulater->hearbeat_rate_;
+	int fileupload_count = simulater->fileupload_rate_;
+	int locationupload_count = simulater->locationupload_rate_;
+
 	while (!(simulater->is_need_stop_))
 	{
 		if (heartbeat_count == simulater->hearbeat_rate_)
