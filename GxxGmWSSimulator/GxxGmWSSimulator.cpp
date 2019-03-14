@@ -47,7 +47,7 @@ GxxGmWSSimulator::~GxxGmWSSimulator()
 	}
 }
 
-int GxxGmWSSimulator::Initialize(const char *ws_id, const char *ws_ip, int heartbeat_rate, int fileupload_rate,
+int GxxGmWSSimulator::Initialize(const char *ws_id, const char *ws_ip, int heartbeat_rate, int fileupload_rate, int query_orgs_rate, int query_users_rate, 
 					const char *video_path, const char *audio_path, const char *image_path,	const char *gateway_ip,
 					int gateway_port, const char *authkey, const char *domain)
 {
@@ -58,6 +58,8 @@ int GxxGmWSSimulator::Initialize(const char *ws_id, const char *ws_ip, int heart
 	workstaion_ip_ = ws_ip;
 	hearbeat_rate_ = heartbeat_rate;
 	fileupload_rate_ = fileupload_rate;
+	query_orgs_rate_ = query_orgs_rate;
+	query_users_rate_ = query_users_rate;
 
 	video_path_ = video_path;
 	audio_path_ = audio_path;
@@ -242,13 +244,13 @@ int GxxGmWSSimulator::SendHeartBeat()
 			return -1;
 		}
 
-		// 将字符串转为UTF-8
-		Poco::Latin1Encoding latin1;
-		Poco::UTF8Encoding utf8;
-		Poco::TextConverter converter(latin1, utf8);
-		std::string strUtf8;
-		converter.convert(json_str, strUtf8);
-		json_str = strUtf8;
+		//// 将字符串转为UTF-8
+		//Poco::Latin1Encoding latin1;
+		//Poco::UTF8Encoding utf8;
+		//Poco::TextConverter converter(latin1, utf8);
+		//std::string strUtf8;
+		//converter.convert(json_str, strUtf8);
+		//json_str = strUtf8;
 
 		// 分析结果
 		Poco::JSON::Parser parser;
@@ -272,13 +274,15 @@ int GxxGmWSSimulator::SendHeartBeat()
 		Poco::Dynamic::Var org_name = body_jsonObject->get("bmmc");
 		workstaion_org_name_ = org_name.toString();
 
+		wchar_t tmp[4096] = {0};
+		MultiByteToWideChar(CP_UTF8, 0, workstaion_org_name_.c_str(), -1, tmp, 4096);
+
+		char ascii[4096] = {0};
+		WideCharToMultiByte(CP_ACP, 0, tmp, -1, ascii, 4096, "", NULL);
+		workstaion_org_name_ = ascii;
+
 		// 采集站所属部门名称转码为GBK
-		Poco::UTF8Encoding utf8Encoding;
-		Poco::ASCIIEncoding asciiEncoding;
-		Poco::TextConverter converter2(utf8Encoding,asciiEncoding);
-		std::string workstaion_org_name_ascii;
-		int errors = converter2.convert(workstaion_org_name_, workstaion_org_name_ascii); // 这里转出来的中文 都是?号
-		std::cout<<workstaion_org_name_ascii.c_str()<<std::endl;
+		//std::cout<<workstaion_org_name_.c_str()<<std::endl;
 	}
 	catch (Poco::Exception &ex)
 	{
@@ -390,13 +394,13 @@ int GxxGmWSSimulator::SendFileInfo()
 			return -1;
 		}
 
-		// 将字符串转为UTF-8
-		Poco::Latin1Encoding latin1;
-		Poco::UTF8Encoding utf8;
-		Poco::TextConverter converter(latin1, utf8);
-		std::string strUtf8;
-		converter.convert(json_str, strUtf8);
-		json_str = strUtf8;
+		//// 将字符串转为UTF-8
+		//Poco::Latin1Encoding latin1;
+		//Poco::UTF8Encoding utf8;
+		//Poco::TextConverter converter(latin1, utf8);
+		//std::string strUtf8;
+		//converter.convert(json_str, strUtf8);
+		//json_str = strUtf8;
 
 		// 分析结果
 		Poco::JSON::Parser parser;
@@ -483,13 +487,13 @@ int GxxGmWSSimulator::GetOrgInfo()
 			return -1;
 		}
 
-		// 将字符串转为UTF-8
-		Poco::Latin1Encoding latin1;
-		Poco::UTF8Encoding utf8;
-		Poco::TextConverter converter(latin1, utf8);
-		std::string strUtf8;
-		converter.convert(json_str, strUtf8);
-		json_str = strUtf8;
+		//// 将字符串转为UTF-8
+		//Poco::Latin1Encoding latin1;
+		//Poco::UTF8Encoding utf8;
+		//Poco::TextConverter converter(latin1, utf8);
+		//std::string strUtf8;
+		//converter.convert(json_str, strUtf8);
+		//json_str = strUtf8;
 
 		// 分析结果
 		Poco::JSON::Parser parser;
@@ -517,6 +521,87 @@ int GxxGmWSSimulator::GetUserInfo()
 {
 	int errCode = 0;
 	std::string errStr;
+
+	try
+	{
+		char uri_string[4096] = {0};
+		sprintf_s(uri_string, 4096, 
+			"/openapi/workstation/v3/userinfo?domain=2431&gzz_xh=%s&authkey=1234&bmbh=%s",
+			workstaion_id_.c_str(), workstaion_org_code_.c_str());
+
+		// 构建请求
+		Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_GET, uri_string, Poco::Net::HTTPRequest::HTTP_1_1);
+		request.add("Content-Type", "application/json; charset=utf-8");
+
+
+		// 发送请求
+		session_->sendRequest(request);
+
+		// 接收应答
+		Poco::Net::HTTPResponse response;
+		std::istream &is = session_->receiveResponse(response);
+
+		// 判断服务器返回信息
+		Poco::Net::HTTPResponse::HTTPStatus status = response.getStatus();
+		if (Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK != status)
+		{
+			errCode = status;
+			return errCode;
+		}
+
+		/*
+		{
+			"code": 0,
+			"message": "SUCCESS",
+			"body": [
+				{
+					"jybh": "000001",
+					"jyxm": "近坪",
+					"pwd": "4d0bcd8704a0b378578dd221abde99f9",
+					"bmbh": "44010401",
+					"bmmc": "一级部门",
+					"priviledges": ""
+				}
+			]
+		}
+		*/
+
+		// 解析返回的结果，如果返回SUCCESS，则取出部门编号（bmbh）和部门名称（bmmc），自动填入模拟器对应字段
+		std::ostringstream ostr;
+		Poco::StreamCopier::copyStream(is, ostr);
+
+		std::string json_str = ostr.str();
+		if (json_str.empty())
+		{
+			return -1;
+		}
+
+		//// 将字符串转为UTF-8
+		//Poco::Latin1Encoding latin1;
+		//Poco::UTF8Encoding utf8;
+		//Poco::TextConverter converter(latin1, utf8);
+		//std::string strUtf8;
+		//converter.convert(json_str, strUtf8);
+		//json_str = strUtf8;
+
+		// 分析结果
+		Poco::JSON::Parser parser;
+		Poco::Dynamic::Var json = parser.parse(json_str);
+		Poco::JSON::Object::Ptr jsonObject = json.extract<Poco::JSON::Object::Ptr>();
+
+		//Poco::Dynamic::Var message = jsonObject->get("message");
+		//jsonObject = message.extract<Poco::JSON::Object::Ptr>();
+
+		Poco::Dynamic::Var result_code = jsonObject->get("code");
+		errCode = atoi(result_code.toString().c_str());
+		if (errCode != 0)
+			return errCode;
+	}
+	catch(Poco::Exception e)
+	{
+		errCode = e.code();
+		errStr = e.displayText();
+	}
 
 	return errCode;
 }
@@ -551,6 +636,9 @@ void GxxGmWSSimulator::WorkingThreadFunc(void* param)
 	int fileupload_count = simulater->fileupload_rate_;
 	int locationupload_count = simulater->locationupload_rate_;
 
+	int query_orgs_count = simulater->query_orgs_rate_;
+	int query_users_count = simulater->query_users_rate_;
+
 	while (!(simulater->is_need_stop_))
 	{
 		if (heartbeat_count == simulater->hearbeat_rate_)
@@ -573,9 +661,23 @@ void GxxGmWSSimulator::WorkingThreadFunc(void* param)
 			locationupload_count = 0;
 		}
 
+		if (query_orgs_count == simulater->query_orgs_rate_)
+		{
+			simulater->GetOrgInfo();
+			query_orgs_count = 0;
+		}
+
+		if (query_users_count == simulater->query_users_rate_)
+		{
+			simulater->GetUserInfo();
+			query_users_count = 0;
+		}
+
 		++heartbeat_count;
 		++fileupload_count;
 		++locationupload_count;
+		++query_orgs_count;
+		++query_users_count;
 		Sleep(1);
 	}
 

@@ -87,6 +87,8 @@ public:
 			// 几个自动操作的频率
 			int heartbeat_rate = config().getInt("WorkStationSimulater.HEARTBEAT_RATE");
 			int fileupload_rate = config().getInt("WorkStationSimulater.FILE_UPLOAD_RATE");
+			int query_orgs_rate = config().getInt("WorkStationSimulater.ORG_QUERY_TATE");
+			int query_users_rate = config().getInt("WorkStationSimulater.USER_QUERY_TATE");
 
 			// 基本媒体文件路径
 			std::string video_name = config().getString("WorkStationSimulater.VIDEO_FILE");
@@ -143,7 +145,7 @@ public:
 				simulater->SetLogger(&logger);
 
 				errCode = simulater->Initialize(current_device_id, simulater_ip.c_str(), heartbeat_rate,
-					fileupload_rate, video_path_str.c_str(), audio_path_str.c_str(), image_path_str.c_str(),
+					fileupload_rate, query_orgs_rate, query_users_rate, video_path_str.c_str(), audio_path_str.c_str(), image_path_str.c_str(),
 					gateway_ip.c_str(),	gateway_port, gateway_authkey.c_str(), gateway_domain.c_str());
 
 				if (errCode != 0)

@@ -31,7 +31,7 @@ public:
 	//	*authkey	授权KEY
 	//	*domain		域名
 	int Initialize(const char *ws_id, const char *ws_ip,
-		int heartbeat_rate, int fileupload_rate, const char *video_path,
+		int heartbeat_rate, int fileupload_rate, int query_orgs_rate, int query_users_rate, const char *video_path,
 		const char *audio_path, const char *image_path, const char *gateway_ip,
 		int gateway_port, const char *authkey, const char *domain);
 
@@ -76,6 +76,8 @@ public:
 	int hearbeat_rate_;					// 心跳发送频率（配置文件读取）
 	int fileupload_rate_;				// 文件上报信息频率（配置文件读取）
 	int locationupload_rate_;			// 定位信息上报频率
+	int query_orgs_rate_;				// 组织架构查询频率
+	int query_users_rate_;				// 用户信息查询频率
 
 	std::string video_path_;			// 视频文件路径（配置文件读取）
 	std::string audio_path_;			// 音频文件路径（配置文件读取）
