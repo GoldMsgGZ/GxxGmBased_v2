@@ -1,12 +1,18 @@
 #ifndef _GxxGmSSH_H_
 #define _GxxGmSSH_H_
 
+#ifdef GXXGMSSH_EXPORTS
+#define DLL_API __declspec(dllexport)
+#else
+#define DLL_API __declspec(dllimport)
+#endif
+
 #include <string>
 #include "libssh2.h"
 
 #pragma comment(lib, "libssh2.lib")
 
-class GxxGmSSH
+class DLL_API GxxGmSSH
 {
 public:
 	GxxGmSSH();
