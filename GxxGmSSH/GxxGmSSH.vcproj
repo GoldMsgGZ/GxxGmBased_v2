@@ -41,6 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="..\ext\libssh2\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;GXXGMSSH_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,6 +62,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="..\ext\libssh2\lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"

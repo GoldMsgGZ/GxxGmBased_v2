@@ -74,8 +74,6 @@ public:
 		{
 			// 读取采集站配置文件
 			// 首先获得当前工作目录
-			
-
 			std::string server_ip = config().getString("DeviceGateway.SERVER_IP");
 			std::string server_port = config().getString("DeviceGateway.SERVER_PORT");
 			std::string server_gbcode = config().getString("DeviceGateway.SERVER_GBCODE");
@@ -207,7 +205,7 @@ public:
 			}
 
 			printf("模拟器已经运行，按任意键关闭模拟器....");
-			logger().error("模拟器已经运行，按任意键关闭模拟器....");
+			logger().information("模拟器已经运行，按任意键关闭模拟器....");
 			getchar();
 
 			// 这里批量注销
@@ -233,7 +231,7 @@ public:
 
 int main(int argc, const char *argv[])
 {
-	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.7\n");
+	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.8\n");
 	printf("\n");
 	printf("功能说明：\n");
 	printf("1. 支持GB28181-2011 和 GB28181-2016两个版本的协议通信；\n");
@@ -248,6 +246,7 @@ int main(int argc, const char *argv[])
 	printf("10. 采用Poco::Application框架实现模拟器；\n");
 	printf("11. 优化了服务组件，降低资源占用；\n");
 	printf("12. 调整了视频解码器调用过程，进一步降低资源占用；\n");
+	printf("12. 重构日志系统；\n");
 	printf("\n");
 	system("pause");
 
