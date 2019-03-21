@@ -10,8 +10,6 @@
 #include <string>
 #include "libssh2.h"
 
-#pragma comment(lib, "libssh2.lib")
-
 class DLL_API GxxGmSSH
 {
 public:

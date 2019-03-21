@@ -1,4 +1,40 @@
+#include <iostream>
+
 #include "GxxGmSSH.h"
+#include <WinSock.h>
+
+#pragma comment(lib, "libssh2.lib")
+#pragma comment(lib, "ws2_32.lib")
+
+static int waitsocket(int socket_fd, LIBSSH2_SESSION *session)
+{
+	struct timeval timeout;
+	int rc;
+	fd_set fd;
+	fd_set *writefd = NULL;
+	fd_set *readfd = NULL;
+	int dir;
+
+	timeout.tv_sec = 10;
+	timeout.tv_usec = 0;
+
+	FD_ZERO(&fd);
+
+	FD_SET(socket_fd, &fd);
+
+	/* now make sure we wait in the correct direction */
+	dir = libssh2_session_block_directions(session);
+
+	if(dir & LIBSSH2_SESSION_BLOCK_INBOUND)
+		readfd = &fd;
+
+	if(dir & LIBSSH2_SESSION_BLOCK_OUTBOUND)
+		writefd = &fd;
+
+	rc = select(socket_fd + 1, readfd, writefd, NULL, &timeout);
+
+	return rc;
+}
 
 GxxGmSSH::GxxGmSSH()
 {
@@ -20,7 +56,7 @@ int GxxGmSSH::Initialize()
 
 	if (errCode != 0)
 	{
-		fprintf(stderr, "WSAStartup failed with error: %d\n", err);
+		printf("WSAStartup failed with error: %d\n", errCode);
 		return errCode;
 	}
 #endif
@@ -28,7 +64,7 @@ int GxxGmSSH::Initialize()
 	errCode = libssh2_init(0);
 	if (errCode != 0)
 	{
-		fprintf (stderr, "libssh2 initialization failed (%d)\n", errCode);
+		printf ("libssh2 initialization failed (%d)\n", errCode);
 		return errCode;
 	}
 
@@ -51,6 +87,7 @@ int GxxGmSSH::Login(const char *ipaddr, const char *username, const char *passwo
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 
+	struct sockaddr_in sin;
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(22);
 	sin.sin_addr.s_addr = hostaddr;
@@ -58,7 +95,7 @@ int GxxGmSSH::Login(const char *ipaddr, const char *username, const char *passwo
 	errCode = connect(sock, (struct sockaddr*)(&sin), sizeof(struct sockaddr_in));
 	if (errCode != 0)
 	{
-		fprintf(stderr, "failed to connect!\n");
+		printf("failed to connect!\n");
 		return errCode;
 	}
 
@@ -74,7 +111,7 @@ int GxxGmSSH::Login(const char *ipaddr, const char *username, const char *passwo
 
 	if (errCode)
 	{
-		fprintf(stderr, "Failure establishing SSH session: %d\n", errCode);
+		printf("Failure establishing SSH session: %d\n", errCode);
 		return -3;
 	}
 
@@ -126,18 +163,18 @@ int GxxGmSSH::Login(const char *ipaddr, const char *username, const char *passwo
 
 	if ( strlen(password) != 0 ) {
 		/* We could authenticate via password */
-		while ((errCode = libssh2_userauth_password(session, username, password)) == LIBSSH2_ERROR_EAGAIN);
+		while ((errCode = libssh2_userauth_password(ssh2_session, username, password)) == LIBSSH2_ERROR_EAGAIN);
 
 		if (errCode)
 		{
-			fprintf(stderr, "Authentication by password failed.\n");
-			goto shutdown;
+			printf("Authentication by password failed.\n");
+			return errCode;
 		}
 	}
 	else
 	{
 		/* Or by public key */
-		while ((errCode = libssh2_userauth_publickey_fromfile(session, username,
+		while ((errCode = libssh2_userauth_publickey_fromfile(ssh2_session, username,
 			"/home/user/"
 			".ssh/id_rsa.pub",
 			"/home/user/"
@@ -145,8 +182,7 @@ int GxxGmSSH::Login(const char *ipaddr, const char *username, const char *passwo
 			password)) ==
 			LIBSSH2_ERROR_EAGAIN);
 		if (errCode) {
-			fprintf(stderr, "\tAuthentication by public key failed\n");
-			goto shutdown;
+			printf("\tAuthentication by public key failed\n");
 		}
 	}
 
@@ -170,16 +206,14 @@ void GxxGmSSH::Logout()
 	}
 
 	if (exitsignal)
-		fprintf(stderr, "\nGot signal: %s\n", exitsignal);
+		printf("\nGot signal: %s\n", exitsignal);
 	else 
-		fprintf(stderr, "\nEXIT: %d bytecount: %d\n", exitcode, bytecount);
+		printf("\nEXIT: %d\n", exitcode);
 
 	libssh2_channel_free(channel);
 	channel = NULL;
 
-shutdown:
-
-	libssh2_session_disconnect(session, "Normal Shutdown, Thank you for playing");
+	libssh2_session_disconnect(ssh2_session, "Normal Shutdown, Thank you for playing");
 	libssh2_session_free(ssh2_session);
 
 #ifdef WIN32
@@ -188,39 +222,9 @@ shutdown:
 	close(sock);
 #endif
 
-	fprintf(stderr, "all done\n");
+	printf("all done\n");
 
 	
-}
-
-static int waitsocket(int socket_fd, LIBSSH2_SESSION *session)
-{
-	struct timeval timeout;
-	int rc;
-	fd_set fd;
-	fd_set *writefd = NULL;
-	fd_set *readfd = NULL;
-	int dir;
-
-	timeout.tv_sec = 10;
-	timeout.tv_usec = 0;
-
-	FD_ZERO(&fd);
-
-	FD_SET(socket_fd, &fd);
-
-	/* now make sure we wait in the correct direction */
-	dir = libssh2_session_block_directions(session);
-
-	if(dir & LIBSSH2_SESSION_BLOCK_INBOUND)
-		readfd = &fd;
-
-	if(dir & LIBSSH2_SESSION_BLOCK_OUTBOUND)
-		writefd = &fd;
-
-	rc = select(socket_fd + 1, readfd, writefd, NULL, &timeout);
-
-	return rc;
 }
 
 int GxxGmSSH::Exec(const char *commandline, std::string &result)
@@ -228,16 +232,16 @@ int GxxGmSSH::Exec(const char *commandline, std::string &result)
 	int errCode = 0;
 	int bytecount = 0;
 
-	channel = libssh2_channel_open_session(ssh2_session);
-	while( channel == NULL && libssh2_session_last_error(ssh2_session, NULL,NULL,0) == LIBSSH2_ERROR_EAGAIN )
-    {
-        waitsocket(sock, ssh2_session);
-    }
+	while( (channel = libssh2_channel_open_session(ssh2_session)) == NULL
+		&& libssh2_session_last_error(ssh2_session,NULL,NULL,0) == LIBSSH2_ERROR_EAGAIN )
+	{
+		waitsocket(sock, ssh2_session);
+	}
 
     if( channel == NULL )
     {
-        fprintf(stderr,"Error\n");
-        result -1;
+        printf("Error\n");
+        return -1;
     }
 
     while( (errCode = libssh2_channel_exec(channel, commandline)) == LIBSSH2_ERROR_EAGAIN )
@@ -246,7 +250,7 @@ int GxxGmSSH::Exec(const char *commandline, std::string &result)
     }
     if( errCode != 0 )
     {
-        fprintf(stderr,"Error\n");
+        printf("Error\n");
         return -2;
     }
     for( ;; )
@@ -261,15 +265,15 @@ int GxxGmSSH::Exec(const char *commandline, std::string &result)
             {
                 int i;
                 bytecount += rc;
-                fprintf(stderr, "We read:\n");
+                //printf("We read:\n");
                 for( i=0; i < rc; ++i )
                     fputc( buffer[i], stderr);
-                fprintf(stderr, "\n");
+                printf("\n");
             }
             else {
-                if( rc != LIBSSH2_ERROR_EAGAIN )
-                    /* no need to output this for the EAGAIN case */
-                    fprintf(stderr, "libssh2_channel_read returned %d\n", rc);
+                //if( rc != LIBSSH2_ERROR_EAGAIN )
+                //    /* no need to output this for the EAGAIN case */
+                //    printf("libssh2_channel_read returned %d\n", rc);
             }
         }
         while( rc > 0 );
