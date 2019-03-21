@@ -125,6 +125,8 @@ BOOL CGxxGmGoVideoMgrDlg::OnInitDialog()
 	if (ret == IDCANCEL)
 		exit(4);
 
+	// 登录成功了，启动一个保活线程，定时发CMS请求
+
 	// 为Tab Control增加两个页面
 	m_cTabMain.InsertItem(0, _T("服务状态"));
 	m_cTabMain.InsertItem(1, _T("设备管理"));

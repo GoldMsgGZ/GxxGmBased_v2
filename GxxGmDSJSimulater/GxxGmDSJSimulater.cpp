@@ -1,6 +1,7 @@
 #include "GxxGmDSJSimulater.h"
 #include <Windows.h>
 #include <sstream>
+#include <iostream>
 
 #include "Poco/Base64Encoder.h"
 #include "Poco/Base64Decoder.h"
@@ -124,40 +125,7 @@ int GxxGmDSJSimulater::Initialize(struct SimulaterInitInfo &init_info, FFMpegStu
 
 	sprintf_s(msg, 4096, "[%s]注册到接入网关成功！错误码：%d", init_info.local_gbcode_.c_str(), err);
 	std::cout<<msg<<std::endl;
-	app_->logger().error(msg);
-
-
-
-	//// 初始化日志
-	//SYSTEMTIME st;
-	//GetLocalTime(&st);
-	//char current_time[128] = {0};
-	//sprintf_s(current_time, 128, "%d-%02d-%02d %02d-%02d-%02d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-
-	//char log_file_name[4096] = {0};
-	//sprintf_s(log_file_name, 4096, "%s.log", current_time, init_info.local_gbcode_.c_str());
-
-	//char current_program_path[4096] = {0};
-	//GetModuleFileNameA(NULL, current_program_path, 4096);
-	//std::string tmp = current_program_path;
-	//int pos = tmp.find_last_of('\\');
-
-	//std::string log_path = tmp.substr(0, pos + 1);
-	//log_path.append("log");
-	//CreateDirectoryA(log_path.c_str(), NULL);
-	//log_path.append("\\");
-	//log_path.append(init_info.local_gbcode_.c_str());
-	//CreateDirectoryA(log_path.c_str(), NULL);
-	//log_path.append("\\");
-	//log_path.append(log_file_name);
-
-	//log_file_handle_ = CreateFileA(log_path.c_str(), GENERIC_ALL, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	//if (log_file_handle_ == INVALID_HANDLE_VALUE)
-	//{
-	//	errCode = GetLastError();
-	//	printf("[%s]创建日志文件失败！\n", init_info.local_gbcode_.c_str());
-
-	//}
+	app_->logger().information(msg);
 
 	// 保存参数
 	local_ip_ = init_info.local_ip_.c_str();
@@ -911,24 +879,31 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_NotifyInfo_CallBackFunc(EnumNotifyType eTyp
 	{
 	case EnumNotifyType::eNOTIFY_BROADCAST:
 		// 接收到语音广播
-		sprintf_s(msg, 4096, "[%s] Recevice broadcast request.", simulater->local_gbcode_.c_str());
-		std::cout<<msg<<std::endl;
-		simulater->app_->logger().error(msg);
-
+		{
+			sprintf_s(msg, 4096, "[%s]收到语音广播请求.", simulater->local_gbcode_.c_str());
+			std::cout<<msg<<std::endl;
+			simulater->app_->logger().error(msg);
+		}
 		break;
 	case EnumNotifyType::eNOTIFY_CATASUBS:
 		// 接收到目录订阅
-		sprintf_s(msg, 4096, "[%s] Recevice catalog subscribe request.", simulater->local_gbcode_.c_str());
-		std::cout<<msg<<std::endl;
-		simulater->app_->logger().error(msg);
+		{
+			StruCatalogSubInfo *sub_info = (StruCatalogSubInfo *)pMsg;
 
+			sprintf_s(msg, 4096, "[%s]收到目录订阅请求。订阅ID：%d", simulater->local_gbcode_.c_str(), sub_info->iID);
+			std::cout<<msg<<std::endl;
+			simulater->app_->logger().error(msg);
+		}
 		break;
 	case EnumNotifyType::eNOTIFY_ALARMSUBS:
 		// 接收到告警订阅
-		sprintf_s(msg, 4096, "[%s] Recevice alarm subscribe request.", simulater->local_gbcode_.c_str());
-		std::cout<<msg<<std::endl;
-		simulater->app_->logger().error(msg);
+		{
+			StruAlarmSubInfo *sub_info = (StruAlarmSubInfo *)pMsg;
 
+			sprintf_s(msg, 4096, "[%s]收到告警订阅请求。订阅ID：%d", simulater->local_gbcode_.c_str(), sub_info->iSubID);
+			std::cout<<msg<<std::endl;
+			simulater->app_->logger().error(msg);
+		}
 		break;
 	case EnumNotifyType::eNOTIFY_MOBILEPOSSUB:
 		{
@@ -940,14 +915,14 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_NotifyInfo_CallBackFunc(EnumNotifyType eTyp
 			StruMobilePosSubInfo *mobile_position_sub_info = (StruMobilePosSubInfo *)pMsg;
 			simulater->mobile_position_sub_id_ = mobile_position_sub_info->iSubID;
 
-			sprintf_s(msg, 4096, "[%s] Recevice mobile-pos subscribe request. Subscribe-ID : %d", simulater->local_gbcode_.c_str(), simulater->mobile_position_sub_id_);
+			sprintf_s(msg, 4096, "[%s]收到移动设备定位订阅请求。订阅ID：%d", simulater->local_gbcode_.c_str(), simulater->mobile_position_sub_id_);
 			std::cout<<msg<<std::endl;
 			simulater->app_->logger().error(msg);
 		}
 		break;
 	case EnumNotifyType::eNOTIFY_SUBSEXPIRED:
 		// 终止订阅
-		sprintf_s(msg, 4096, "[%s] Recevice subscribe expired request.", simulater->local_gbcode_.c_str());
+		sprintf_s(msg, 4096, "[%s]收到订阅过期请求。", simulater->local_gbcode_.c_str());
 		std::cout<<msg<<std::endl;
 		simulater->app_->logger().error(msg);
 
@@ -1196,7 +1171,7 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 				err = GB28181Agent_HeartBeat(simulater->agent_, &connention_param, 1, NULL);
 				if (err != GS28181_ERR_SUCCESS)
 				{
-					sprintf_s(msg, 4096, "[%s] Send 28181 heart-beat failed. errCode : ", simulater->local_gbcode_.c_str(), err);
+					sprintf_s(msg, 4096, "[%s] 发送GB28181保活心跳失败。错误码：%d", simulater->local_gbcode_.c_str(), err);
 					std::cout<<msg<<std::endl;
 					simulater->app_->logger().error(msg);
 				}
