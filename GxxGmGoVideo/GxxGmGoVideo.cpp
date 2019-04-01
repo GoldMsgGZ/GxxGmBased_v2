@@ -113,11 +113,11 @@ int GxxGmGoVideo::Login(const char *govideo_ip, unsigned short govideo_port, con
 		token_ = token.toString();
 		errCode = atoi(result_code.toString().c_str());
 
-		//// 登录成功了，启动心跳线程
-		//if (!hb_thread_.isRunning())
-		//{
-		//	hb_thread_.start(GxxGmGoVideo::HeartBeatThread, this);
-		//}
+		// 登录成功了，启动心跳线程
+		if (!hb_thread_.isRunning())
+		{
+			hb_thread_.start(GxxGmGoVideo::HeartBeatThread, this);
+		}
 	}
 	catch (Poco::Net::NetException &ex)
 	{
@@ -1519,17 +1519,17 @@ void GxxGmGoVideo::HeartBeatThread(void* param)
 
 			char query_string[4096] = {0};
 			sprintf_s(query_string, 4096,
-				"/GoVideo/Server/KeepAlive"
-				);
+				"/GoVideo/Serviceconfig/GetAllServerRequest?SequenceID=5&Token=%s&StartRow=1&RowNum=100",
+				govideo->token_.c_str());
 			std::string uri = query_string;
-			Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_POST, uri, Poco::Net::HTTPRequest::HTTP_1_1);
-			request.add("Content-Type", "application/json; charset=gb2312");
-			request.add("SequenceID", "10086");
-			request.add("Token", govideo->token_.c_str());
+			Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_GET, uri, Poco::Net::HTTPRequest::HTTP_1_1);
+			//request.add("Content-Type", "application/json; charset=gb2312");
+			//request.add("SequenceID", "10086");
+			//request.add("Token", govideo->token_.c_str());
 
-			request.setContentLength(0);
+			//request.setContentLength(0);
 
-			session->sendRequest(request)<<"";
+			session->sendRequest(request);
 
 			Poco::Net::HTTPResponse response;
 			std::istream &is = session->receiveResponse(response);
@@ -1568,12 +1568,13 @@ void GxxGmGoVideo::HeartBeatThread(void* param)
 		{
 			errCode = ex.code();
 			errstr = ex.displayText();
-			printf("点流失败！%s\n", errstr.c_str());
+			printf("保活心跳发送失败！%s\n", errstr.c_str());
 		}
 		catch (Poco::Exception &ex)
 		{
 			errCode = ex.code();
 			errstr = ex.displayText();
+			printf("保活心跳发送失败！%s\n", errstr.c_str());
 		}
 	}
 

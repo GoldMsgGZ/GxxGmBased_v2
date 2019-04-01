@@ -49,6 +49,11 @@ struct SimulaterInitInfo
 	std::string platform_id_;
 };
 
+struct ExtraDataResponseInfo
+{
+
+};
+
 class DLL_API GxxGmDSJSimulaterNotifer
 {
 public:
@@ -88,6 +93,8 @@ public:
 public:
 	// 发送绑定用户请求
 	int SendBindUserInfo(const char *user_id, const char *password);
+	int SendBindUserConfirmRecevicedInfo();
+	int SendBindUserConfirmInfo();
 	// 发送设备基本信息
 	int SendBaseInfo();
 	// 发送设备定位信息
