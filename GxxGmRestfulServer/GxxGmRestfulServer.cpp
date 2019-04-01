@@ -18,47 +18,14 @@
 #include "Poco/Util/ServerApplication.h"
 #include "Poco/StreamCopier.h"
 
-#include "Poco\ClassLoader.h"
-#include "Poco\Manifest.h"
-#include "GxxGmAbstractPlugin.h"
-
-typedef Poco::ClassLoader<GxxGmAbstractPlugin> PluginLoader;
-typedef Poco::Manifest<GxxGmAbstractPlugin> PluginManifest;
 
 class GxxGmRequestHandler : public Poco::Net::HTTPRequestHandler
 {
 public:
 	virtual void handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response)
 	{
-		// 有新的请求进来了，我们根据插件集合来分发
-		Poco::ClassLoader<GxxGmAbstractPlugin>::Iterator iter(plugin_loader_->begin());
-		Poco::ClassLoader<GxxGmAbstractPlugin>::Iterator iter_end(plugin_loader_->end());
-
-		for (; iter != iter_end; ++iter)
-		{
-			Poco::Manifest<GxxGmAbstractPlugin>::Iterator manifest_iter(iter->second->begin());
-			Poco::Manifest<GxxGmAbstractPlugin>::Iterator manifest_iter_end(iter->second->end());
-
-			for (; manifest_iter != manifest_iter_end; ++manifest_iter)
-			{
-				int errCode = manifest_iter->RequestHandler(request, response);
-				if (errCode != REQUEST_HANDLE_CODE_NOT_SUPPORTED)
-				{
-					// 说明该请求已经被某一个业务插件处理掉了，这里的结果是最终结果
-					break;
-				}
-			}
-		}
+		
 	}
-
-public:
-	void SetLoader(Poco::ClassLoader<GxxGmAbstractPlugin> *loader)
-	{
-		plugin_loader_ = loader;
-	}
-
-private:
-	Poco::ClassLoader<GxxGmAbstractPlugin> *plugin_loader_;
 };
 
 class GxxGmRequestHandlerFactory : public Poco::Net::HTTPRequestHandlerFactory
@@ -67,19 +34,8 @@ public:
 	virtual Poco::Net::HTTPRequestHandler* createRequestHandler(const Poco::Net::HTTPServerRequest& request)
 	{
 		GxxGmRequestHandler *handler = new GxxGmRequestHandler;
-		handler->SetLoader(&plugin_loader_);
-
 		return handler;
 	}
-
-public:
-	void LoadPlugin(std::string plugin_path)
-	{
-		plugin_loader_.loadLibrary(plugin_path);
-	}
-
-private:
-	PluginLoader plugin_loader_;
 };
 
 class GxxGmServerApp : public Poco::Util::ServerApplication
@@ -112,12 +68,10 @@ protected:
 
 			for (int index = 0; index < plugin_count; ++index)
 			{
-				char value[4096] = {0};
-				sprintf_s(value, 4096, "PLUGINS.PLUGIN_PATH_%d", index + 1);
-				std::string plugin_path = config().getString(value);
-				plugin_path += Poco::SharedLibrary::suffix();
-
-				factory->LoadPlugin(plugin_path);
+				//char value[4096] = {0};
+				//sprintf_s(value, 4096, "PLUGINS.PLUGIN_PATH_%d", index + 1);
+				//std::string plugin_path = config().getString(value);
+				//plugin_path += Poco::SharedLibrary::suffix();
 			}
 
 			// 启动服务
