@@ -51,7 +51,9 @@ struct SimulaterInitInfo
 
 struct ExtraDataResponseInfo
 {
-
+	int send_type_;
+	std::string target_device_id_;
+	std::string extra_msg_;
 };
 
 class DLL_API GxxGmDSJSimulaterNotifer
@@ -178,6 +180,14 @@ public:
 	std::string dep_id_;
 	std::string show_location_;
 	std::string show_datetime_;
+
+public:
+	// 这里用于存放需要回复给平台的请求数据
+	// 还有一个配套的线程来
+	std::queue<ExtraDataResponseInfo> extra_response_queue_;
+	Poco::Event wait_queue_not_empty_;
+	Poco::Thread extra_data_response_thread;
+	static void  ExtraDataResponseThread(void *param);
 
 public:
 	GxxGmDSJSimulaterStreamMgr stream_mgr_;

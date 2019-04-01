@@ -293,6 +293,72 @@ int GxxGmDSJSimulater::SendBindUserInfo(/*const char *platform_id, const char *d
 	return err;
 }
 
+int GxxGmDSJSimulater::SendBindUserConfirmRecevicedInfo()
+{
+	// 将参数加入队列，有线程专门处理消息发送
+	GS28181_ERR err = GS28181_ERR_SUCCESS;
+
+	char msg[4096] = {0};
+	strcpy_s(msg, 4096, "<SubCmdType>BindUserConfirmReceived</SubCmdType>");
+
+	// 调用接口，发送透传信息
+	StruConnectParam connention_param;
+	strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, server_ip_.c_str());
+	strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, server_gbcode_.c_str());
+	connention_param.iPort = atoi(server_port_.c_str());
+
+	// 这里是否要考虑一下编码问题
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg, strlen(msg));
+	if (err != GS28181_ERR_SUCCESS)
+	{
+		// 
+		sprintf_s(msg, 4096, "[%s]发送设备绑定请求失败！错误码：%d", local_gbcode_.c_str(), err);
+		std::cout<<msg<<std::endl;
+		app_->logger().error(msg);
+	}
+
+	return err;
+}
+
+int GxxGmDSJSimulater::SendBindUserConfirmInfo(const char *user_id, const char *password)
+{
+	// 按照要求构建字符串
+	const char *msg_format = "<SubCmdType>BindUserConfirm</SubCmdType> \
+		<Receipt>1</Receipt> \
+		<PlatformID>%s</PlatformID> \
+		<DeviceIMEI>358F27F145B</DeviceIMEI> \
+		<UserID>GM001</UserID> \
+		<Password>96e79218965eb72c92a549dd5a330112</Password>
+";
+
+	// 这里算一波MD5
+	Poco::MD5Engine md5;
+	md5.update(password);
+	std::string md5hex = md5.digestToHex(md5.digest());
+
+	char msg[4096] = {0};
+	sprintf_s(msg, 4096, msg_format, 
+		platform_id_.c_str(), imei_.c_str(), user_id, md5hex.c_str());
+
+	// 调用接口，发送透传信息
+	StruConnectParam connention_param;
+	strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, server_ip_.c_str());
+	strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, server_gbcode_.c_str());
+	connention_param.iPort = atoi(server_port_.c_str());
+
+	// 这里是否要考虑一下编码问题
+	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg, strlen(msg));
+	if (err != GS28181_ERR_SUCCESS)
+	{
+		// 
+		sprintf_s(msg, 4096, "[%s]发送设备绑定请求失败！错误码：%d", local_gbcode_.c_str(), err);
+		std::cout<<msg<<std::endl;
+		app_->logger().error(msg);
+	}
+
+	return err;
+}
+
 int GxxGmDSJSimulater::SendBaseInfo()
 {
 	// 按照要求构建字符串
@@ -1036,6 +1102,8 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_ExtendRqeustCallBack(SESSION_HANDLE hSessio
 			simulater->dev_baseinfo_time_ = atoi(element_device_states_rate->GetText());
 		}
 
+		// 这里应该是完成了人机绑定的，应当记录一下日志
+
 		// 收到绑定用户信息的结果
 		// 这里是不是应该扔到一个队列里面处理？
 
@@ -1049,21 +1117,13 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_ExtendRqeustCallBack(SESSION_HANDLE hSessio
 			</Callbacks>\
 			</ConfigUpdateReport>";
 
-		GS28181_ERR err = GB28181Agent_RespondTransData(simulater->agent_, czTargetDevID, true, result, strlen(result));
-		if (err != GS28181_ERR_SUCCESS)
-		{
-			sprintf_s(msg, 4096, "[%s]发送绑定结果确认请求失败。", simulater->local_gbcode_.c_str());
-			std::cout<<msg<<std::endl;
-			simulater->app_->logger().error(msg);
-		}
-
-		//// 通知UI层更新信息
-		////simulater->notifer_->RecvRemoteBindUser();
-
-		////err = GB28181Agent_NotifyTransData(simulater->agent_, &simulater->reg_msg.stuCnnParam, czTargetDevID, NULL, 0);
-		////if (err != GS28181_ERR_SUCCESS)
-		////{
-		////}
+		ExtraDataResponseInfo response;
+		response.target_device_id_ = czTargetDevID;
+		response.extra_msg_ = result;
+		
+		// 塞入队列
+		simulater->extra_response_queue_.push(response);
+		simulater->wait_queue_not_empty_.set();
 	}
 	else if (_stricmp(sub_cmd_type, "BindUserConfirm") == 0)
 	{
@@ -1221,4 +1281,39 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 		errCode = e.code();
 		errStr = e.displayText();
 	}
+}
+
+void GxxGmDSJSimulater::ExtraDataResponseThread(void *param)
+{
+	GxxGmDSJSimulater *simulator = (GxxGmDSJSimulater *)param;
+	char msg[4096] = {0};
+
+	// 调用接口，发送透传信息
+	StruConnectParam connention_param;
+	strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, server_ip_.c_str());
+	strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, server_gbcode_.c_str());
+	connention_param.iPort = atoi(server_port_.c_str());
+
+	while (true)
+	{
+		// 通过事件检查队列是否为空
+		if (simulator->extra_response_queue_.empty())
+		{
+			wait_queue_not_empty_.wait(10);
+			continue;
+		}
+
+		ExtraDataResponseInfo extra_data = simulator->extra_response_queue_.front();
+		simulator->extra_response_queue_.pop();
+
+		// 这里是否要考虑一下编码问题
+		GS28181_ERR err = GB28181Agent_NotifyTransData(simulator->agent_, &connention_param, simulator->local_gbcode_.c_str(), extra_data.extra_msg_.c_str(), extra_data.extra_msg_.size());
+		if (err != GS28181_ERR_SUCCESS)
+		{
+			sprintf_s(msg, 4096, "[%s]发送请求失败！错误码：%d，请求信息：\n%s\n", simulator->local_gbcode_.c_str(), err, extra_data.extra_msg_.c_str());
+			std::cout<<msg<<std::endl;
+			app_->logger().error(msg);
+		}
+	}
+	
 }
