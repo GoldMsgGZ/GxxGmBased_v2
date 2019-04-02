@@ -238,7 +238,7 @@ public:
 
 int main(int argc, const char *argv[])
 {
-	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.8\n");
+	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.9\n");
 	printf("\n");
 	printf("功能说明：\n");
 	printf("1. 支持GB28181-2011 和 GB28181-2016两个版本的协议通信；\n");
@@ -253,7 +253,8 @@ int main(int argc, const char *argv[])
 	printf("10. 采用Poco::Application框架实现模拟器；\n");
 	printf("11. 优化了服务组件，降低资源占用；\n");
 	printf("12. 调整了视频解码器调用过程，进一步降低资源占用；\n");
-	printf("12. 重构日志系统；\n");
+	printf("13. 重构日志系统；\n");
+	printf("14. 增加了人机绑定逻辑、增加了接收警情逻辑；\n");
 	printf("\n");
 	system("pause");
 

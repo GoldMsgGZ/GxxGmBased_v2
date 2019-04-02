@@ -171,6 +171,12 @@ int GxxGmDSJSimulater::Initialize(struct SimulaterInitInfo &init_info, FFMpegStu
 		std::cout<<msg<<std::endl;
 		app_->logger().error(msg);
 	}
+	else
+	{
+		sprintf_s(msg, 4096, "[%s]初始化推流服务成功！", init_info.local_gbcode_.c_str());
+		std::cout<<msg<<std::endl;
+		app_->logger().information(msg);
+	}
 
 	// 查询目录响应成功
 	// 开始向上推送设备状态信息和定位信息
@@ -301,9 +307,15 @@ int GxxGmDSJSimulater::SendBindUserInfo(/*const char *platform_id, const char *d
 	if (err != GS28181_ERR_SUCCESS)
 	{
 		// 
-		sprintf_s(msg, 4096, "[%s]发送设备绑定请求失败！错误码：%d", local_gbcode_.c_str(), err);
+		sprintf_s(msg, 4096, "[%s]发送人机绑定请求失败！错误码：%d", local_gbcode_.c_str(), err);
 		std::cout<<msg<<std::endl;
 		app_->logger().error(msg);
+	}
+	else
+	{
+		sprintf_s(msg, 4096, "[%s]发送人机绑定请求成功！错误码：%d", local_gbcode_.c_str(), err);
+		std::cout<<msg<<std::endl;
+		app_->logger().information(msg);
 	}
 
 	return err;
@@ -322,25 +334,11 @@ int GxxGmDSJSimulater::SendBindUserConfirmRecevicedInfo()
 	extra_response_queue_.push(info);
 	wait_queue_not_empty_.set();
 
+	sprintf_s(msg, 4096, "[%s]已将人机绑定——收到用户确认请求消息放入队列", local_gbcode_.c_str());
+	std::cout<<msg<<std::endl;
+	app_->logger().information(msg);
+
 	return 0;
-
-// 	// 调用接口，发送透传信息
-// 	StruConnectParam connention_param;
-// 	strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, server_ip_.c_str());
-// 	strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, server_gbcode_.c_str());
-// 	connention_param.iPort = atoi(server_port_.c_str());
-// 
-// 	// 这里是否要考虑一下编码问题
-// 	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg, strlen(msg));
-// 	if (err != GS28181_ERR_SUCCESS)
-// 	{
-// 		// 
-// 		sprintf_s(msg, 4096, "[%s]发送设备绑定请求失败！错误码：%d", local_gbcode_.c_str(), err);
-// 		std::cout<<msg<<std::endl;
-// 		app_->logger().error(msg);
-// 	}
-
-//	return err;
 }
 
 int GxxGmDSJSimulater::SendBindUserConfirmInfo()
@@ -348,11 +346,11 @@ int GxxGmDSJSimulater::SendBindUserConfirmInfo()
 	// 按照要求构建字符串
 	const char *msg_format = 
 		"<SubCmdType>BindUserConfirm</SubCmdType> \
-		<Receipt>1</Receipt> \
-		<PlatformID>%s</PlatformID> \
-		<DeviceIMEI>%s</DeviceIMEI> \
-		<UserID>%s</UserID> \
-		<Password>%s</Password>";
+		 <Receipt>1</Receipt> \
+		 <PlatformID>%s</PlatformID> \
+		 <DeviceIMEI>%s</DeviceIMEI> \
+		 <UserID>%s</UserID> \
+		 <Password>%s</Password>";
 
 	// 这里算一波MD5
 	Poco::MD5Engine md5;
@@ -368,25 +366,11 @@ int GxxGmDSJSimulater::SendBindUserConfirmInfo()
 	extra_response_queue_.push(info);
 	wait_queue_not_empty_.set();
 
-	return 0;
+	sprintf_s(msg, 4096, "[%s]已将人机绑定——确认绑定请求消息放入队列", local_gbcode_.c_str());
+	std::cout<<msg<<std::endl;
+	app_->logger().information(msg);
 
-// 	// 调用接口，发送透传信息
-// 	StruConnectParam connention_param;
-// 	strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, server_ip_.c_str());
-// 	strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, server_gbcode_.c_str());
-// 	connention_param.iPort = atoi(server_port_.c_str());
-// 
-// 	// 这里是否要考虑一下编码问题
-// 	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg, strlen(msg));
-// 	if (err != GS28181_ERR_SUCCESS)
-// 	{
-// 		// 
-// 		sprintf_s(msg, 4096, "[%s]发送设备绑定请求失败！错误码：%d", local_gbcode_.c_str(), err);
-// 		std::cout<<msg<<std::endl;
-// 		app_->logger().error(msg);
-// 	}
-// 
-// 	return err;
+	return 0;
 }
 
 int GxxGmDSJSimulater::SendBaseInfo()
@@ -424,6 +408,12 @@ int GxxGmDSJSimulater::SendBaseInfo()
 		sprintf_s(msg, 4096, "[%s]发送设备基础信息失败！错误码：%d", local_gbcode_.c_str(), err);
 		std::cout<<msg<<std::endl;
 		app_->logger().error(msg);
+	}
+	else
+	{
+		sprintf_s(msg, 4096, "[%s]发送设备基础信息成功！错误码：%d", local_gbcode_.c_str(), err);
+		std::cout<<msg<<std::endl;
+		app_->logger().information(msg);
 	}
 
 	return err;
@@ -470,9 +460,15 @@ int GxxGmDSJSimulater::SendLocationInfo()
 	GS28181_ERR err = GB28181Agent_NotifyTransData(agent_, &connention_param, local_gbcode_.c_str(), msg, strlen(msg));
 	if (err != GS28181_ERR_SUCCESS)
 	{
-		sprintf_s(msg, 4096, "[%s]发送设备定位信息失败！错误码：%d", local_gbcode_.c_str(), err);
+		sprintf_s(msg, 4096, "[%s]发送扩展设备定位信息失败！错误码：%d", local_gbcode_.c_str(), err);
 		std::cout<<msg<<std::endl;
 		app_->logger().error(msg);
+	}
+	else
+	{
+		sprintf_s(msg, 4096, "[%s]发送扩展设备定位信息成功！错误码：%d", local_gbcode_.c_str(), err);
+		std::cout<<msg<<std::endl;
+		app_->logger().information(msg);
 	}
 
 	return err;
@@ -507,9 +503,15 @@ int GxxGmDSJSimulater::SendLocationInfoEx()
 	if (err != GS28181_ERR_SUCCESS)
 	{
 		// 
-		sprintf_s(msg, 4096, "[%s]发送设备定位信息失败！错误码：%d", local_gbcode_.c_str(), err);
+		sprintf_s(msg, 4096, "[%s]发送标准设备定位信息失败！错误码：%d", local_gbcode_.c_str(), err);
 		std::cout<<msg<<std::endl;
 		app_->logger().error(msg);
+	}
+	else
+	{
+		sprintf_s(msg, 4096, "[%s]发送标准设备定位信息成功！错误码：%d", local_gbcode_.c_str(), err);
+		std::cout<<msg<<std::endl;
+		app_->logger().information(msg);
 	}
 
 	return err;
@@ -543,6 +545,12 @@ int GxxGmDSJSimulater::SendExceptionInfo()
 		sprintf_s(msg, 4096, "[%s]发送设备异常信息失败！错误码：%d", local_gbcode_.c_str(), err);
 		std::cout<<msg<<std::endl;
 		app_->logger().error(msg);
+	}
+	else
+	{
+		sprintf_s(msg, 4096, "[%s]发送标准设备定位信息成功！错误码：%d", local_gbcode_.c_str(), err);
+		std::cout<<msg<<std::endl;
+		app_->logger().information(msg);
 	}
 
 	return err;
@@ -598,6 +606,12 @@ int GxxGmDSJSimulater::SendAlarmInfo()
 		std::cout<<msg<<std::endl;
 		app_->logger().error(msg);
 	}
+	else
+	{
+		sprintf_s(msg, 4096, "[%s]发送设备告警信息成功！错误码：%d", local_gbcode_.c_str(), err);
+		std::cout<<msg<<std::endl;
+		app_->logger().information(msg);
+	}
 
 	return err;
 }
@@ -638,6 +652,12 @@ int GxxGmDSJSimulater::SendFaceInfo(const char *face_img, int face_img_len)
 		std::cout<<msg<<std::endl;
 		app_->logger().error(msg);
 	}
+	else
+	{
+		sprintf_s(msg, 4096, "[%s]发送人脸识别请求成功！错误码：%d", local_gbcode_.c_str(), err);
+		std::cout<<msg<<std::endl;
+		app_->logger().information(msg);
+	}
 
 	return err;
 }
@@ -671,6 +691,12 @@ int GxxGmDSJSimulater::SendCarIdInfo()
 		sprintf_s(msg, 4096, "[%s]发送车牌识别请求失败！错误码：%d", local_gbcode_.c_str(), err);
 		std::cout<<msg<<std::endl;
 		app_->logger().error(msg);
+	}
+	else
+	{
+		sprintf_s(msg, 4096, "[%s]发送车牌识别请求成功！错误码：%d", local_gbcode_.c_str(), err);
+		std::cout<<msg<<std::endl;
+		app_->logger().information(msg);
 	}
 
 	return err;
@@ -739,6 +765,10 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_DevInfoQueryCB(SESSION_HANDLE hSession, con
 
 			return SIP_RESPONSE_CODE_SUCCESS;
 		}
+
+		sprintf_s(msg, 4096, "[%s]响应设备信息查询成功！错误码：%d", simulater->local_gbcode_.c_str(), err);
+		std::cout<<msg<<std::endl;
+		simulater->app_->logger().information(msg);
 	}
 	else if (stuQuery->eType == EnumQueryType::eQUE_DEV_STATUS)
 	{
@@ -780,6 +810,10 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_DevInfoQueryCB(SESSION_HANDLE hSession, con
 			simulater->app_->logger().error(msg);
 
 			return SIP_RESPONSE_CODE_SUCCESS;
+
+			sprintf_s(msg, 4096, "[%s]响应设备状态查询成功！错误码：%d", simulater->local_gbcode_.c_str(), err);
+			std::cout<<msg<<std::endl;
+			simulater->app_->logger().information(msg);
 		}
 	}
 	else if (stuQuery->eType == EnumQueryType::eQUE_DEV_CATALOG)
@@ -835,6 +869,10 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_DevInfoQueryCB(SESSION_HANDLE hSession, con
 
 			return SIP_RESPONSE_CODE_SUCCESS;
 		}
+
+		sprintf_s(msg, 4096, "[%s]响应设备目录查询成功！错误码：%d", simulater->local_gbcode_.c_str(), err);
+		std::cout<<msg<<std::endl;
+		simulater->app_->logger().information(msg);
 	}
 	else if (stuQuery->eType == EnumQueryType::eQUE_DEV_RECORDINDEX)
 	{
@@ -960,7 +998,7 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_StreamRequestCB(STREAM_HANDLE hStream, cons
 
 		sprintf_s(msg, 4096, "[%s]收到停流请求！", simulater->local_gbcode_.c_str());
 		std::cout<<msg<<std::endl;
-		simulater->app_->logger().error(msg);
+		simulater->app_->logger().information(msg);
 	}
 
 	return SIP_RESPONSE_CODE_SUCCESS;
@@ -978,7 +1016,7 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_NotifyInfo_CallBackFunc(EnumNotifyType eTyp
 		{
 			sprintf_s(msg, 4096, "[%s]收到语音广播请求.", simulater->local_gbcode_.c_str());
 			std::cout<<msg<<std::endl;
-			simulater->app_->logger().error(msg);
+			simulater->app_->logger().information(msg);
 		}
 		break;
 	case EnumNotifyType::eNOTIFY_CATASUBS:
@@ -988,7 +1026,7 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_NotifyInfo_CallBackFunc(EnumNotifyType eTyp
 
 			sprintf_s(msg, 4096, "[%s]收到目录订阅请求。订阅ID：%d", simulater->local_gbcode_.c_str(), sub_info->iID);
 			std::cout<<msg<<std::endl;
-			simulater->app_->logger().error(msg);
+			simulater->app_->logger().information(msg);
 		}
 		break;
 	case EnumNotifyType::eNOTIFY_ALARMSUBS:
@@ -998,7 +1036,7 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_NotifyInfo_CallBackFunc(EnumNotifyType eTyp
 
 			sprintf_s(msg, 4096, "[%s]收到告警订阅请求。订阅ID：%d", simulater->local_gbcode_.c_str(), sub_info->iSubID);
 			std::cout<<msg<<std::endl;
-			simulater->app_->logger().error(msg);
+			simulater->app_->logger().information(msg);
 		}
 		break;
 	case EnumNotifyType::eNOTIFY_MOBILEPOSSUB:
@@ -1013,14 +1051,14 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_NotifyInfo_CallBackFunc(EnumNotifyType eTyp
 
 			sprintf_s(msg, 4096, "[%s]收到移动设备定位订阅请求。订阅ID：%d", simulater->local_gbcode_.c_str(), simulater->mobile_position_sub_id_);
 			std::cout<<msg<<std::endl;
-			simulater->app_->logger().error(msg);
+			simulater->app_->logger().information(msg);
 		}
 		break;
 	case EnumNotifyType::eNOTIFY_SUBSEXPIRED:
 		// 终止订阅
 		sprintf_s(msg, 4096, "[%s]收到订阅过期请求。", simulater->local_gbcode_.c_str());
 		std::cout<<msg<<std::endl;
-		simulater->app_->logger().error(msg);
+		simulater->app_->logger().information(msg);
 
 		break;
 	default:
@@ -1058,6 +1096,10 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_ExtendRqeustCallBack(SESSION_HANDLE hSessio
 	tinyxml2::XMLError xml_err = doc.Parse(xml.c_str());
 	if (xml_err != tinyxml2::XMLError::XML_SUCCESS)
 	{
+		sprintf_s(msg, 4096, "[%s]收到无法识别的扩展信息：%s", simulater->local_gbcode_.c_str(), xml.c_str());
+		std::cout<<msg<<std::endl;
+		simulater->app_->logger().information(msg);
+
 		return SIP_RESPONSE_CODE_BAD_REQUEST;
 	}
 
@@ -1084,7 +1126,7 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_ExtendRqeustCallBack(SESSION_HANDLE hSessio
 			//simulater->speaker_->Speak("账号或密码错误！");
 			sprintf_s(msg, 4096, "[%s]收到人机绑定反馈：%s", simulater->local_gbcode_.c_str(), sub_cmd_result_detail);
 			std::cout<<msg<<std::endl;
-			simulater->app_->logger().error(msg);
+			simulater->app_->logger().information(msg);
 			
 			return SIP_RESPONSE_CODE_SUCCESS;
 		}
@@ -1139,7 +1181,7 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_ExtendRqeustCallBack(SESSION_HANDLE hSessio
 		// 这里应该是完成了人机绑定的，应当记录一下日志
 		sprintf_s(msg, 4096, "[%s]收到人机绑定反馈：绑定成功！", simulater->local_gbcode_.c_str());
 		std::cout<<msg<<std::endl;
-		simulater->app_->logger().error(msg);
+		simulater->app_->logger().information(msg);
 
 		// 收到绑定用户信息的结果
 		// 这里是不是应该扔到一个队列里面处理？
@@ -1164,6 +1206,10 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_ExtendRqeustCallBack(SESSION_HANDLE hSessio
 	}
 	else if (_stricmp(sub_cmd_type, "BindUserConfirm") == 0)
 	{
+		sprintf_s(msg, 4096, "[%s]收到人机绑定确认信息，此用户之前已绑定了其他设备...", simulater->local_gbcode_.c_str());
+		std::cout<<msg<<std::endl;
+		simulater->app_->logger().information(msg);
+
 		// 接收到用户确认包，这里就不处理了，直接发下一个信令
 		simulater->SendBindUserConfirmRecevicedInfo();
 		simulater->SendBindUserConfirmInfo();
@@ -1206,11 +1252,6 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_ExtendRqeustCallBack(SESSION_HANDLE hSessio
 	}
 	else if (_stricmp(sub_cmd_type, "EmergencyInfo") == 0)
 	{
-		GS28181_ERR err = GB28181Agent_RespondTransData(simulater->agent_, czTargetDevID, true, NULL, 0);
-		if (err != GS28181_ERR_SUCCESS)
-		{
-		}
-
 		// 平台下发警情信息
 		tinyxml2::XMLElement *element_emergency_id = root->FirstChildElement("EmergencyId");
 		tinyxml2::XMLElement *element_dispatch_time = root->FirstChildElement("DispatchTime");
@@ -1223,6 +1264,9 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_ExtendRqeustCallBack(SESSION_HANDLE hSessio
 		simulater->notifer_->RecvEmergency(emergency_id, dispatch_time, dispatch_end_time);
 
 		// 添加语音播报
+		sprintf_s(msg, 4096, "[%s]收到警情信息信息\n警情ID：%s\n处警时间：%s\n处警结束时间%s", simulater->local_gbcode_.c_str(), emergency_id, dispatch_time, dispatch_end_time);
+		std::cout<<msg<<std::endl;
+		simulater->app_->logger().information(msg);
 	}
 
 	return SIP_RESPONSE_CODE_SUCCESS;
@@ -1360,6 +1404,12 @@ void GxxGmDSJSimulater::ExtraDataResponseThread(void *param)
 			sprintf_s(msg, 4096, "[%s]发送请求失败！错误码：%d，请求信息：\n%s\n", simulator->local_gbcode_.c_str(), err, extra_data.extra_msg_.c_str());
 			std::cout<<msg<<std::endl;
 			simulator->app_->logger().error(msg);
+		}
+		else
+		{
+			sprintf_s(msg, 4096, "[%s]发送请求成功！错误码：%d，请求信息：\n%s\n", simulator->local_gbcode_.c_str(), err, extra_data.extra_msg_.c_str());
+			std::cout<<msg<<std::endl;
+			simulator->app_->logger().information(msg);
 		}
 	}
 	
