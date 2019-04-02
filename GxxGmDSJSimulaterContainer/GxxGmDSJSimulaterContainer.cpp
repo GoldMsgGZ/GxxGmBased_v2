@@ -98,7 +98,11 @@ public:
 			int gb28181_hb_time = config().getUInt("GxxGmDSJSimulater.GB28181_HB_TIME");
 			int dev_baseinfo_time = config().getUInt("GxxGmDSJSimulater.DEV_BASE_INFO_TIME");
 			int dev_location_time = config().getUInt("GxxGmDSJSimulater.DEV_LOCATION_TIME");
+			int dev_userbind_time = config().getUInt("GxxGmDSJSimulater.DEV_BINDUSER_TIME");
 			int dev_imei_index_start = config().getUInt("GxxGmDSJSimulater.DEVICE_IMEI_START");
+
+			std::string police_number = config().getString("GxxGmDSJSimulater.POLICE_NUMBER");
+			std::string police_password = config().getString("GxxGmDSJSimulater.POLICE_PASSWORD");
 
 			std::string location_latitude = config().getString("GxxGmDSJSimulater.DEV_LOCATION_LATITUDE");
 			std::string location_longtitude = config().getString("GxxGmDSJSimulater.DEV_LOCATION_LONGTITUDE");
@@ -187,6 +191,9 @@ public:
 				init_info.gb28181_hb_time_ = gb28181_hb_time;
 				init_info.dev_baseinfo_time_ = dev_baseinfo_time;
 				init_info.dev_location_time_ = dev_location_time;
+				init_info.dev_userbind_time_ = dev_userbind_time;
+				init_info.police_number_ = police_number;
+				init_info.police_password_ = police_password;
 				init_info.imei_ = current_client_imei;
 				init_info.platform_id_ = platform_id;
 

@@ -5,6 +5,7 @@
 #include "GxxGmDSJSimulaterStreamMgr.h"
 #include "GB28181AgentSDK.h"
 #include <string>
+#include <queue>
 
 #include "Poco/Thread.h"
 #include "Poco/Logger.h"
@@ -44,6 +45,10 @@ struct SimulaterInitInfo
 	int gb28181_hb_time_;
 	int dev_baseinfo_time_;
 	int dev_location_time_;
+	int dev_userbind_time_;
+
+	std::string police_number_;
+	std::string police_password_;
 
 	std::string imei_;
 	std::string platform_id_;
@@ -158,6 +163,7 @@ public:
 	int gb28181_hb_time_;		// 保活心跳间隔时间
 	int dev_baseinfo_time_;		// 基础信息间隔时间
 	int dev_location_time_;		// 定位信息间隔时间
+	int dev_userbind_time_;		// 人机绑定信息间隔
 
 	std::string imei_;			// 模拟器IMEI
 	std::string platform_id_;
@@ -165,6 +171,10 @@ public:
 	DEVICE_BASE_INFO base_info_;
 	DEVICE_LOCATION_INFO location_info_;
 	DEVICE_EXCEPTION_INFO exception_info_;
+
+public:
+	std::string police_id_;
+	std::string police_password_;
 
 public:
 	// 水印部分内容
