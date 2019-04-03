@@ -45,7 +45,7 @@ public:
 
 		Poco::AutoPtr<Poco::FileChannel> fileChannel(new Poco::FileChannel);
 		fileChannel->setProperty("path", name);
-		fileChannel->setProperty("rotation", "1 M");
+		fileChannel->setProperty("rotation", "50 M");
 		fileChannel->setProperty("archive", "timestamp");
 
 		// 每条日志的时间格式

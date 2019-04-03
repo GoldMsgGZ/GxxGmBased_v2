@@ -289,8 +289,8 @@ int GxxGmDSJSimulater::SendBindUserInfo(/*const char *platform_id, const char *d
 	// 这里算一波MD5
 	Poco::MD5Engine md5;
 	md5.update(password);
-	//std::string md5hex = md5.digestToHex(md5.digest());
-	std::string md5hex = password;
+	std::string md5hex = md5.digestToHex(md5.digest());
+	//std::string md5hex = password;
 
 	char msg[4096] = {0};
 	sprintf_s(msg, 4096, msg_format, 
@@ -1304,21 +1304,14 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 		strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, simulater->server_gbcode_.c_str());
 		connention_param.iPort = atoi(simulater->server_port_.c_str());
 
-		int heartbeat_count = 0;
-		int baseinfo_count = 0;
-		int location_count = 0;
-		int userbind_count = 0;
+		int heartbeat_count = simulater->gb28181_hb_time_;
+		int baseinfo_count = simulater->dev_baseinfo_time_;
+		int location_count = simulater->dev_location_time_;
+		int userbind_count = simulater->dev_userbind_time_;
 
 		while (!simulater->is_gb28181_heartbeat_thread_need_exit_)
 		{
-			// 以1毫秒计数
-			Poco::Thread::sleep(1);
-			//Sleep(1);
-			++heartbeat_count;
-			++baseinfo_count;
-			++location_count;
-			++userbind_count;
-
+			
 			if (heartbeat_count == simulater->gb28181_hb_time_)
 			{
 				// 发送保活心跳
@@ -1364,6 +1357,15 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 				simulater->SendBindUserInfo(simulater->police_id_.c_str(), simulater->police_password_.c_str());
 				userbind_count = 0;
 			}
+
+			// 以1毫秒计数
+			Poco::Thread::sleep(1);
+			//Sleep(1);
+			++heartbeat_count;
+			++baseinfo_count;
+			++location_count;
+			++userbind_count;
+
 		}
 	}
 	catch (Poco::Exception e)
