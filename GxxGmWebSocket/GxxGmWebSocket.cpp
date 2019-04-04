@@ -5,6 +5,14 @@
 
 #include "stdafx.h"
 
+#include "Poco/DateTimeFormatter.h"
+#include "Poco/FileChannel.h"
+#include "Poco/FormattingChannel.h"
+#include "Poco/Timestamp.h"
+#include "Poco/PatternFormatter.h"
+#include "Poco/Util/Option.h"
+#include "Poco/Util/OptionSet.h"
+
 #include "Poco/Net/WebSocket.h"
 #include "Poco/Net/SocketStream.h"
 #include "Poco/Net/HTTPClientSession.h"
@@ -94,6 +102,38 @@ private:
 
 class GxxGmServerApp : public Poco::Util::ServerApplication
 {
+public:
+	void initialize(Poco::Util::Application& self)
+	{
+		Poco::Util::Application::initialize(self);
+
+		std::string current_working_dir = Poco::Path::current();
+		Poco::Path config_path(current_working_dir);
+		config_path.append("GxxGmDSJSimulater.ini");
+		this->loadConfiguration(config_path.toString(Poco::Path::PATH_NATIVE));
+
+		int log_level = config().getInt("LOG_INFO.LEVEL");
+
+		// 初始化日志
+		std::string name = "GxxGmWebSocket_log_";
+		name.append(Poco::DateTimeFormatter::format(Poco::Timestamp(), "%Y%m%d%H%M%S"));
+		name.append(".log");
+
+		Poco::AutoPtr<Poco::FileChannel> fileChannel(new Poco::FileChannel);
+		fileChannel->setProperty("path", name);
+		fileChannel->setProperty("rotation", "50 M");
+		fileChannel->setProperty("archive", "timestamp");
+
+		// 每条日志的时间格式
+		Poco::AutoPtr<Poco::PatternFormatter> patternFormatter(new Poco::PatternFormatter());
+		patternFormatter->setProperty("pattern","[%Y-%m-%d %H:%M:%S] %p %s(%l): %t");
+
+		//初始化　Channel
+		Poco::AutoPtr<Poco::Channel> channel = new Poco::FormattingChannel(patternFormatter,fileChannel);
+		logger().setChannel(channel);
+		logger().setLevel(log_level);
+	}
+
 protected:
 	int main(const std::vector<std::string>& args)
 	{
@@ -102,11 +142,11 @@ protected:
 
 		try
 		{
-			// 首先获得当前工作目录
-			std::string current_working_dir = Poco::Path::current();
-			Poco::Path config_path(current_working_dir);
-			config_path.append("config.ini");
-			this->loadConfiguration(config_path.toString(Poco::Path::PATH_NATIVE));
+			//// 首先获得当前工作目录
+			//std::string current_working_dir = Poco::Path::current();
+			//Poco::Path config_path(current_working_dir);
+			//config_path.append("config.ini");
+			//this->loadConfiguration(config_path.toString(Poco::Path::PATH_NATIVE));
 
 			// 拿IP、端口进行绑定
 			std::string ipaddress = config().getString("SERVICE_CFG.IP");
