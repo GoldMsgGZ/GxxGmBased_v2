@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="GxxGmWebService"
+	Name="GxxGmWebSocket"
 	ProjectGUID="{40D32F45-79F7-4385-A9DC-0A81A5DCCCC8}"
 	RootNamespace="GxxGmWebService"
 	Keyword="Win32Proj"
@@ -173,7 +173,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\GxxGmWebService.cpp"
+				RelativePath=".\GxxGmWebSocket.cpp"
 				>
 			</File>
 			<File

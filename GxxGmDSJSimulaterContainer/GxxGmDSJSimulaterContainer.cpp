@@ -64,11 +64,51 @@ public:
 		Poco::Util::Application::uninitialize();
 	}
 
+	bool has_param(const char *param)
+	{
+		Poco::Util::Application::ArgVec argcs = this->argv();
+		Poco::Util::Application::ArgVec::iterator iter;
+		bool founded = false;
+		for (iter = argcs.begin(); iter != argcs.end(); ++iter)
+		{
+			if (iter->compare("-q") == 0)
+			{
+				founded = true;
+				break;
+			}
+		}
+
+		return founded;
+	}
+
 	int main(const std::vector<std::string>& args)
 	{
 		int errCode = 0;
 		std::string errStr;
 		char msg[4096] = {0};
+
+		printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.10\n");
+		printf("\n");
+		printf("功能说明：\n");
+		printf("1. 支持GB28181-2011 和 GB28181-2016两个版本的协议通信；\n");
+		printf("2. 支持向接入平台发送GB28181保活心跳，默认30秒发一次，配置文件可配频率；\n");
+		printf("3. 支持向接入平台发送扩展的设备基础信息，默认5秒发一次，配置文件可配频率；\n");
+		printf("4. 支持向接入平台发送扩展的设备定位信息，默认5秒发一次，配置文件可配频率；\n");
+		printf("5. 支持实时视频点流，流数据来源默认为video.gmf，配置文件可配其他格式视频文件，视频文件编码必须为H.264；\n");
+		printf("6. 修正无帧率视频的播放，默认按30pfs进行播放；\n");
+		printf("7. 当视频源为G711时，可推送音频数据；\n");
+		printf("8. 模拟器可配置定位坐标；\n");
+		printf("9. 模拟器28181保活心跳、设备基础信息、设备定位信息发送间隔支持到毫秒级；\n");
+		printf("10. 采用Poco::Application框架实现模拟器；\n");
+		printf("11. 优化了服务组件，降低资源占用；\n");
+		printf("12. 调整了视频解码器调用过程，进一步降低资源占用；\n");
+		printf("13. 重构日志系统；\n");
+		printf("14. 增加了人机绑定逻辑、增加了接收警情逻辑；\n");
+		printf("15. 增加启动参数-q，跳过确认环节直接启动模拟器；\n");
+		printf("\n");
+
+		if (!has_param("-q"))
+			system("pause");
 
 		try
 		{
@@ -238,26 +278,6 @@ public:
 
 int main(int argc, const char *argv[])
 {
-	printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.9\n");
-	printf("\n");
-	printf("功能说明：\n");
-	printf("1. 支持GB28181-2011 和 GB28181-2016两个版本的协议通信；\n");
-	printf("2. 支持向接入平台发送GB28181保活心跳，默认30秒发一次，配置文件可配频率；\n");
-	printf("3. 支持向接入平台发送扩展的设备基础信息，默认5秒发一次，配置文件可配频率；\n");
-	printf("4. 支持向接入平台发送扩展的设备定位信息，默认5秒发一次，配置文件可配频率；\n");
-	printf("5. 支持实时视频点流，流数据来源默认为video.gmf，配置文件可配其他格式视频文件，视频文件编码必须为H.264；\n");
-	printf("6. 修正无帧率视频的播放，默认按30pfs进行播放；\n");
-	printf("7. 当视频源为G711时，可推送音频数据；\n");
-	printf("8. 模拟器可配置定位坐标；\n");
-	printf("9. 模拟器28181保活心跳、设备基础信息、设备定位信息发送间隔支持到毫秒级；\n");
-	printf("10. 采用Poco::Application框架实现模拟器；\n");
-	printf("11. 优化了服务组件，降低资源占用；\n");
-	printf("12. 调整了视频解码器调用过程，进一步降低资源占用；\n");
-	printf("13. 重构日志系统；\n");
-	printf("14. 增加了人机绑定逻辑、增加了接收警情逻辑；\n");
-	printf("\n");
-	system("pause");
-
 	char current_program_path[4096] = {0};
 	GetModuleFileNameA(NULL, current_program_path, 4096);
 	std::string tmp = current_program_path;
@@ -275,6 +295,7 @@ int main(int argc, const char *argv[])
 	bgBase::SetupMiniDumpMonitor(dump_path);
 
 	GxxGmApplication app;
+	app.init(argc, (char **)argv);
 	app.run();
 
 	return 0;

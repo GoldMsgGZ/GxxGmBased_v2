@@ -1,5 +1,7 @@
 // GxxGmWebService.cpp : 定义控制台应用程序的入口点。
 //
+// 
+// 测试服务器地址：http://www.blue-zero.com/WebSocket/
 
 #include "stdafx.h"
 
