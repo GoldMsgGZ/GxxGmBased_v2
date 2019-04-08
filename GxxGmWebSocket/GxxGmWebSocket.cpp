@@ -52,7 +52,7 @@ public:
 			int n = 0;
 			do
 			{
-				// 接收数据
+				// 接收数据，放入消息处理队列
 				n = websocket.receiveFrame(buffer.begin(), static_cast<int>(buffer.size()), flags);
 
 				// 发送数据
