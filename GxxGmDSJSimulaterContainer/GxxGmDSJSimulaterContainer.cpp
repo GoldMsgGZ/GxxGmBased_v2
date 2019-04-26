@@ -283,6 +283,8 @@ int main(int argc, const char *argv[])
 	std::string tmp = current_program_path;
 	int pos = tmp.find_last_of('\\');
 
+	// 初始化几个业务目录
+
 	// 这里初始化FFMpeg
 	std::string base_dir = tmp.substr(0, pos + 1);
 

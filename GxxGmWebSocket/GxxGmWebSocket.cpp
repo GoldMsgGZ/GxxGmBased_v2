@@ -109,7 +109,7 @@ public:
 
 		std::string current_working_dir = Poco::Path::current();
 		Poco::Path config_path(current_working_dir);
-		config_path.append("GxxGmDSJSimulater.ini");
+		config_path.append("config.ini");
 		this->loadConfiguration(config_path.toString(Poco::Path::PATH_NATIVE));
 
 		int log_level = config().getInt("LOG_INFO.LEVEL");
