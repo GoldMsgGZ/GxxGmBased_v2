@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="Generator" content="EditPlus®">
+  <meta name="Author" content="">
+  <meta name="Keywords" content="">
+  <meta name="Description" content="">
+  <title>Test Chrome Element Pos</title>
+ </head>
+ <body>
+  <script>
+  function getPos() {
+	  var div_object = document.getElementById("div_label");
+	  var left = div_object.getBoundingClientRect().left;
+	  var top = div_object.getBoundingClientRect().top;
+	  var right = div_object.getBoundingClientRect().right;
+	  var bottom = div_object.getBoundingClientRect().bottom;
+	  alert('(' + left + ',' + top + '), (' + right + ', ' + bottom + ')')
+  }
+  </script>
+
+  <div >
+	<img id="div_label" src="img.png" />
+  </div>
+  <input type="button" value="获取DIV标签坐标" onClick="getPos()" />
+
+  
+
+ </body>
+</html>
