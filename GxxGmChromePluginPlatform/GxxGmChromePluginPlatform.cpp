@@ -31,6 +31,8 @@
 #include "Poco/Util/ServerApplication.h"
 #include "Poco/StreamCopier.h"
 
+#include "Poco/JSON/Parser.h"
+
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -59,6 +61,8 @@ public:
 				n = websocket.receiveFrame(buffer.begin(), static_cast<int>(buffer.size()), flags);
 
 				// 分析协议，分发请求
+				Poco::JSON::Parser parse;
+				Poco::Dynamic::Var val;
 
 				// 发送数据
 				websocket.sendFrame(buffer.begin(), n, flags);
@@ -81,6 +85,10 @@ public:
 				break;
 			}
 		}
+		catch(Poco::Exception &ex)
+		{
+			std::cout<<ex.name()<<" "<<ex.code()<<std::endl;
+		}
 	}
 
 private:
@@ -99,7 +107,7 @@ public:
 public:
 	Poco::Net::HTTPRequestHandler* createRequestHandler(const Poco::Net::HTTPServerRequest& request)
 	{
-		return new GxxGmWebSocketRequestHandler(app, buffer_size_);
+		return new GxxGmWebSocketRequestHandler(app_, buffer_size_);
 	}
 
 private:
@@ -156,7 +164,7 @@ protected:
 			Poco::Net::ServerSocket server_socket(socket_address);
 
 			// 启动服务
-			const int msgSize = 64000;
+			const int msgSize = 1024 * 1024;
 
 			//Poco::Net::ServerSocket ss(0);
 			Poco::Net::HTTPServer server(new GxxGmWebSocketRequestHandlerFactory(msgSize, this), server_socket, new Poco::Net::HTTPServerParams);
@@ -176,6 +184,7 @@ protected:
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	return 0;
+	GxxGmServerApp app;
+	return app.run(argc, argv);
 }
 

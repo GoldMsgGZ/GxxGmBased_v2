@@ -222,6 +222,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\protocol.md"
+			>
+		</File>
+		<File
 			RelativePath=".\ReadMe.txt"
 			>
 		</File>

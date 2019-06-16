@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="Generator" content="EditPlus®">
+  <meta name="Author" content="">
+  <meta name="Keywords" content="">
+  <meta name="Description" content="">
+  <title>GxxGmChromePlayer</title>
+ </head>
+ <body>
+  <script type="application/javascript">
+  var global_ws = null;
+
+  function websocketConn() {
+    if ("WebSocket" in window) {
+      // 浏览器支持WebSocket
+      var websocket_url = document.getElementById("websocket_url").value;
+      global_ws = new WebSocket(websocket_url);
+
+      // 处理websocket默认的几个事件
+      global_ws.onopen = function() {
+        // WebSocket已经连接上了
+        alert("已连接到WebSocket服务器");
+      }
+
+      global_ws.onmessage = function(evt) {
+        // 接收到服务器发送的数据
+        var received_msg = evt.data;
+        alert("收到消息：" + received_msg);
+      }
+
+      global_ws.onerror = function(evt) {
+        // 收到错误信息
+      }
+
+      global_ws.onclose = function() {
+        // 关闭WebSocket连接
+        alert("WebSocket连接关闭");
+      }
+    } else {
+      // 浏览器不支持WebSocket。
+      // 那么实际上就只能使用HTML了。
+    }
+  }
+
+  // 断开WebSocket连接
+  function websocketDisconn() {
+    global_ws.close();
+  }
+
+
+  // 创建GUID
+  function guid() {
+    function S4() {
+       return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+    }
+    return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
+  }
+
+  // 初始化播放器
+  function initPlayer() {
+    var request_id = guid();
+    var request_time = (new Date()).valueOf();
+    var request_method = "CreatePlugin";
+
+    var plugin_type = "realplay_player";
+    var page_title = document.title;
+
+    var div_object = document.getElementById("player_area");
+	  var left = div_object.getBoundingClientRect().left;
+	  var top = div_object.getBoundingClientRect().top;
+	  var right = div_object.getBoundingClientRect().right;
+	  var bottom = div_object.getBoundingClientRect().bottom;
+
+    // 组件json请求
+    var request_param = {};
+    request_param.plugin_type = plugin_type;
+    request_param.page_title = page_title;
+    request_param.player_position_left = left;
+    request_param.player_position_top = top;
+    request_param.player_position_right = right;
+    request_param.player_position_bottom = bottom;
+
+    var request_json = {};
+    request_json.request_id = request_id;
+    request_json.request_time = request_time;
+    request_json.request_method = request_method;
+    request_json.request_param = request_param;
+
+    // 将请求转换为
+    var json_string = JSON.stringify(request_json);
+
+    // 发送请求
+    global_ws.send(json_string);
+  }
+
+  // 销毁播放器
+  function destroyPlayer() {
+
+  }
+
+  // 播放视频
+  function play() {
+    var video_url = document.getElementById("video_url");
+    var timestamp = (new Date()).valueOf();
+    var request_id = guid();
+    var request_type = "PlayReal";
+  }
+  </script>
+
+  <span>WebSocket配置：</span><br />
+  <span>WebSocket服务器地址：</span>
+  <input type="text" style="width:300px;" id="websocket_url" value="ws://localhost:10501/plugin" /><br/>
+  <input type="button" value="连接到WebSocket服务器" onclick="websocketConn()" />
+  <input type="button" value="端开WebSocket连接" onClick="websocketDisconn()" />
+
+  <div>
+	 <img id="player_area" src="player.png" />
+  </div>
+
+  <!-- 功能按键 -->
+  <input type="button" value="初始化播放器" onclick="initPlayer()" />
+  <input type="button" value="销毁播放器" onClick="destroyPlayer()" />
+  <br />
+
+  <span>视频播放地址：</span>
+  <input type="text" style="width:300px;" id="video_url" value="http://localhost/live/15m.mp4" /><br/>
+  <input type="button" value="播放视频" onClick="destroyPlayer()" />
+
+
+
+ </body>
+</html>
