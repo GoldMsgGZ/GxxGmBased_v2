@@ -1,9 +1,11 @@
-// GxxGmWebService.cpp : 定义控制台应用程序的入口点。
+// GxxGmChromePluginPlatform.cpp : 定义控制台应用程序的入口点。
+//
 //
 // 
 // 测试服务器地址：http://www.blue-zero.com/WebSocket/
 
 #include "stdafx.h"
+
 
 #include "Poco/DateTimeFormatter.h"
 #include "Poco/FileChannel.h"
@@ -36,8 +38,9 @@
 class GxxGmWebSocketRequestHandler : public Poco::Net::HTTPRequestHandler
 {
 public:
-	GxxGmWebSocketRequestHandler(std::size_t buffer_size = 4096)
+	GxxGmWebSocketRequestHandler(Poco::Util::Application *app, std::size_t buffer_size = 4096)
 		: buffer_size_(buffer_size)
+		, app_(app)
 	{
 	}
 
@@ -54,6 +57,8 @@ public:
 			{
 				// 接收数据，放入消息处理队列
 				n = websocket.receiveFrame(buffer.begin(), static_cast<int>(buffer.size()), flags);
+
+				// 分析协议，分发请求
 
 				// 发送数据
 				websocket.sendFrame(buffer.begin(), n, flags);
@@ -80,25 +85,27 @@ public:
 
 private:
 	std::size_t buffer_size_;
+	Poco::Util::Application *app_;
 };
 
 class GxxGmWebSocketRequestHandlerFactory : public Poco::Net::HTTPRequestHandlerFactory
 {
 public:
-	GxxGmWebSocketRequestHandlerFactory(std::size_t buffer_size)
+	GxxGmWebSocketRequestHandlerFactory(std::size_t buffer_size, Poco::Util::Application *app)
 		: buffer_size_(buffer_size)
+		, app_(app)
 	{}
 
 public:
 	Poco::Net::HTTPRequestHandler* createRequestHandler(const Poco::Net::HTTPServerRequest& request)
 	{
-		return new GxxGmWebSocketRequestHandler(buffer_size_);
+		return new GxxGmWebSocketRequestHandler(app, buffer_size_);
 	}
 
 private:
 	std::size_t buffer_size_;
+	Poco::Util::Application *app_;
 };
-
 
 class GxxGmServerApp : public Poco::Util::ServerApplication
 {
@@ -115,7 +122,7 @@ public:
 		int log_level = config().getInt("LOG_INFO.LEVEL");
 
 		// 初始化日志
-		std::string name = "GxxGmWebSocket_log_";
+		std::string name = "log_";
 		name.append(Poco::DateTimeFormatter::format(Poco::Timestamp(), "%Y%m%d%H%M%S"));
 		name.append(".log");
 
@@ -142,12 +149,6 @@ protected:
 
 		try
 		{
-			//// 首先获得当前工作目录
-			//std::string current_working_dir = Poco::Path::current();
-			//Poco::Path config_path(current_working_dir);
-			//config_path.append("config.ini");
-			//this->loadConfiguration(config_path.toString(Poco::Path::PATH_NATIVE));
-
 			// 拿IP、端口进行绑定
 			std::string ipaddress = config().getString("SERVICE_CFG.IP");
 			unsigned int port = config().getUInt("SERVICE_CFG.PORT");
@@ -158,7 +159,7 @@ protected:
 			const int msgSize = 64000;
 
 			//Poco::Net::ServerSocket ss(0);
-			Poco::Net::HTTPServer server(new GxxGmWebSocketRequestHandlerFactory(msgSize), server_socket, new Poco::Net::HTTPServerParams);
+			Poco::Net::HTTPServer server(new GxxGmWebSocketRequestHandlerFactory(msgSize, this), server_socket, new Poco::Net::HTTPServerParams);
 			server.start();
 			waitForTerminationRequest();
 			server.stop();
@@ -173,10 +174,8 @@ protected:
 	}
 };
 
-
 int _tmain(int argc, _TCHAR* argv[])
 {
-	GxxGmServerApp app;
-	return app.run(argc, argv);
+	return 0;
 }
 
