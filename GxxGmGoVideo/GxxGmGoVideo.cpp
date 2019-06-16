@@ -116,7 +116,7 @@ int GxxGmGoVideo::Login(const char *govideo_ip, unsigned short govideo_port, con
 		// 登录成功了，启动心跳线程
 		if (!hb_thread_.isRunning())
 		{
-			hb_thread_.start(GxxGmGoVideo::HeartBeatThread, this);
+			//hb_thread_.start(GxxGmGoVideo::HeartBeatThread, this);
 		}
 	}
 	catch (Poco::Net::NetException &ex)

@@ -8,12 +8,17 @@
 #include <Tlhelp32.h>
 
 const TCHAR *apps[] = {
-	_T("ALMon.exe"),
-	_T("ALsvc.exe"),
-	_T("ManagementAgentNT.exe"),
-	_T("RouterNT.exe"),
-	_T("ssp.exe"),
-	_T("swc_service.exe"),
+	_T("ALMon.exe"),				// É±Èí&¼à¿ØÈí¼ş
+	_T("ALsvc.exe"),				// É±Èí&¼à¿ØÈí¼ş 
+	_T("ManagementAgentNT.exe"),	// É±Èí&¼à¿ØÈí¼ş
+	_T("RouterNT.exe"),				// É±Èí&¼à¿ØÈí¼ş
+	_T("ssp.exe"),					// É±Èí&¼à¿ØÈí¼ş
+	_T("swc_service.exe"),			// É±Èí&¼à¿ØÈí¼ş
+	_T("SophosEndPoint+EXP.exe"),	// É±Èí&¼à¿ØÈí¼ş
+	_T("hmpalert.exe"),				// É±Èí&¼à¿ØÈí¼ş
+	_T("winrdlv3.exe"),				// ¼à¿ØÈí¼ş
+	_T("ONacAgent.exe"),				// ¼à¿ØÈí¼ş 
+	_T("xsupengine.exe"),
 	_T("")
 };
 

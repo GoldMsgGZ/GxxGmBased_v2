@@ -24,7 +24,7 @@ class GxxGmRequestHandler : public Poco::Net::HTTPRequestHandler
 public:
 	virtual void handleRequest(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response)
 	{
-		
+
 	}
 };
 
