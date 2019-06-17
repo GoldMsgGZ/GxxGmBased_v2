@@ -43,6 +43,7 @@ public:
 	GxxGmWebSocketRequestHandler(Poco::Util::Application *app, std::size_t buffer_size = 4096)
 		: buffer_size_(buffer_size)
 		, app_(app)
+
 	{
 	}
 

@@ -6,6 +6,8 @@
 #include "GxxGmChromeWndFollow.h"
 #include "GxxGmChromeWndFollowDlg.h"
 
+#include "Poco/JSON/Parser.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -100,7 +102,12 @@ BOOL CGxxGmChromeWndFollowDlg::OnInitDialog()
 	// TODO: 在此添加额外的初始化代码
 	// 首先获得要跟随的窗口标题，以及指定空间范围内的控件POS
 	AfxGetApp()->m_lpCmdLine;
-	MessageBox(AfxGetApp()->m_lpCmdLine, _T(""), 0);
+	//MessageBox(AfxGetApp()->m_lpCmdLine, _T(""), 0);
+
+	// 首先要将命令行转换为UTF8
+	std::string param;
+	Poco::UnicodeConverter::toUTF8(AfxGetApp()->m_lpCmdLine, param);
+
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
