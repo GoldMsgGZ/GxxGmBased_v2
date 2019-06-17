@@ -98,6 +98,9 @@ BOOL CGxxGmChromeWndFollowDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	// 首先获得要跟随的窗口标题，以及指定空间范围内的控件POS
+	AfxGetApp()->m_lpCmdLine;
+	MessageBox(AfxGetApp()->m_lpCmdLine, _T(""), 0);
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
