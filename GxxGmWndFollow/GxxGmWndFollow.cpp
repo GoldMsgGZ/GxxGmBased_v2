@@ -6,13 +6,21 @@
 #include <Windows.h>
 
 
+typedef struct _SUB_WND_PARAM_
+{
+	HWND parent_hwnd;
+	int x_;
+	int y_;
+	int width_;
+	int height_;
+
+} SUB_WND_PARAM, *PSUB_WND_PARAM;
+
+
+
+
 // 自定义消息处理函数的实现
-LRESULT CALLBACK WindowProc(
-							_In_  HWND hwnd,
-							_In_  UINT uMsg,
-							_In_  WPARAM wParam,
-							_In_  LPARAM lParam
-							)
+LRESULT CALLBACK WindowProc(_In_  HWND hwnd, _In_  UINT uMsg, _In_  WPARAM wParam, _In_  LPARAM lParam)
 {
 	switch (uMsg)
 	{
@@ -55,7 +63,7 @@ void CreateWnd(HWND parent_hwnd, int x, int y, int width, int height)
 	HWND hwnd = CreateWindow(
 		_T("RenderWindow"),           //【关键】上面注册的类名lpszClassName，要完全一致  
 		_T("Zombie"),  //窗口标题文字  
-		WS_OVERLAPPEDWINDOW/*WS_CHILDWINDOW*/, //窗口外观样式  
+		/*WS_OVERLAPPEDWINDOW*/WS_CHILDWINDOW, //窗口外观样式  
 		x,             //窗口相对于父级的X坐标  
 		y,             //窗口相对于父级的Y坐标  
 		width,              //窗口的宽度  
@@ -74,9 +82,22 @@ void CreateWnd(HWND parent_hwnd, int x, int y, int width, int height)
 	// 显示窗口  
 	ShowWindow(hwnd, SW_SHOW);
 
+	MSG msg;
+	while (GetMessage(&msg, hwnd, 0, 0))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
 }
 
 
+DWORD WINAPI WorkingThread(LPVOID lpParam)
+{
+	PSUB_WND_PARAM sub_wnd_param = (PSUB_WND_PARAM)lpParam;
+	CreateWnd(sub_wnd_param->parent_hwnd, sub_wnd_param->x_, sub_wnd_param->y_, sub_wnd_param->width_, sub_wnd_param->height_);
+	return 0;
+}
 
 BOOL CALLBACK EnumChildProc(HWND hwnd, LPARAM lParam)
 {
@@ -86,12 +107,16 @@ BOOL CALLBACK EnumChildProc(HWND hwnd, LPARAM lParam)
 	// chrome 子窗口标题：Chrome Legacy Window
 	// 模拟的控件相对于子窗口坐标为(8,8) (208, 208)
 
-	// 创建一个窗口
-	int x = window_rect.left + 8;
-	int y = window_rect.top + 8;
-	int width = 200;
-	int height = 200;
-	CreateWnd(hwnd, x, y, width, height);
+	// 创建一个窗口，放到线程里面执行
+	SUB_WND_PARAM sub_wnd_param;
+	sub_wnd_param.parent_hwnd = hwnd;
+	sub_wnd_param.x_ = window_rect.left + 8;
+	sub_wnd_param.y_ = window_rect.top + 8;
+	sub_wnd_param.width_ = 200;
+	sub_wnd_param.height_ = 200;
+	CreateThread(NULL, 0, WorkingThread, &sub_wnd_param, 0, NULL);
+	Sleep(1000);
+	
 
 	TCHAR temp1[256] = {0}, temp2[256] = {0};
 	::GetWindowText(hwnd, temp1, 255);
@@ -110,7 +135,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 	if(_tcscmp(caption, _T("")))
 		std::cout<<caption<<std::endl;
 
-	if(_tcsicmp(caption, _T("Test Chrome Element Pos - Google Chrome")) == 0)
+	if(_tcsicmp(caption, _T("GxxGmChromePlayer - Google Chrome")) == 0)
 	{
 		// 枚举子窗口
 		::EnumChildWindows(hwnd, EnumChildProc, 0);
@@ -137,8 +162,11 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 
 }
 
+
+
 int _tmain(int argc, _TCHAR* argv[])
 {
+	// 主线程消息会被暂停阻塞。这里需要有一个线程来执行相关操作
 	// 首先枚举当前系统所有窗口
 	EnumWindows(EnumWindowsProc, NULL);
 
