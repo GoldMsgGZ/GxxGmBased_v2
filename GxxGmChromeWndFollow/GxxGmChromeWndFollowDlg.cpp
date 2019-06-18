@@ -7,6 +7,7 @@
 #include "GxxGmChromeWndFollowDlg.h"
 
 #include "Poco/JSON/Parser.h"
+#include "Poco/JSON/Object.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -70,6 +71,12 @@ END_MESSAGE_MAP()
 
 // CGxxGmChromeWndFollowDlg 消息处理程序
 
+HHOOK hook_callwndproc		= NULL;
+HHOOK hook_callwndprocret	= NULL;
+HHOOK hook_msgfilter		= NULL;
+HHOOK hook_shell			= NULL;
+HHOOK hook_sysmsgfilter		= NULL;
+
 BOOL CGxxGmChromeWndFollowDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
@@ -108,6 +115,49 @@ BOOL CGxxGmChromeWndFollowDlg::OnInitDialog()
 	std::string param;
 	Poco::UnicodeConverter::toUTF8(AfxGetApp()->m_lpCmdLine, param);
 
+	// 解析Json
+	try
+	{
+		Poco::JSON::Parser parse;
+		Poco::Dynamic::Var json_var = parse.parse(param);
+		assert(json_var.type() == typeid(Poco::JSON::Object::Ptr));
+
+		Poco::JSON::Object::Ptr json_object = json_var.extract<Poco::JSON::Object::Ptr>();
+		std::string page_title = json_object->get("page_title").toString();
+		Poco::Int32 pos_left = json_object->get("player_position_left");
+		Poco::Int32 pos_top = json_object->get("player_position_top");
+		Poco::Int32 pos_right = json_object->get("player_position_right");
+		Poco::Int32 pos_bottom = json_object->get("player_position_bottom");
+
+		int x = pos_left;
+		int y = pos_top;
+		int width = pos_right - pos_left;
+		int height = pos_bottom - pos_top;
+
+		// 查找父窗口，得到其句柄，然后搜索子窗口
+		this->MoveWindow(x, y, width, height);
+	}
+	catch (Poco::JSON::JSONException &ex)
+	{
+		ex.code();
+		ex.name();
+	}
+
+	// 这里注册一个全局消息钩子
+	hook_callwndproc	= SetWindowsHookEx(WH_CALLWNDPROC,		CallWndProc,	theApp.m_hInstance, NULL);
+	int errCode = GetLastError();
+
+	hook_callwndprocret	= SetWindowsHookEx(WH_CALLWNDPROCRET,	CallWndRetProc, theApp.m_hInstance, NULL);
+	errCode = GetLastError();
+
+	hook_msgfilter		= SetWindowsHookEx(WH_MSGFILTER,		MessageProc,	theApp.m_hInstance, NULL);
+	errCode = GetLastError();
+
+	hook_shell			= SetWindowsHookEx(WH_SHELL,			ShellProc,		theApp.m_hInstance, NULL);
+	errCode = GetLastError();
+
+	hook_sysmsgfilter	= SetWindowsHookEx(WH_SYSMSGFILTER,		SysMsgProc,		theApp.m_hInstance, NULL);
+	errCode = GetLastError();
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -159,5 +209,77 @@ void CGxxGmChromeWndFollowDlg::OnPaint()
 HCURSOR CGxxGmChromeWndFollowDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
+}
+
+LRESULT CALLBACK CGxxGmChromeWndFollowDlg::CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	PCWPSTRUCT msg = (PCWPSTRUCT)lParam;
+	if (msg->message == WM_MOVE)
+	{
+		TRACE("窗口移动消息\n");
+	}
+
+	// 向下传递消息
+	return CallNextHookEx(hook_callwndproc, nCode, wParam, lParam);
+}
+
+LRESULT CALLBACK CGxxGmChromeWndFollowDlg::CallWndRetProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	PCWPRETSTRUCT msg = (PCWPRETSTRUCT)lParam;
+	if (msg->message == WM_MOVE)
+	{
+		TRACE("窗口移动消息\n");
+	}
+
+	// 向下传递消息
+	return CallNextHookEx(hook_callwndprocret, nCode, wParam, lParam);
+}
+
+LRESULT CALLBACK CGxxGmChromeWndFollowDlg::MessageProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	PMSG msg = (PMSG)lParam;
+	if (msg->message == WM_MOVE)
+	{
+		TRACE("窗口移动消息\n");
+	}
+
+	// 向下传递消息
+	return CallNextHookEx(hook_msgfilter, nCode, wParam, lParam);
+}
+
+LRESULT CALLBACK CGxxGmChromeWndFollowDlg::ShellProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	PMSG msg = (PMSG)lParam;
+	if (msg->message == WM_MOVE)
+	{
+		TRACE("窗口移动消息\n");
+	}
+
+	// 向下传递消息
+	return CallNextHookEx(hook_shell, nCode, wParam, lParam);
+}
+
+LRESULT CALLBACK CGxxGmChromeWndFollowDlg::SysMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	PMSG msg = (PMSG)lParam;
+	if (msg->message == WM_MOVE)
+	{
+		TRACE("窗口移动消息\n");
+	}
+
+	switch (nCode)
+	{
+	case MSGF_DIALOGBOX:
+		// 窗口消息
+		break;
+	case MSGF_MENU:
+		break;
+	case MSGF_SCROLLBAR:
+		// 滚动条滚动消息
+		break;
+	}
+
+	// 向下传递消息
+	return CallNextHookEx(hook_sysmsgfilter, nCode, wParam, lParam);
 }
 

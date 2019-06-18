@@ -65,6 +65,8 @@ public:
 				Poco::JSON::Parser parse;
 				Poco::Dynamic::Var val;
 
+
+
 				// ·¢ËÍÊı¾İ
 				websocket.sendFrame(buffer.begin(), n, flags);
 
