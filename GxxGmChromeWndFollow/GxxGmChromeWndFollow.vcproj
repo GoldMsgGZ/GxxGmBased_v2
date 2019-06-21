@@ -69,7 +69,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\ext\Poco\lib"
+				AdditionalLibraryDirectories="..\ext\Poco\lib;&quot;..\$(ConfigurationName)&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -266,5 +266,9 @@
 		</File>
 	</Files>
 	<Globals>
+		<Global
+			Name="RESOURCE_FILE"
+			Value="GxxGmChromeWndFollow.rc"
+		/>
 	</Globals>
 </VisualStudioProject>

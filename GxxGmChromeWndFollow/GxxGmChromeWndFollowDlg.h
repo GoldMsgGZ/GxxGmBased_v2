@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <string>
+
 
 // CGxxGmChromeWndFollowDlg ¶Ô»°¿ò
 class CGxxGmChromeWndFollowDlg : public CDialog
@@ -31,10 +33,14 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 public:
-	static LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam);
-	static LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam, LPARAM lParam);
-	static LRESULT CALLBACK MessageProc(int nCode, WPARAM wParam, LPARAM lParam);
-	static LRESULT CALLBACK ShellProc(int nCode, WPARAM wParam, LPARAM lParam);
-	static LRESULT CALLBACK SysMsgProc(int nCode, WPARAM wParam, LPARAM lParam);
+	int x;
+	int y;
+	int width;
+	int height;
+	std::string page_title;
 
+public:
+	static DWORD WINAPI WndFollowThread(LPVOID lpParam);
+
+	afx_msg void OnMove(int x, int y);
 };

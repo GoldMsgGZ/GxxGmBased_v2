@@ -8,10 +8,13 @@
 
 #include "Poco/JSON/Parser.h"
 #include "Poco/JSON/Object.h"
+#include "../GxxGmMsgFilter/GxxGmMsgFilter.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+
+#pragma comment(lib, "GxxGmMsgFilter.lib")
 
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
@@ -66,16 +69,13 @@ BEGIN_MESSAGE_MAP(CGxxGmChromeWndFollowDlg, CDialog)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	//}}AFX_MSG_MAP
+	ON_WM_MOVE()
 END_MESSAGE_MAP()
 
 
 // CGxxGmChromeWndFollowDlg 消息处理程序
 
-HHOOK hook_callwndproc		= NULL;
-HHOOK hook_callwndprocret	= NULL;
-HHOOK hook_msgfilter		= NULL;
-HHOOK hook_shell			= NULL;
-HHOOK hook_sysmsgfilter		= NULL;
+
 
 BOOL CGxxGmChromeWndFollowDlg::OnInitDialog()
 {
@@ -107,6 +107,8 @@ BOOL CGxxGmChromeWndFollowDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	int errCode = 0;
+
 	// 首先获得要跟随的窗口标题，以及指定空间范围内的控件POS
 	AfxGetApp()->m_lpCmdLine;
 	//MessageBox(AfxGetApp()->m_lpCmdLine, _T(""), 0);
@@ -123,16 +125,16 @@ BOOL CGxxGmChromeWndFollowDlg::OnInitDialog()
 		assert(json_var.type() == typeid(Poco::JSON::Object::Ptr));
 
 		Poco::JSON::Object::Ptr json_object = json_var.extract<Poco::JSON::Object::Ptr>();
-		std::string page_title = json_object->get("page_title").toString();
+		page_title = json_object->get("page_title").toString();
 		Poco::Int32 pos_left = json_object->get("player_position_left");
 		Poco::Int32 pos_top = json_object->get("player_position_top");
 		Poco::Int32 pos_right = json_object->get("player_position_right");
 		Poco::Int32 pos_bottom = json_object->get("player_position_bottom");
 
-		int x = pos_left;
-		int y = pos_top;
-		int width = pos_right - pos_left;
-		int height = pos_bottom - pos_top;
+		x = pos_left;
+		y = pos_top;
+		width = pos_right - pos_left;
+		height = pos_bottom - pos_top;
 
 		// 查找父窗口，得到其句柄，然后搜索子窗口
 		this->MoveWindow(x, y, width, height);
@@ -143,21 +145,11 @@ BOOL CGxxGmChromeWndFollowDlg::OnInitDialog()
 		ex.name();
 	}
 
-	// 这里注册一个全局消息钩子
-	hook_callwndproc	= SetWindowsHookEx(WH_CALLWNDPROC,		CallWndProc,	theApp.m_hInstance, NULL);
-	int errCode = GetLastError();
+	// 安装全局消息钩子，目前好像钩不到其他窗口的移动消息
+	//errCode = InstallHooks(this->m_hWnd);
 
-	hook_callwndprocret	= SetWindowsHookEx(WH_CALLWNDPROCRET,	CallWndRetProc, theApp.m_hInstance, NULL);
-	errCode = GetLastError();
-
-	hook_msgfilter		= SetWindowsHookEx(WH_MSGFILTER,		MessageProc,	theApp.m_hInstance, NULL);
-	errCode = GetLastError();
-
-	hook_shell			= SetWindowsHookEx(WH_SHELL,			ShellProc,		theApp.m_hInstance, NULL);
-	errCode = GetLastError();
-
-	hook_sysmsgfilter	= SetWindowsHookEx(WH_SYSMSGFILTER,		SysMsgProc,		theApp.m_hInstance, NULL);
-	errCode = GetLastError();
+	// 创建窗口跟随线程，用于跟随指定的浏览器窗口
+	CreateThread(NULL, 0, WndFollowThread, this, 0, NULL);
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -211,75 +203,83 @@ HCURSOR CGxxGmChromeWndFollowDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-LRESULT CALLBACK CGxxGmChromeWndFollowDlg::CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
-{
-	PCWPSTRUCT msg = (PCWPSTRUCT)lParam;
-	if (msg->message == WM_MOVE)
-	{
-		TRACE("窗口移动消息\n");
-	}
 
-	// 向下传递消息
-	return CallNextHookEx(hook_callwndproc, nCode, wParam, lParam);
+BOOL CALLBACK EnumChildProc(HWND hwnd, LPARAM lParam)
+{
+	CGxxGmChromeWndFollowDlg *dlg = (CGxxGmChromeWndFollowDlg *)lParam;
+
+	RECT window_rect;
+	GetWindowRect(hwnd, &window_rect);
+
+	// chrome 子窗口标题：Chrome Legacy Window
+	// 模拟的控件相对于子窗口坐标为(8,8) (208, 208)
+
+	// 创建一个窗口，放到线程里面执行
+	int x = window_rect.left + dlg->x;
+	int y = window_rect.top + dlg->y;
+	int width = dlg->width;
+	int height = dlg->height;
+
+	dlg->MoveWindow(x, y, width, height);
+	
+	SetWindowPos(dlg->m_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
+	SetWindowPos(dlg->m_hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
+	//dlg->SetX
+
+	return true;
 }
 
-LRESULT CALLBACK CGxxGmChromeWndFollowDlg::CallWndRetProc(int nCode, WPARAM wParam, LPARAM lParam)
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 {
-	PCWPRETSTRUCT msg = (PCWPRETSTRUCT)lParam;
-	if (msg->message == WM_MOVE)
+	CGxxGmChromeWndFollowDlg *dlg = (CGxxGmChromeWndFollowDlg *)lParam;
+
+	char caption[200] = {0};
+	memset(caption, 0, sizeof(caption));
+	::GetWindowTextA(hwnd, caption, 200);
+
+	if(strcmp(caption, ""))
+		std::cout<<caption<<std::endl;
+
+	// Google Chrome
+	if(stricmp(caption, "GxxGmChromePlayer - Google Chrome") == 0)
 	{
-		TRACE("窗口移动消息\n");
+		// 枚举子窗口
+		::EnumChildWindows(hwnd, EnumChildProc, (LPARAM)dlg);
 	}
 
-	// 向下传递消息
-	return CallNextHookEx(hook_callwndprocret, nCode, wParam, lParam);
+	return TRUE;
+
 }
 
-LRESULT CALLBACK CGxxGmChromeWndFollowDlg::MessageProc(int nCode, WPARAM wParam, LPARAM lParam)
+DWORD WINAPI CGxxGmChromeWndFollowDlg::WndFollowThread(LPVOID lpParam)
 {
-	PMSG msg = (PMSG)lParam;
-	if (msg->message == WM_MOVE)
-	{
-		TRACE("窗口移动消息\n");
-	}
+	CGxxGmChromeWndFollowDlg *dlg = (CGxxGmChromeWndFollowDlg *)lpParam;
 
-	// 向下传递消息
-	return CallNextHookEx(hook_msgfilter, nCode, wParam, lParam);
+	while (true)
+	{
+		EnumWindows(EnumWindowsProc, (LPARAM)dlg);
+		//Sleep(1);
+	}
+	return 0;
 }
 
-LRESULT CALLBACK CGxxGmChromeWndFollowDlg::ShellProc(int nCode, WPARAM wParam, LPARAM lParam)
+
+void CGxxGmChromeWndFollowDlg::OnMove(int x, int y)
 {
-	PMSG msg = (PMSG)lParam;
-	if (msg->message == WM_MOVE)
-	{
-		TRACE("窗口移动消息\n");
-	}
+	CDialog::OnMove(x, y);
 
-	// 向下传递消息
-	return CallNextHookEx(hook_shell, nCode, wParam, lParam);
+	// 首先获取窗口的长宽
+	RECT rect;
+	this->GetClientRect(&rect);
+
+	TRACE("left:%d, top:%d, right:%d, bottom:%d\n", rect.left, rect.top, rect.right, rect.bottom);
+
+	int nx = rect.left;
+	int ny = rect.top;
+	int nwidth = rect.right - rect.left;
+	int nheight = rect.bottom - rect.top;
+
+	// 接下来尝试改变控件的长宽
+	CWnd *pcwnd = GetDlgItem(IDC_STATIC_SCREEN);
+	pcwnd->MoveWindow(nx, ny, nwidth, nheight);
 }
-
-LRESULT CALLBACK CGxxGmChromeWndFollowDlg::SysMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
-{
-	PMSG msg = (PMSG)lParam;
-	if (msg->message == WM_MOVE)
-	{
-		TRACE("窗口移动消息\n");
-	}
-
-	switch (nCode)
-	{
-	case MSGF_DIALOGBOX:
-		// 窗口消息
-		break;
-	case MSGF_MENU:
-		break;
-	case MSGF_SCROLLBAR:
-		// 滚动条滚动消息
-		break;
-	}
-
-	// 向下传递消息
-	return CallNextHookEx(hook_sysmsgfilter, nCode, wParam, lParam);
-}
-
