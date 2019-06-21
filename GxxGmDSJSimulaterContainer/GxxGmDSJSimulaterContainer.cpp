@@ -87,7 +87,7 @@ public:
 		std::string errStr;
 		char msg[4096] = {0};
 
-		printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.10\n");
+		printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.11\n");
 		printf("\n");
 		printf("功能说明：\n");
 		printf("1. 支持GB28181-2011 和 GB28181-2016两个版本的协议通信；\n");
@@ -105,6 +105,7 @@ public:
 		printf("13. 重构日志系统；\n");
 		printf("14. 增加了人机绑定逻辑、增加了接收警情逻辑；\n");
 		printf("15. 增加启动参数-q，跳过确认环节直接启动模拟器；\n");
+		printf("16. 增加接收平台升级命令功能；\n");
 		printf("\n");
 
 		if (!has_param("-q"))

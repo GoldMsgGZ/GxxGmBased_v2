@@ -1264,7 +1264,43 @@ SIP_REPSOND_CODE GxxGmDSJSimulater::_ExtendRqeustCallBack(SESSION_HANDLE hSessio
 		simulater->notifer_->RecvEmergency(emergency_id, dispatch_time, dispatch_end_time);
 
 		// 添加语音播报
-		sprintf_s(msg, 4096, "[%s]收到警情信息信息\n警情ID：%s\n处警时间：%s\n处警结束时间%s", simulater->local_gbcode_.c_str(), emergency_id, dispatch_time, dispatch_end_time);
+		sprintf_s(msg, 4096, "[%s]收到警情信息\n警情ID：%s\n处警时间：%s\n处警结束时间%s", simulater->local_gbcode_.c_str(), emergency_id, dispatch_time, dispatch_end_time);
+		std::cout<<msg<<std::endl;
+		simulater->app_->logger().information(msg);
+	}
+	else if (_stricmp(sub_cmd_type, "P2DUpdate") == 0)
+	{
+		// 2019-06-21 10:00开始实现 - wangy
+		// 平台下发升级命令
+		tinyxml2::XMLElement *element_package_name = root->FirstChildElement("PackageName");
+		tinyxml2::XMLElement *element_hash_code = root->FirstChildElement("HASHCODE");
+		tinyxml2::XMLElement *element_hash_class = root->FirstChildElement("HASHCLASS");
+		tinyxml2::XMLElement *element_update_level = root->FirstChildElement("UpdateLevel");
+		tinyxml2::XMLElement *element_newest_version = root->FirstChildElement("NewestVersion");
+		tinyxml2::XMLElement *element_newest_package_url = root->FirstChildElement("NewestPackageUrl");
+
+		const char *package_name		= element_package_name->GetText();
+		const char *hash_code			= element_hash_code->GetText();
+		const char *hash_class			= element_hash_class->GetText();
+		const char *update_level		= element_update_level->GetText();
+		const char *newest_version		= element_newest_version->GetText();
+		const char *newest_package_url	= element_newest_package_url->GetText();
+
+		// 发送成功消息
+		const char *result = "<SubCmdType>P2DUpdate</SubCmdType>"
+							"<SubCmdResult>SUCCEES</SubCmdResult>";
+
+		ExtraDataResponseInfo response;
+		response.target_device_id_ = czTargetDevID;
+		response.extra_msg_ = result;
+
+		// 塞入队列
+		simulater->extra_response_queue_.push(response);
+		simulater->wait_queue_not_empty_.set();
+
+		// 记录日志
+		sprintf_s(msg, 4096, "[%s]收到设备升级命令\n包名：%s\n包摘要：%s\n摘要算法：%s\n升级范围：%s\n升级包版本：%s\n升级包下载地址：%s", 
+			simulater->local_gbcode_.c_str(), package_name, hash_code, hash_class, update_level, newest_version, newest_package_url);
 		std::cout<<msg<<std::endl;
 		simulater->app_->logger().information(msg);
 	}
