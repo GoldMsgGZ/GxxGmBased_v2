@@ -9,6 +9,7 @@
 #include "Poco/Latin1Encoding.h"
 #include "Poco/TextConverter.h"
 #include "Poco/UTF8Encoding.h"
+#include "Poco/Random.h"
 
 #include "tinyxml2.h"
 
@@ -260,6 +261,10 @@ void GxxGmDSJSimulater::SetLocationInfo(DEVICE_LOCATION_INFO location_info)
 	location_info_.radius_				= location_info.radius_;
 	location_info_.satellites_			= location_info.satellites_;
 	location_info_.speed_				= location_info.speed_;
+
+	// 初始化
+	last_longtitude_ = atof(location_info_.longitude_.c_str());
+	last_latitude_ = atof(location_info_.latitude_.c_str());
 }
 
 void GxxGmDSJSimulater::SetExceptionInfo(DEVICE_EXCEPTION_INFO excep_info)
@@ -443,6 +448,9 @@ int GxxGmDSJSimulater::SendLocationInfo()
 	char current_time[128] = {0};
 	sprintf_s(current_time, 128, "%d-%02d-%02d %02d:%02d:%02d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
 
+	// 这里更新一下坐标位置
+	UpdateLocationPos();
+
 	char msg[4096] = {0};
 	sprintf_s(msg, 4096, msg_format,
 		location_info_.division_ns_.c_str(), location_info_.division_ew_.c_str(), location_info_.radius_.c_str(),
@@ -484,6 +492,9 @@ int GxxGmDSJSimulater::SendLocationInfoEx()
 	char current_time[128] = {0};
 	sprintf_s(current_time, 128, "%d-%02d-%02d %02d:%02d:%02d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
 
+	// 这里更新一下坐标位置
+	UpdateLocationPos();
+
 	StruMobilePosNotifyInfo position;
 	strcpy_s(position.czGBCode, STR_GBCODE_LEN, local_gbcode_.c_str());
 	strcpy_s(position.czDateTime, STR_DATETIME_LEN, current_time);
@@ -515,6 +526,79 @@ int GxxGmDSJSimulater::SendLocationInfoEx()
 	}
 
 	return err;
+}
+
+// 计算弧度
+double rad(double d)
+{
+	const double PI = 3.1415926535898;
+	return d * PI / 180.0;
+}
+
+// 从两个gps坐标点（经纬度）获得两点的直线距离，单位是米
+double CalcDistance(double fLati1, double fLong1, double fLati2, double fLong2)
+{
+	const float EARTH_RADIUS = 6378.137;
+
+
+	double radLat1 = rad(fLati1);
+	double radLat2 = rad(fLati2);
+	double a = radLat1 - radLat2;
+	double b = rad(fLong1) - rad(fLong2);
+	double s = 2 * asin(sqrt(pow(sin(a/2),2) + cos(radLat1)*cos(radLat2)*pow(sin(b/2),2)));
+	s = s * EARTH_RADIUS;
+	//s = (int)(s * 10000000) / 10000;
+	s = s * 10000000 / 10000;
+	return s;
+}
+
+int GxxGmDSJSimulater::UpdateLocationPos()
+{
+	// 计算两个点的位移，满足以下两个条件
+	// 1. 位移距离要超过15米
+	// 2. 位移时速低于137km/h，即38m/s
+
+	// 生成两个随机数，转换成double，转移到小数点后5位
+	double new_latitude = 0.0;
+	double new_longtitude = 0.0;
+
+	// 这里随机取点，如果不符合条件则重取，100次为上限
+	bool is_ok = false;
+	for (int index = 0; index < 100; ++index)
+	{
+		Poco::Random random_object;
+		double random_latitude = random_object.nextDouble() / 10000.0;
+		double random_longtitude = random_object.nextDouble() / 10000.0;
+
+		double new_latitude = last_latitude_ + random_latitude;
+		double new_longtitude = last_longtitude_ + random_longtitude;
+
+		// 计算两点距离
+		double new_distance = CalcDistance(last_latitude_, last_longtitude_, new_latitude, new_longtitude);
+		if (new_distance > 15)
+		{
+			// 计算位移速度，先获取时间间隔，目前应该是毫秒
+			double speed = new_distance / (dev_location_time_ / 1000);
+			if (speed > 38)
+			{
+				// 满足条件了，这两个点可以返回
+				is_ok = true;
+				break;
+			}
+		}
+	}
+
+	if (is_ok)
+	{
+		char tmp[4096] = {0};
+		sprintf_s(tmp, 4096, "%f", new_latitude);
+		location_info_.latitude_ = tmp;
+
+		sprintf_s(tmp, 4096, "%f", new_longtitude);
+		location_info_.longitude_ = tmp;
+	}
+	
+	return 0;
 }
 
 int GxxGmDSJSimulater::SendExceptionInfo()

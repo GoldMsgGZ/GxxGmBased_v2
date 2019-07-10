@@ -107,6 +107,7 @@ public:
 	// 发送设备定位信息
 	int SendLocationInfo();
 	int SendLocationInfoEx();
+	int UpdateLocationPos();
 	// 发送设备异常信息
 	int SendExceptionInfo();
 	// 发送设备告警信息
@@ -171,6 +172,9 @@ public:
 	DEVICE_BASE_INFO base_info_;
 	DEVICE_LOCATION_INFO location_info_;
 	DEVICE_EXCEPTION_INFO exception_info_;
+
+	double last_longtitude_;	// 用于计算GPS坐标推移
+	double last_latitude_;		// 用于计算GPS坐标推移
 
 public:
 	std::string police_id_;
