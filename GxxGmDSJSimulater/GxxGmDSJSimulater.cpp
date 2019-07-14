@@ -567,11 +567,11 @@ int GxxGmDSJSimulater::UpdateLocationPos()
 	for (int index = 0; index < 100; ++index)
 	{
 		Poco::Random random_object;
-		double random_latitude = random_object.nextDouble() / 10000.0;
-		double random_longtitude = random_object.nextDouble() / 10000.0;
+		double random_latitude = random_object.nextDouble() / 1000;
+		double random_longtitude = random_object.nextDouble() / 1000;
 
-		double new_latitude = last_latitude_ + random_latitude;
-		double new_longtitude = last_longtitude_ + random_longtitude;
+		new_latitude = last_latitude_ + random_latitude;
+		new_longtitude = last_longtitude_ + random_longtitude;
 
 		// 计算两点距离
 		double new_distance = CalcDistance(last_latitude_, last_longtitude_, new_latitude, new_longtitude);
@@ -579,7 +579,7 @@ int GxxGmDSJSimulater::UpdateLocationPos()
 		{
 			// 计算位移速度，先获取时间间隔，目前应该是毫秒
 			double speed = new_distance / (dev_location_time_ / 1000);
-			if (speed > 38)
+			if (speed <= 38)
 			{
 				// 满足条件了，这两个点可以返回
 				is_ok = true;
