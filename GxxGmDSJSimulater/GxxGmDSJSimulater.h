@@ -47,6 +47,7 @@ struct SimulaterInitInfo
 	int dev_location_time_;
 	int dev_userbind_time_;
 
+	int start_dev_userbind_;
 	std::string police_number_;
 	std::string police_password_;
 
@@ -177,6 +178,7 @@ public:
 	double last_latitude_;		// 用于计算GPS坐标推移
 
 public:
+	int start_dev_userbind_;
 	std::string police_id_;
 	std::string police_password_;
 

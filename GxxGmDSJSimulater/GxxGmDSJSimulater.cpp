@@ -143,6 +143,7 @@ int GxxGmDSJSimulater::Initialize(struct SimulaterInitInfo &init_info, FFMpegStu
 	dev_location_time_ = init_info.dev_location_time_;
 	dev_userbind_time_ = init_info.dev_userbind_time_;
 
+	start_dev_userbind_ = init_info.start_dev_userbind_;
 	police_id_ = init_info.police_number_;
 	police_password_ = init_info.police_password_;
 
@@ -547,7 +548,6 @@ double CalcDistance(double fLati1, double fLong1, double fLati2, double fLong2)
 	double b = rad(fLong1) - rad(fLong2);
 	double s = 2 * asin(sqrt(pow(sin(a/2),2) + cos(radLat1)*cos(radLat2)*pow(sin(b/2),2)));
 	s = s * EARTH_RADIUS;
-	//s = (int)(s * 10000000) / 10000;
 	s = s * 10000000 / 10000;
 	return s;
 }
@@ -1472,10 +1472,13 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 				location_count = 0;
 			}
 
-			if (userbind_count == simulater->dev_userbind_time_)
+			if (simulater->start_dev_userbind_ != 0)
 			{
-				simulater->SendBindUserInfo(simulater->police_id_.c_str(), simulater->police_password_.c_str());
-				userbind_count = 0;
+				if (userbind_count == simulater->dev_userbind_time_)
+				{
+					simulater->SendBindUserInfo(simulater->police_id_.c_str(), simulater->police_password_.c_str());
+					userbind_count = 0;
+				}
 			}
 
 			// ÒÔ1ºÁÃë¼ÆÊı
