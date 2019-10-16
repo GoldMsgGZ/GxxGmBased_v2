@@ -46,6 +46,7 @@ struct SimulaterInitInfo
 	int dev_baseinfo_time_;
 	int dev_location_time_;
 	int dev_userbind_time_;
+	int dev_exception_time_;
 
 	int start_dev_userbind_;
 	std::string police_number_;
@@ -89,6 +90,9 @@ public:
 	void Destroy();
 
 	void SetNotifer(GxxGmDSJSimulaterNotifer *notifer);
+
+public:
+	int Register();
 
 public:
 	// 设置设备基本信息
@@ -139,6 +143,9 @@ public:
 	static void GB28181HeartbeatThreadFun(void *param);
 	Poco::Thread gb28181_heartbeat_thread_;
 	bool is_gb28181_heartbeat_thread_need_exit_;
+
+	static void PositionThreadFun(void *param);
+	Poco::Thread position_thread_;
 	bool is_standard_gb28181_mobile_position_;
 
 public:
@@ -166,6 +173,7 @@ public:
 	int dev_baseinfo_time_;		// 基础信息间隔时间
 	int dev_location_time_;		// 定位信息间隔时间
 	int dev_userbind_time_;		// 人机绑定信息间隔
+	int dev_exception_time_;	// 设备异常信息间隔
 
 	std::string imei_;			// 模拟器IMEI
 	std::string platform_id_;

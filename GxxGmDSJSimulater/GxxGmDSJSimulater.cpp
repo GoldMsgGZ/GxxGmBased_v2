@@ -86,6 +86,29 @@ int GxxGmDSJSimulater::Initialize(struct SimulaterInitInfo &init_info, FFMpegStu
 	GB28181Agent_SetNotifyInfoCB(agent_, _NotifyInfo_CallBackFunc, this);
 	GB28181Agent_SetExtendRequestCB(agent_, _ExtendRqeustCallBack, this);
 
+	// 保存参数
+	local_ip_ = init_info.local_ip_.c_str();
+	local_port_ = init_info.local_port_.c_str();
+	local_gbcode_ = init_info.local_gbcode_.c_str();
+	server_ip_ = init_info.server_ip_.c_str();
+	server_port_ = init_info.server_port_.c_str();
+	server_gbcode_ = init_info.server_gbcode_.c_str();
+	username_ = init_info.username_.c_str();
+	password_ = init_info.password_.c_str();
+
+	gb28181_hb_time_ = init_info.gb28181_hb_time_;
+	dev_baseinfo_time_ = init_info.dev_baseinfo_time_;
+	dev_location_time_ = init_info.dev_location_time_;
+	dev_userbind_time_ = init_info.dev_userbind_time_;
+	dev_exception_time_ = init_info.dev_exception_time_;
+
+	start_dev_userbind_ = init_info.start_dev_userbind_;
+	police_id_ = init_info.police_number_;
+	police_password_ = init_info.police_password_;
+
+	imei_ = init_info.imei_;
+	platform_id_ = init_info.platform_id_;
+
 	// 这里判断网络情况
 	EnumTransType eTransType = EnumTransType::eTYPE_UDP;
 	if (init_info.sip_net_.compare("UDP") == 0)
@@ -104,51 +127,33 @@ int GxxGmDSJSimulater::Initialize(struct SimulaterInitInfo &init_info, FFMpegStu
 		return err;
 	}
 
-	reg_msg.iExpires = 86400;	// 1年
-	strcpy_s(reg_msg.szUserName, STR_USERNAME_LEN, init_info.username_.c_str());
-	strcpy_s(reg_msg.szPassword, STR_PASSWORD_LEN, init_info.password_.c_str());
-	strcpy_s(reg_msg.stuCnnParam.szIP, STR_IPADDRESS_LEN, init_info.server_ip_.c_str());
-	reg_msg.stuCnnParam.iPort = (unsigned int)atoi(init_info.server_port_.c_str());
-	strcpy_s(reg_msg.stuCnnParam.szGBCode, STR_GBCODE_LEN, init_info.server_gbcode_.c_str());
+	// 执行注册
+	Register();
 
-	char date_time[4096] = {0};
-	err = GB28181Agent_Register(agent_, &reg_msg, date_time);
-	if (err != GS28181_ERR_SUCCESS)
-	{
-		sprintf_s(msg, 4096, "[%s]注册到接入网关失败！错误码：%d", init_info.local_gbcode_.c_str(), err);
-		std::cout<<msg<<std::endl;
-		app_->logger().error(msg);
+	////reg_msg.iExpires = 86400;	// 1年31536000
+	//reg_msg.iExpires = 31536000;	// 1年31536000
+	//strcpy_s(reg_msg.szUserName, STR_USERNAME_LEN, init_info.username_.c_str());
+	//strcpy_s(reg_msg.szPassword, STR_PASSWORD_LEN, init_info.password_.c_str());
+	//strcpy_s(reg_msg.stuCnnParam.szIP, STR_IPADDRESS_LEN, init_info.server_ip_.c_str());
+	//reg_msg.stuCnnParam.iPort = (unsigned int)atoi(init_info.server_port_.c_str());
+	//strcpy_s(reg_msg.stuCnnParam.szGBCode, STR_GBCODE_LEN, init_info.server_gbcode_.c_str());
 
-		GB28181Agent_Stop(agent_);
-		GB28181Agent_Uninit(agent_);
-		return err;
-	}
+	//char date_time[4096] = {0};
+	//err = GB28181Agent_Register(agent_, &reg_msg, date_time);
+	//if (err != GS28181_ERR_SUCCESS)
+	//{
+	//	sprintf_s(msg, 4096, "[%s]注册到接入网关失败！错误码：%d", init_info.local_gbcode_.c_str(), err);
+	//	std::cout<<msg<<std::endl;
+	//	app_->logger().error(msg);
 
-	sprintf_s(msg, 4096, "[%s]注册到接入网关成功！错误码：%d", init_info.local_gbcode_.c_str(), err);
-	std::cout<<msg<<std::endl;
-	app_->logger().information(msg);
+	//	GB28181Agent_Stop(agent_);
+	//	GB28181Agent_Uninit(agent_);
+	//	return err;
+	//}
 
-	// 保存参数
-	local_ip_ = init_info.local_ip_.c_str();
-	local_port_ = init_info.local_port_.c_str();
-	local_gbcode_ = init_info.local_gbcode_.c_str();
-	server_ip_ = init_info.server_ip_.c_str();
-	server_port_ = init_info.server_port_.c_str();
-	server_gbcode_ = init_info.server_gbcode_.c_str();
-	username_ = init_info.username_.c_str();
-	password_ = init_info.password_.c_str();
-
-	gb28181_hb_time_ = init_info.gb28181_hb_time_;
-	dev_baseinfo_time_ = init_info.dev_baseinfo_time_;
-	dev_location_time_ = init_info.dev_location_time_;
-	dev_userbind_time_ = init_info.dev_userbind_time_;
-
-	start_dev_userbind_ = init_info.start_dev_userbind_;
-	police_id_ = init_info.police_number_;
-	police_password_ = init_info.police_password_;
-
-	imei_ = init_info.imei_;
-	platform_id_ = init_info.platform_id_;
+	//sprintf_s(msg, 4096, "[%s]注册到接入网关成功！错误码：%d", init_info.local_gbcode_.c_str(), err);
+	//std::cout<<msg<<std::endl;
+	//app_->logger().information(msg);
 
 	// 设置默认名称
 	dev_name_ = "GxxGmSimulater";
@@ -186,6 +191,13 @@ int GxxGmDSJSimulater::Initialize(struct SimulaterInitInfo &init_info, FFMpegStu
 	if (!gb28181_heartbeat_thread_.isRunning())
 	{
 		gb28181_heartbeat_thread_.start(GB28181HeartbeatThreadFun, this);
+		//Sleep(10);
+		Poco::Thread::sleep(10);
+	}
+
+	if (!position_thread_.isRunning())
+	{
+		position_thread_.start(PositionThreadFun, this);
 		//Sleep(10);
 		Poco::Thread::sleep(10);
 	}
@@ -233,6 +245,37 @@ void GxxGmDSJSimulater::Destroy()
 void GxxGmDSJSimulater::SetNotifer(GxxGmDSJSimulaterNotifer *notifer)
 {
 	notifer_ = notifer;
+}
+
+int GxxGmDSJSimulater::Register()
+{
+	char msg[4096] = {0};
+
+	reg_msg.iExpires = 31536000;	// 1年31536000
+	strcpy_s(reg_msg.szUserName, STR_USERNAME_LEN, username_.c_str());
+	strcpy_s(reg_msg.szPassword, STR_PASSWORD_LEN, password_.c_str());
+	strcpy_s(reg_msg.stuCnnParam.szIP, STR_IPADDRESS_LEN, server_ip_.c_str());
+	reg_msg.stuCnnParam.iPort = (unsigned int)atoi(server_port_.c_str());
+	strcpy_s(reg_msg.stuCnnParam.szGBCode, STR_GBCODE_LEN, server_gbcode_.c_str());
+
+	char date_time[4096] = {0};
+	GS28181_ERR err = GB28181Agent_Register(agent_, &reg_msg, date_time);
+	if (err != GS28181_ERR_SUCCESS)
+	{
+		sprintf_s(msg, 4096, "[%s]注册到接入网关失败！错误码：%d", local_gbcode_.c_str(), err);
+		std::cout<<msg<<std::endl;
+		app_->logger().error(msg);
+
+		GB28181Agent_Stop(agent_);
+		GB28181Agent_Uninit(agent_);
+		return err;
+	}
+
+	sprintf_s(msg, 4096, "[%s]注册到接入网关成功！错误码：%d", local_gbcode_.c_str(), err);
+	std::cout<<msg<<std::endl;
+	app_->logger().information(msg);
+
+	return err;
 }
 
 void GxxGmDSJSimulater::SetBaseInfo(DEVICE_BASE_INFO base_info)
@@ -567,7 +610,7 @@ int GxxGmDSJSimulater::UpdateLocationPos()
 	for (int index = 0; index < 100; ++index)
 	{
 		Poco::Random random_object;
-		double random_latitude = random_object.nextDouble() / 1000;
+		double random_latitude = random_object.nextDouble() / 100;
 		double random_longtitude = random_object.nextDouble() / 1000;
 
 		new_latitude = last_latitude_ + random_latitude;
@@ -609,6 +652,7 @@ int GxxGmDSJSimulater::SendExceptionInfo()
 									<Battery>Removed</Battery> \
 									<CCD>Error</CCD> \
 									<MIC>Error</MIC> \
+									<POSITION>Error</POSITION> \
 							  </Exceptions>";
 
 	char msg[4096] = {0};
@@ -632,7 +676,7 @@ int GxxGmDSJSimulater::SendExceptionInfo()
 	}
 	else
 	{
-		sprintf_s(msg, 4096, "[%s]发送标准设备定位信息成功！错误码：%d", local_gbcode_.c_str(), err);
+		sprintf_s(msg, 4096, "[%s]发送设备异常信息成功！错误码：%d", local_gbcode_.c_str(), err);
 		std::cout<<msg<<std::endl;
 		app_->logger().information(msg);
 	}
@@ -1426,8 +1470,8 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 
 		int heartbeat_count = simulater->gb28181_hb_time_;
 		int baseinfo_count = simulater->dev_baseinfo_time_;
-		int location_count = simulater->dev_location_time_;
 		int userbind_count = simulater->dev_userbind_time_;
+		int exception_count = simulater->dev_exception_time_;
 
 		while (!simulater->is_gb28181_heartbeat_thread_need_exit_)
 		{
@@ -1444,6 +1488,9 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 					sprintf_s(msg, 4096, "[%s] 发送GB28181保活心跳失败。错误码：%d", simulater->local_gbcode_.c_str(), err);
 					std::cout<<msg<<std::endl;
 					simulater->app_->logger().error(msg);
+
+					// 重新注册
+					//simulater->Register();
 				}
 
 				heartbeat_count = 0;
@@ -1456,6 +1503,61 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 				baseinfo_count = 0;
 			}
 
+			if (simulater->start_dev_userbind_ != 0)
+			{
+				if (userbind_count == simulater->dev_userbind_time_)
+				{
+					// 发送人机绑定信息
+					simulater->SendBindUserInfo(simulater->police_id_.c_str(), simulater->police_password_.c_str());
+					userbind_count = 0;
+				}
+			}
+
+			if (exception_count == simulater->dev_exception_time_)
+			{
+				// 发送设备异常信息
+				simulater->SendExceptionInfo();
+				exception_count = 0;
+			}
+
+			// 以1毫秒计数
+			Poco::Thread::sleep(1);
+			//Sleep(1);
+			++heartbeat_count;
+			++baseinfo_count;
+			++userbind_count;
+			++exception_count;
+
+		}
+	}
+	catch (Poco::Exception e)
+	{
+		errCode = e.code();
+		errStr = e.displayText();
+	}
+}
+
+void GxxGmDSJSimulater::PositionThreadFun(void *param)
+{
+	// 
+	GxxGmDSJSimulater *simulater = (GxxGmDSJSimulater *)param;
+	char msg[4096] = {0};
+
+	int errCode = 0;
+	std::string errStr;
+
+	try
+	{
+		StruConnectParam connention_param;
+		strcpy_s(connention_param.szIP, STR_IPADDRESS_LEN, simulater->server_ip_.c_str());
+		strcpy_s(connention_param.szGBCode, STR_GBCODE_LEN, simulater->server_gbcode_.c_str());
+		connention_param.iPort = atoi(simulater->server_port_.c_str());
+
+		int location_count = simulater->dev_location_time_;
+
+		while (!simulater->is_gb28181_heartbeat_thread_need_exit_)
+		{
+			//
 			if (location_count == simulater->dev_location_time_)
 			{
 				// 发送定位信息
@@ -1472,23 +1574,9 @@ void GxxGmDSJSimulater::GB28181HeartbeatThreadFun(void *param)
 				location_count = 0;
 			}
 
-			if (simulater->start_dev_userbind_ != 0)
-			{
-				if (userbind_count == simulater->dev_userbind_time_)
-				{
-					simulater->SendBindUserInfo(simulater->police_id_.c_str(), simulater->police_password_.c_str());
-					userbind_count = 0;
-				}
-			}
-
 			// 以1毫秒计数
 			Poco::Thread::sleep(1);
-			//Sleep(1);
-			++heartbeat_count;
-			++baseinfo_count;
 			++location_count;
-			++userbind_count;
-
 		}
 	}
 	catch (Poco::Exception e)

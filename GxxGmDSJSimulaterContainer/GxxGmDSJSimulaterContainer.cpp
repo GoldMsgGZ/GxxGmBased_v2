@@ -87,7 +87,7 @@ public:
 		std::string errStr;
 		char msg[4096] = {0};
 
-		printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.13\n");
+		printf("高新兴国迈 执法仪模拟器(GB28181-2016) V2.16\n");
 		printf("\n");
 		printf("功能说明：\n");
 		printf("1. 支持GB28181-2011 和 GB28181-2016两个版本的协议通信；\n");
@@ -109,6 +109,9 @@ public:
 		printf("17. 支持动态坐标上送；\n");
 		printf("18. 更新最新基础库；\n");
 		printf("19. 增加人机绑定开关；\n");
+		printf("20. 将定位信息上送放入单独线程进行处理；\n");
+		printf("21. 模拟器注册时间强制设置为1年；\n");
+		printf("22. 增加了定期发送设备异常信息；\n");
 		printf("\n");
 
 		if (!has_param("-q"))
@@ -143,6 +146,7 @@ public:
 			int dev_baseinfo_time = config().getUInt("GxxGmDSJSimulater.DEV_BASE_INFO_TIME");
 			int dev_location_time = config().getUInt("GxxGmDSJSimulater.DEV_LOCATION_TIME");
 			int dev_userbind_time = config().getUInt("GxxGmDSJSimulater.DEV_BINDUSER_TIME");
+			int dev_exception_time = config().getUInt("GxxGmDSJSimulater.DEV_EXCEPTION_TIME");
 			int dev_imei_index_start = config().getUInt("GxxGmDSJSimulater.DEVICE_IMEI_START");
 
 			int start_dev_userbind = config().getUInt("GxxGmDSJSimulater.START_DEV_BINDUSER");
@@ -237,6 +241,7 @@ public:
 				init_info.dev_baseinfo_time_ = dev_baseinfo_time;
 				init_info.dev_location_time_ = dev_location_time;
 				init_info.dev_userbind_time_ = dev_userbind_time;
+				init_info.dev_exception_time_ = dev_exception_time;
 				init_info.start_dev_userbind_ = start_dev_userbind;
 				init_info.police_number_ = police_number;
 				init_info.police_password_ = police_password;
